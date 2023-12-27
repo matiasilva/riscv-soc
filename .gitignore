@@ -1,0 +1,8 @@
+*.DS_Store
+*.lxt2
+*.vcd
+*.bin
+*.blif
+*.asc
+*.out
+

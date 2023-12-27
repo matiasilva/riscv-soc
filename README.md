@@ -16,3 +16,22 @@ While there is a great open source toolset for the iCESugar v1.5, it remains dif
 	- http://github.com/wuxx/icesugar
 
 I recommend building each of these tools from source to ensure the latest (working) version and in the case of `icesprog` you'll also need to add the binary directory to your `$PATH`. Each of these tools has their own required dependencies so look them up to find them. Then, a standard `make -j4` and `sudo make install` suffices, apart from the odd case when a `./configure` was needed. While I was wrapping my head around this, I found https://f4pga.readthedocs.io/en/latest/flows/index.html quite helpful in explaining each step of the design flow and how that interlinks with these open source tools.
+
+
+## Extra steps
+
+### Mounting the iCESugar board
+
+It seems that Raspberry Pi OS couldn't mount the board since `df` turned up empty. It was evident that the device was correctly plugged in though as `lsusb` showed a new addition and `dmesg` didn't show any errors. This meant that the board had to be manually mounted (remember, it's not really a mass storage device but acts like one), so I ran `blkid` to get the device UUID:
+
+```
+/dev/sda: SEC_TYPE="msdos" LABEL_FATBOOT="DAPLINK-DND" LABEL="iCELink" UUID="2702-1974" BLOCK_SIZE="512" TYPE="vfat"
+```
+
+I then added an entry in `fstab`:
+
+```
+UUID=2702-1974 /mnt/iCELink vfat defaults,auto,users,rw,nofail 0 0
+```
+
+and that was it!
