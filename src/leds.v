@@ -1,9 +1,9 @@
 module soc (
 	input clk,
-	output P1_9
+	output LED_G
 );
 
-	reg [15:0] count = 0;
+	reg [19:0] count = 0;
 	reg state = 0;
 
 	always @(posedge clk) begin 
@@ -13,6 +13,6 @@ module soc (
 		end
 	end
 
-	assign P1_9 = state;
+	assign LED_G = state;
 
 endmodule

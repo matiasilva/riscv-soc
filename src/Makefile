@@ -23,9 +23,12 @@ prog_flash:
 		exit 1; \
      	fi
 
+vis:
+	yosys -p "read_verilog leds.v; hierarchy -check; proc; opt; fsm; opt; memory; opt; show -prefix leds -format svg" leds.v
+
 sim:
 	iverilog tb.v $(filename).v
 	vvp  a.out
 
 clean:
-	rm -rf $(filename).blif $(filename).asc $(filename).json $(filename).bin a.out tb.lxt2 xt2 tb.vcd
+	rm -rf $(filename).blif $(filename).asc $(filename).jsonma $(filename).bin a.out tb.lxt2 xt2 tb.vcd
