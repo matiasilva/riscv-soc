@@ -39,7 +39,7 @@ module memory #(
 			end
 			next_instr <= 0;
 		end else begin
-			next_instr <= {mem[pc], mem[pc + 1], mem[pc +  2], mem[pc + 3]};
+			next_instr <= {mem[pc + 3], mem[pc + 2], mem[pc + 1], mem[pc]};
 		end
 	end
 

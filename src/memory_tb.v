@@ -55,7 +55,7 @@ module memory_tb ();
 				@(posedge clk);
 				$display("pc: %d",pc);
 				#PDELAY loaded_instr <= instr;
-				scratch2 <= {check_mem[pc], check_mem[pc + 1], check_mem[pc + 2], check_mem[pc + 3]};
+				scratch2 <= {check_mem[pc + 3], check_mem[pc + 2], check_mem[pc + 1], check_mem[pc]};
 				#PDELAY `assert(loaded_instr, scratch2);
 				pc <= pc + 4;
 			end
