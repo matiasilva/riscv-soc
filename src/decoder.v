@@ -15,36 +15,7 @@ module decoder (
 	wire [2:0] funct3 = instr[14:12];
   	wire [6:0] funct7 = instr[31:25];
 
-  	wire [3:0] rtype_alu_op;
-
-  	// R-type
-  	always @(*) begin :
-  		case (funct3)
-  			3'b000: begin
-  				// ADD, SUB
-  				if (func7[5]) begin
-  					// SUB
-  				end else begin
-  					// ADD
-  				end
-  			end
-  			3'b001: begin
-  				// SUB
-  			end
-  			3'b010: begin
-  			end
-  			3'b011: begin
-  			end
-  			3'b100: begin
-  			end
-  			3'b101: begin
-  			end
-  			3'b110: begin
-  			end
-  			3'b111: begin
-  			end
-  		endcase
-  	end
+  	wire [3:0] rtype_alu_op = {funct7[5], funct3};
 
 	always @(posedge clk or negedge rst_n) begin :
 		if(~rst_n) begin
@@ -54,8 +25,7 @@ module decoder (
 				7'b0110011: begin
 					// ALU operations on registers
 					// R-type
-
-
+					alu_op <= rtype_alu_op;
 				end
 				7'b0010011: begin
 					// ALU operations on immediates

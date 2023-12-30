@@ -1,23 +1,22 @@
-filename = leds
 pcf_file = io.pcf
 
 ICELINK_DIR=$(shell df | grep iCELink | awk '{print $$6}')
 ${warning iCELink path: $(ICELINK_DIR)}
 
 build:
-	yosys -p "synth_ice40 -json $(filename).json" $(filename).v
+	yosys -p "synth_ice40 -json $(design).json" $(design).v
 	nextpnr-ice40 \
 		--up5k \
 		--package sg48 \
-		--json $(filename).json \
+		--json $(design).json \
 		--pcf $(pcf_file) \
-		--asc $(filename).asc
-	icepack $(filename).asc $(filename).bin
+		--asc $(design).asc
+	icepack $(design).asc $(design).bin
 
 prog_flash:
 	@if [ -d '$(ICELINK_DIR)' ]; \
      	then \
-		cp $(filename).bin $(ICELINK_DIR); \
+		cp $(design).bin $(ICELINK_DIR); \
      	else \
 		echo "iCELink not found"; \
 		exit 1; \
@@ -27,8 +26,8 @@ vis:
 	yosys -p "read_verilog leds.v; hierarchy -check; proc; opt; fsm; opt; memory; opt; show -prefix leds -format svg" leds.v
 
 sim:
-	iverilog tb.v $(filename).v
+	iverilog $(design).v $(design)_tb.v
 	vvp  a.out
 
 clean:
-	rm -rf $(filename).blif $(filename).asc $(filename).jsonma $(filename).bin a.out tb.lxt2 xt2 tb.vcd
+	rm -rf $(design).blif $(design).asc $(design).json $(design).bin $(design).out $(design)_tb.lxt2 $(design)_tb.vcd
