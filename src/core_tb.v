@@ -7,7 +7,7 @@
             #(HCLK) $finish; \
         end
 
-module demo_tb ();
+module core_tb ();
 
 	reg clk;
 	reg rst_n;
