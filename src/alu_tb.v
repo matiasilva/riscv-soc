@@ -13,7 +13,7 @@ module alu_tb ();
 	reg rst_n;
 	reg [31:0] a;
 	reg [31:0] b;
-	reg [3:0] op;
+	reg [4:0] op;
 
 	wire [31:0] out;
 	reg [31:0] result;
@@ -49,7 +49,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b0000;
+				op <= 5'b00000;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a+b));
@@ -65,7 +65,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b1000;
+				op <= 5'b01000;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a-b));
@@ -81,7 +81,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b0010;
+				op <= 5'b00010;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, ($signed(a)<$signed(b)));
@@ -97,7 +97,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b0011;
+				op <= 5'b00011;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a<b));
@@ -113,7 +113,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b0111;
+				op <= 5'b00111;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a&b));
@@ -129,7 +129,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b0110;
+				op <= 5'b00110;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a|b));
@@ -145,7 +145,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b0100;
+				op <= 5'b00100;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a^b));
@@ -161,7 +161,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b0001;
+				op <= 5'b00001;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a<<b[4:0]));
@@ -177,7 +177,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b0101;
+				op <= 5'b00101;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a>>b[4:0]));
@@ -193,7 +193,7 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 4'b1101;
+				op <= 5'b01101;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) scratch1 = (($signed(a)) >>> (b[4:0]));

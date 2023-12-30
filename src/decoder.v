@@ -1,3 +1,7 @@
+/*
+	translates instructions into control signals
+*/
+
 module decoder (
 	input clk,
 	input rst_n,
@@ -14,6 +18,11 @@ module decoder (
 
 	wire [2:0] funct3 = instr[14:12];
   	wire [6:0] funct7 = instr[31:25];
+
+  	wire [11:0] imm = instr[31:20];
+   	wire [6:0] imm_upper = imm[11:5];
+  	wire [4:0] imm_lower = imm[4:0];
+
 
   	wire [3:0] rtype_alu_op = {funct7[5], funct3};
 

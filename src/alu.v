@@ -19,12 +19,13 @@ module alu (
 	input         rst_n,
 	input  [31:0] a    ,
 	input  [31:0] b    ,
-	input  [ 3:0] op   ,
+	input  [ 4:0] op   ,
 	output reg [31:0] out
 );
 
 	wire [31:0] diff = a - b;
 	wire [4:0] shamt = b[4:0];
+
 
 	always @(*) begin
 			case (op)
