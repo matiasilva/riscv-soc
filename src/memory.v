@@ -14,7 +14,7 @@ module memory #(
 
 	localparam MEM_SIZE = 512;
 
-// 512 bytes, 128 words
+	// 512 bytes, 128 words
 	reg [7:0] mem [MEM_SIZE - 1:0];
 	reg [31:0] next_instr;
 
@@ -22,7 +22,7 @@ module memory #(
 
 	initial begin
 		if (PRELOAD) begin
-			@(posedge rst_n);
+			@(posedge rst_n); // need two of these
 			@(posedge rst_n);
 			if (PRELOAD_FILE === "") begin
 				$display("no preload file provided!");

@@ -26,6 +26,10 @@ module decoder (
 
   	wire [3:0] rtype_alu_op = {funct7[5], funct3};
 
+  	// I-type decode
+
+  	
+
 	always @(posedge clk or negedge rst_n) begin :
 		if(~rst_n) begin
 			alu_op <= 4'b0;

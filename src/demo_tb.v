@@ -34,6 +34,14 @@ module demo_tb ();
 
 	end
 
+	task init();
+		begin
+			#HCLK rst_n <= 0;
+			#HCLK rst_n <= 1;
+			#HCLK;
+		end
+	endtask
+
 	// include tasks here
 
 	initial begin
