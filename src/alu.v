@@ -18,10 +18,11 @@ module alu (
 	input  [31:0] a_i    ,
 	input  [31:0] b_i    ,
 	input  [ 3:0] alucontrol_i   ,
-	output [31:0] out
+	output [31:0] out_o
 );
 
 	wire [31:0] diff = a_i - b_i;
+	wire [4:0] shamt = b_i[4:0];
 
 	reg [31:0] result;
 
@@ -40,9 +41,9 @@ module alu (
 				4'b0111 : result = a_i & b_i;
 				4'b0110 : result = a_i | b_i;
 				4'b0100 : result = a_i ^ b_i;
-				4'b0001 : result = a_i << b_i;
-				4'b0101 : result = a_i >> b_i;
-				4'b1101 : result = ($signed(a_i) >>> b_i);
+				4'b0001 : result = a_i << shamt;
+				4'b0101 : result = a_i >> shamt;
+				4'b1101 : result = ($signed(a_i) >>> shamt);
 			endcase
 		end
 

@@ -15,7 +15,7 @@
 	[alucontrol_out] needs to be 4 bits wide to fit 10 operations
 */
 
-module alucontrol (
+module aluctl (
 	input [1:0] aluop_i,
 	input [3:0] funct_i,
 	output [3:0] alucontrol_o
