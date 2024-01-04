@@ -4,6 +4,9 @@
 `include "registers.v"
 
 `include "pipeline_regs/IF_ID.v"
+`include "pipeline_regs/ID_EX.v"
+`include "pipeline_regs/EX_MEM.v"
+`include "pipeline_regs/MEM_WB.v"
 
 module core (
 	input clk,
@@ -11,6 +14,7 @@ module core (
 );
 
 reg [31:0] pc;
+reg [31:0] pc_incr;
 wire [31:0] instr;
 
 // instruction field select
@@ -28,8 +32,9 @@ wire [6:0] imm_upper = instr[31:25];
 wire [4:0] imm_lower = instr[11:7] ;
 
 // register file
-wire [31:0] rdata1;
-wire [31:0] rdata2;
+wire [31:0] rdata1_idex;
+wire [31:0] rdata2_idex;
+wire [31:0] rdata2_exmem;
 wire [ 4:0] rr1    = rs1;
 wire [ 4:0] rr2    = rs2;
 wire [ 4:0] wrr    = rd;
@@ -61,7 +66,7 @@ instrmem instrmem_u (
 	.clk  (clk  ),
 	.rst_n(rst_n),
 	.pc_i   (pc   ),
-	.instr_o(instr)
+	.instr_o(instr_to_if_id)
 );
 
 alu alu_u (
@@ -113,12 +118,30 @@ memory memory_u (
 );
 
 // pipeline registers
-
+wire [31:0] pc_incr_to_id_ex;
+wire [31:0] instr_to_if_id;
 IF_ID if_id_pregs (
 	.clk      (clk),
 	.rst_n    (rst_n),
-	.
+	.pc_incr_i(pc_incr),
+	.instr_i  (instr_to_if_id),
+	.instr_o  (instr),
+	.pc_incr_o(pc_incr_to_id_ex),
 );
+
+
+wire [31:0] signextended_imm_to_ex_mem;
+wire [31:0] pc_incr_to_ex_mem;
+ID_EX id_ex_pregs (
+	.clk               (clk),
+	.rst_n             (rst_n),
+	.signextended_imm_i(signextended_imm),
+	.pc_incr_i         (pc_incr_to_id_ex),
+	.rdata1_i          (rdata1),
+	.rdata2_i          (rdata2),
+	.pc_incr_o         (pc_incr_to_ex_mem),
+	.rdata1_o		   (),
+	);
 
 /*
 sign extension
@@ -131,13 +154,18 @@ always @(*) begin
 	signextended_imm = imm;
 end
 
+always @(*) begin
+	pc = is_branch ? 32'b0 : pc_incr;
+end
+
 always @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
-		pc <= 0;
+		pc_incr <= 0;
 	end else begin
-		pc <= pc + 4;
+		pc_incr <= pc_incr + 4;
 	end
 end
+
 
 
 endmodule
