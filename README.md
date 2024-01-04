@@ -1,5 +1,14 @@
 # riscv-cpu
 
+## Naming conventions
+
+* signals use snake case and logical word units are joined with no _
+	- eg: memwrite expands to memory write (one action)
+	- eg: mem_to_reg expands to memory to register (no joining)
+* parameters use ALL CAPS
+* task names, module names are all snake case
+* no camel case anywhere
+
 ## Development
 
 While there is a great open source toolset for the iCESugar v1.5, it remains difficult to navigate the web of broken links to find what is really needed to get Verilog synthesized and 'running on' the FPGA. After lots of searching and reading tutorials, I've condensed it to this:

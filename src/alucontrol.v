@@ -16,9 +16,9 @@
 */
 
 module alucontrol (
-	input [1:0] aluop,
-	input [3:0] funct,
-	output [3:0] alucontrol_out
+	input [1:0] aluop_i,
+	input [3:0] funct_i,
+	output [3:0] alucontrol_o
 );
 
 	localparam ADD = 4'b0000;
@@ -27,7 +27,7 @@ module alucontrol (
 	reg [2:0] control;
 
 	always @(*) begin
-		case (aluop)
+		case (aluop_i)
 			2'b00: begin
 				// SW/LW -> add
 				control = ADD;
@@ -36,7 +36,7 @@ module alucontrol (
 				control = SETLESSTHANUNSIGNED;
 			end
 			2'b10: begin
-				control = funct;
+				control = funct_i;
 			end
 			2'b11: begin
 				// unused
@@ -44,6 +44,6 @@ module alucontrol (
 		endcase
 	end
 
-	assign alucontrol_out = control;
+	assign alucontrol_o = control;
 
 endmodule

@@ -7,7 +7,7 @@
             #(HCLK) $finish; \
         end
 
-module memory_tb ();
+module instrmem_tb ();
 
 	reg clk;
 	reg rst_n;

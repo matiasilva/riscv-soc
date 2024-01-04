@@ -26,6 +26,8 @@ wire [11:0] imm = instr[31:20];
 wire [6:0] imm_upper = imm[11:5];
 wire [4:0] imm_lower = imm[4:0];
 
+wire [4:0] shamt = b[4:0];
+
 
 
 memory instrmem_u (
