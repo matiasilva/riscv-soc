@@ -1,4 +1,4 @@
-module IF_ID (
+module IFID (
 	input clk,
 	input rst_n,
 	input [31:0] instr_i,

@@ -1,4 +1,4 @@
-module ID_EX (
+module IDEX (
 	input clk,
 	input rst_n,
 	input [31:0] pc_incr_i,

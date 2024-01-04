@@ -1,4 +1,4 @@
-module MEM_WB (
+module MEMWB (
 	input clk,
 	input rst_n,
 	input [31:0] alu_out_i,

@@ -1,4 +1,4 @@
-module EX_MEM (
+module EXMEM (
 	input clk,
 	input rst_n,
 	input [31:0] pc_next_i,
