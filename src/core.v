@@ -3,6 +3,8 @@
 `include "alu.v"
 `include "registers.v"
 
+`include "pipeline_regs/IF_ID.v"
+
 module core (
 	input clk,
 	input rst_n
@@ -108,6 +110,14 @@ memory memory_u (
 	.addr_i       (alu_out),
 	.wdata_i      (rs2),
 	.rdata_o      (rdatamem),
+);
+
+// pipeline registers
+
+IF_ID if_id_pregs (
+	.clk      (clk),
+	.rst_n    (rst_n),
+	.
 );
 
 /*
