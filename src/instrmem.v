@@ -8,8 +8,8 @@ module instrmem #(
 ) (
 	input clk,    // Clock
 	input rst_n,  // Asynchronous reset active low
-	input [31: 0] pc,
-	output [31:0] instr
+	input [31: 0] pc_i,
+	output [31:0] instr_o
 );
 
 	localparam MEM_SIZE = 512;
@@ -39,10 +39,10 @@ module instrmem #(
 			end
 			next_instr <= 0;
 		end else begin
-			next_instr <= {mem[pc + 3], mem[pc + 2], mem[pc + 1], mem[pc]};
+			next_instr <= {mem[pc_i + 3], mem[pc_i + 2], mem[pc_i + 1], mem[pc_i]};
 		end
 	end
 
-	assign instr = next_instr;
+	assign instr_o = next_instr;
 
 endmodule

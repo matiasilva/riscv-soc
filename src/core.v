@@ -58,8 +58,8 @@ wire [31:0] rdatamem;
 instrmem instrmem_u (
 	.clk  (clk  ),
 	.rst_n(rst_n),
-	.pc   (pc   ),
-	.instr(instr)
+	.pc_i   (pc   ),
+	.instr_o(instr)
 );
 
 alu alu_u (
