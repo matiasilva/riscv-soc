@@ -32,35 +32,34 @@ wire [6:0] imm_upper = instr[31:25];
 wire [4:0] imm_lower = instr[11:7] ;
 
 // register file
-wire [31:0] rdata1_idex;
-wire [31:0] rdata2_idex;
-wire [31:0] rdata2_exmem;
-wire [ 4:0] rr1    = rs1;
-wire [ 4:0] rr2    = rs2;
-wire [ 4:0] wrr    = rd;
-wire [31:0] wrdata = is_mem_to_reg ? rdatamem : alu_out;
+wire [31:0] reg_rd_data1;
+wire [31:0] reg_rd_data2;
+wire [ 4:0] reg_rd_1    = rs1;
+wire [ 4:0] reg_rd_2    = rs2;
+wire [ 4:0] reg_wr_addr    = rd;
+wire [31:0] reg_wr_data = is_mem_to_reg ? rdatamem : alu_out;
 
 // main control unit signals
-wire [1:0] aluop;
-wire is_memread;
-wire is_memwrite;
-wire is_regwrite;
-wire is_mem_to_reg;
-wire is_branch;
-wire alu_src;
+wire [1:0] ctl_aluop;
+wire ctl_mem_re;
+wire ctl_mem_we;
+wire ctl_reg_we;
+wire ctl_is_mem_to_reg;
+wire ctl_is_branch;
+wire ctl_alusrc;
 
 // alu
 reg [31:0] signextended_imm;
 wire [31:0] alu_in1 = rdata1;
-wire [31:0] alu_in2 = alu_src ? rdata2 : signextended_imm;
+wire [31:0] alu_in2 = alu_src ? reg_rd_data2 : signextended_imm;
 wire [31:0] alu_out;
 
 // alu control unit
-wire [3:0] alucontrol;
+wire [3:0] aluctl_ctl;
 wire [3:0] funct = {funct7[5], funct3};
 
 // memory
-wire [31:0] rdatamem;
+wire [31:0] mem_rdata;
 
 instrmem instrmem_u (
 	.clk  (clk  ),

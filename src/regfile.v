@@ -3,13 +3,17 @@
 module regfile (
 	input         clk          ,
 	input         rst_n        ,
-	input  [ 4:0] rr1_i        , // read register 1
-	input  [ 4:0] rr2_i        , // read register 2
-	input  [ 4:0] wrr_i        , // write register
-	input  [31:0] wrdata_i     ,
-	input         is_regwrite_i,
-	output [31:0] rdata1_o     ,
-	output [31:0] rdata2_o
+
+	// read interface
+	input  [ 4:0] reg_rd_r1_i        , // read register 1
+	input  [ 4:0] reg_rd_r2_i        , // read register 2
+	output [31:0] reg_rd_data1_o     ,
+	output [31:0] reg_rd_data2_o,
+
+	// write interface
+	input  [31:0] reg_wr_data_i     ,
+	input  [ 4:0] reg_wr_addr_i        , // write register
+	input         ctl_reg_we_i,
 );
 
 // we don't care about the contents of x[0]
@@ -20,8 +24,8 @@ module regfile (
 	reg [31:0] next_rdata1;
 	reg [31:0] next_rdata2;
 
-	wire isrr1zero = !(|rr1_i);
-	wire isrr2zero = !(|rr2_i);
+	wire isrd_r1zero = !(|reg_rd_r1_i);
+	wire isrd_r2zero = !(|reg_rd_r2_i);
 
 	integer i;
 
@@ -31,16 +35,16 @@ module regfile (
 				x[i] <= 32'b0;
 			end
 		end else begin
-			if (is_writereg_i) begin
-				x[wrr_i] <= wrdata_i;
+			if (ctl_reg_we_i) begin
+				x[reg_wr_addr_i] <= reg_wr_data_i;
 			end else begin
-				next_rdata1 <= x[rr1_i];
-				next_rdata2 <= x[rr2_i];
+				next_rdata1 <= x[reg_rd_r1_i];
+				next_rdata2 <= x[reg_rd_r2_i];
 			end
 		end
 	end
 
-	assign rdata1_o = isrr1zero ? 32'b0 :  next_rdata1;
-	assign rdata2_o = isrr2zero ? 32'b0 : next_rdata2;
+	assign reg_rd_data1_o = isrd_r1zero ? 32'b0 :  next_rdata1;
+	assign reg_rd_data2_o = isrd_r2zero ? 32'b0 : next_rdata2;
 
 endmodule

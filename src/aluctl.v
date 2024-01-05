@@ -16,9 +16,9 @@
 */
 
 module aluctl (
-	input [1:0] aluop_i,
+	input [1:0] ctl_aluop_i,
 	input [3:0] funct_i,
-	output [3:0] alucontrol_o
+	output [3:0] aluctl_ctl_o
 );
 
 	localparam ADD = 4'b0000;
@@ -27,7 +27,7 @@ module aluctl (
 	reg [2:0] control;
 
 	always @(*) begin
-		case (aluop_i)
+		case (ctl_aluop_i)
 			2'b00: begin
 				// SW/LW -> add
 				control = ADD;
@@ -44,6 +44,6 @@ module aluctl (
 		endcase
 	end
 
-	assign alucontrol_o = control;
+	assign aluctl_ctl_o = control;
 
 endmodule

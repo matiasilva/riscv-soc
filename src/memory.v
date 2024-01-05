@@ -8,11 +8,11 @@ module memory #(
 ) (
 	input clk,
 	input rst_n,
-	input is_memread_i,
-	input is_memwrite_i,
-	input [31: 0] addr_i,
-	input [31:0] wdata_i,
-	output [31:0] rdata_o
+	input ctl_mem_re_i,
+	input ctl_mem_we_i,
+	input [31: 0] mem_addr_i,
+	input [31:0] mem_wdata_i,
+	output [31:0] mem_rdata_o
 );
 
 	localparam MEM_SIZE = 512;
@@ -42,17 +42,17 @@ module memory #(
 			end
 			next_rdata <= 0;
 		end else begin
-			if (is_memread_i) begin
-				next_rdata <= {mem[addr_i + 3], mem[addr_i + 2], mem[addr_i + 1], mem[addr_i]};
+			if (ctl_mem_re_i) begin
+				next_rdata <= {mem[mem_addr_i + 3], mem[mem_addr_i + 2], mem[mem_addr_i + 1], mem[mem_addr_i]};
 			end 
-			if (is_memwrite_i) begin
+			if (ctl_mem_we_i) begin
 				for (i = 0; i < 4; i++) begin
-					mem[addr_i + i] <= wdata_i[i +: 8];
+					mem[mem_addr_i + i] <= mem_wdata_i[i +: 8];
 				end
 			end
 		end
 	end
 
-	assign rdata_o = next_rdata;
+	assign mem_rdata_o = next_rdata;
 
 endmodule
