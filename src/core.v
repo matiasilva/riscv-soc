@@ -37,7 +37,7 @@ wire [31:0] reg_rd_data2;
 wire [ 4:0] reg_rd_1    = rs1;
 wire [ 4:0] reg_rd_2    = rs2;
 wire [ 4:0] reg_wr_addr    = rd;
-wire [31:0] reg_wr_data = is_mem_to_reg ? rdatamem : alu_out;
+wire [31:0] reg_wr_data = is_mem_to_reg ? rdatamem : alu_out_q4_o;
 
 // main control unit signals
 wire [1:0] ctrl_aluop;
@@ -49,9 +49,9 @@ wire ctrl_is_branch;
 wire ctrl_alusrc;
 
 // alu
-reg [31:0] signextended_imm;
+reg [31:0] imm_se;
 wire [31:0] alu_in1 = rdata1;
-wire [31:0] alu_in2 = alu_src ? reg_rd_data2 : signextended_imm;
+wire [31:0] alu_in2 = alu_src ? reg_rd_data2 : imm_se_q2_o;
 wire [31:0] alu_out;
 
 // alu control unit
@@ -85,7 +85,7 @@ regfile regfile_u (
 	.wrr_i        (wrr        ),
 	.rdata1_o     (rdata1     ),
 	.rdata2_o     (rdata2     ),
-	.wrdata_i     (wrdata     ),
+	.wrdata_i     (     ),
 	.is_regwrite_i(is_regwrite)
 );
 
@@ -130,17 +130,51 @@ IF_ID if_id_pregs (
 );
 
 
-wire [31:0] signextended_imm_to_ex_mem;
-wire [31:0] pc_incr_to_ex_mem;
+wire [31:0] imm_se_q2_o;
+wire [31:0] pc_incr_q2_o;
+wire [31:0] reg_rd_data1_q2_o;
+wire [31:0] reg_rd_data2_q2_o;
+wire [31:0] reg_wr_addr_q2_o;
 ID_EX id_ex_pregs (
-	.clk               (clk),
-	.rst_n             (rst_n),
-	.signextended_imm_i(signextended_imm),
-	.pc_incr_i         (pc_incr_to_id_ex),
-	.rdata1_i          (rdata1),
-	.rdata2_i          (rdata2),
-	.pc_incr_o         (pc_incr_to_ex_mem),
-	.rdata1_o		   (),
+	.clk       (clk              ),
+	.rst_n     (rst_n            ),
+	.imm_se_i  (imm_se           ),
+	.imm_se_o  (imm_se_q2_o      ),
+	.pc_incr_i (pc_incr_q1_o     ),
+	.pc_incr_o (pc_incr_q2_o     ),
+	.rd_data1_i(reg_rd_data1     ),
+	.rd_data1_o(reg_rd_data1_q2_o),
+	.rd_data2_i(reg_rd_data2     ),
+	.rd_data2_o(reg_rd_data2_q2_o),
+	.wr_addr_i (reg_wr_addr      ),
+	.wr_addr_o (reg_wr_addr_q2_o )
+);
+
+wire [31:0] pc_next_q3_i = (imm_se_q2_o << 2) | pc_incr_q2_o;
+wire [31:0] pc_next_q3_o;
+wire [31:0] reg_wr_addr_q3_o;
+wire [31:0] reg_rd_data2_q3_o;
+wire [31:0] alu_out_q3_o;
+EX_MEM ex_mem_pregs (
+	.clk      (clk),
+	.rst_n    (rst_n),
+	.pc_next_i(pc_next_q3_i),
+	.pc_next_o(pc_next_q3_o),
+	.wr_addr_i(reg_wr_addr_q2_o),
+	.wr_addr_o(reg_wr_addr_q3_o),
+	.rdata2_i (reg_rd_data2_q2_o),
+	.rdata2_o (reg_rd_data2_q3_o),
+	.alu_out_i(alu_out),
+	.alu_out_o(alu_out_q3_o),
+	);
+
+wire [31:0] alu_out_q4_o;
+MEM_WB mem_wb_pregs (
+	.clk       (clk),
+	.rst_n     (rst_n),
+	.alu_out_i (alu_out_q3_o),
+	.alu_out_o (alu_out_q4_o),
+	.rdatamem_i(rdatamem_),
 	);
 
 /*
@@ -151,11 +185,11 @@ does not affect the lower 5 bits of the immediate
 which is what we actually care about
 */
 always @(*) begin
-	signextended_imm = imm;
+	imm_se = imm;
 end
 
 always @(*) begin
-	pc = is_branch ? 32'b0 : pc_incr;
+	pc = is_branch ? pc_next_q3_o: pc_incr;
 end
 
 always @(posedge clk or negedge rst_n) begin
