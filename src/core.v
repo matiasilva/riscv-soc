@@ -65,7 +65,7 @@ instrmem instrmem_u (
 	.clk  (clk  ),
 	.rst_n(rst_n),
 	.pc_i   (pc   ),
-	.instr_o(instr_to_if_id)
+	.instr_o(instr_q1_i)
 );
 
 alu alu_u (
@@ -117,15 +117,16 @@ memory memory_u (
 );
 
 // pipeline registers
-wire [31:0] pc_incr_to_id_ex;
-wire [31:0] instr_to_if_id;
+wire [31:0] pc_incr_q1_o;
+wire [31:0] instr_q1_i;
+wire [31:0] instr_q1_o;
 IF_ID if_id_pregs (
 	.clk      (clk),
 	.rst_n    (rst_n),
 	.pc_incr_i(pc_incr),
-	.instr_i  (instr_to_if_id),
-	.instr_o  (instr),
-	.pc_incr_o(pc_incr_to_id_ex),
+	.instr_i  (instr_q1_i),
+	.instr_o  (instr_q1_o),
+	.pc_incr_o(pc_incr_q1_o),
 );
 
 
