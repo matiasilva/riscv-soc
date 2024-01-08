@@ -13,7 +13,7 @@ module regfile (
 	// write interface
 	input  [31:0] reg_wr_data_i     ,
 	input  [ 4:0] reg_wr_addr_i        , // write register
-	input         ctl_reg_we_i,
+	input         ctrl_reg_we_i,
 );
 
 // we don't care about the contents of x[0]
@@ -35,7 +35,7 @@ module regfile (
 				x[i] <= 32'b0;
 			end
 		end else begin
-			if (ctl_reg_we_i) begin
+			if (ctrl_reg_we_i) begin
 				x[reg_wr_addr_i] <= reg_wr_data_i;
 			end else begin
 				next_rdata1 <= x[reg_rd_r1_i];

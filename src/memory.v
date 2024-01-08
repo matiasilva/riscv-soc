@@ -8,8 +8,8 @@ module memory #(
 ) (
 	input clk,
 	input rst_n,
-	input ctl_mem_re_i,
-	input ctl_mem_we_i,
+	input ctrl_mem_re_i,
+	input ctrl_mem_we_i,
 	input [31: 0] mem_addr_i,
 	input [31:0] mem_wdata_i,
 	output [31:0] mem_rdata_o
@@ -42,10 +42,10 @@ module memory #(
 			end
 			next_rdata <= 0;
 		end else begin
-			if (ctl_mem_re_i) begin
+			if (ctrl_mem_re_i) begin
 				next_rdata <= {mem[mem_addr_i + 3], mem[mem_addr_i + 2], mem[mem_addr_i + 1], mem[mem_addr_i]};
 			end 
-			if (ctl_mem_we_i) begin
+			if (ctrl_mem_we_i) begin
 				for (i = 0; i < 4; i++) begin
 					mem[mem_addr_i + i] <= mem_wdata_i[i +: 8];
 				end

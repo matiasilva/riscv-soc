@@ -40,13 +40,13 @@ wire [ 4:0] reg_wr_addr    = rd;
 wire [31:0] reg_wr_data = is_mem_to_reg ? rdatamem : alu_out;
 
 // main control unit signals
-wire [1:0] ctl_aluop;
-wire ctl_mem_re;
-wire ctl_mem_we;
-wire ctl_reg_we;
-wire ctl_is_mem_to_reg;
-wire ctl_is_branch;
-wire ctl_alusrc;
+wire [1:0] ctrl_aluop;
+wire ctrl_mem_re;
+wire ctrl_mem_we;
+wire ctrl_reg_we;
+wire ctrl_is_mem_to_reg;
+wire ctrl_is_branch;
+wire ctrl_alusrc;
 
 // alu
 reg [31:0] signextended_imm;
@@ -55,7 +55,7 @@ wire [31:0] alu_in2 = alu_src ? reg_rd_data2 : signextended_imm;
 wire [31:0] alu_out;
 
 // alu control unit
-wire [3:0] aluctl_ctl;
+wire [3:0] aluctrl_ctrl;
 wire [3:0] funct = {funct7[5], funct3};
 
 // memory
@@ -100,7 +100,7 @@ control control_u (
 	.alu_src_o      (alu_src      )
 );
 
-aluctl alucontrol_u (
+aluctrl alucontrol_u (
 	.aluop_i     (aluop),
 	.funct_i     (funct),
 	.alucontrol_o(alucontrol),

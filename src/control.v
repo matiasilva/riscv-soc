@@ -8,13 +8,13 @@ generates the necessary control signals for muxes
 
 module control (
 	input [6:0] opcode_i,
-	output [1:0] ctl_aluop_o,
-	output ctl_mem_re_o,
-	output ctl_mem_we_o,
-	output ctl_reg_we_o,
-	output ctl_is_mem_to_reg_o,
-	output ctl_is_branch_o,
-	output ctl_alusrc_o,
+	output [1:0] ctrl_aluop_o,
+	output ctrl_mem_re_o,
+	output ctrl_mem_we_o,
+	output ctrl_reg_we_o,
+	output ctrl_is_mem_to_reg_o,
+	output ctrl_is_branch_o,
+	output ctrl_alusrc_o,
 );
 
 	reg [1:0] aluop;
@@ -70,12 +70,12 @@ module control (
 		endcase
 	end
 
-	assign ctl_aluop_o       = aluop;
-	assign ctl_mem_re_o  = mem_re;
-	assign ctl_mem_we_o = mem_we;
-	assign ctl_reg_we_o = reg_we;
-	assign ctl_mem_to_reg_o  = mem_to_reg;
-	assign ctl_is_branch_o   = is_branch;
-	assign ctl_alusrc_o     = alu_src;
+	assign ctrl_aluop_o       = aluop;
+	assign ctrl_mem_re_o  = mem_re;
+	assign ctrl_mem_we_o = mem_we;
+	assign ctrl_reg_we_o = reg_we;
+	assign ctrl_mem_to_reg_o  = mem_to_reg;
+	assign ctrl_is_branch_o   = is_branch;
+	assign ctrl_alusrc_o     = alu_src;
 
 endmodule

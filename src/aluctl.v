@@ -15,10 +15,10 @@
 	[alucontrol_out] needs to be 4 bits wide to fit 10 operations
 */
 
-module aluctl (
-	input [1:0] ctl_aluop_i,
+module aluctrl (
+	input [1:0] ctrl_aluop_i,
 	input [3:0] funct_i,
-	output [3:0] aluctl_ctl_o
+	output [3:0] aluctrl_ctrl_o
 );
 
 	localparam ADD = 4'b0000;
@@ -27,7 +27,7 @@ module aluctl (
 	reg [2:0] control;
 
 	always @(*) begin
-		case (ctl_aluop_i)
+		case (ctrl_aluop_i)
 			2'b00: begin
 				// SW/LW -> add
 				control = ADD;
@@ -44,6 +44,6 @@ module aluctl (
 		endcase
 	end
 
-	assign aluctl_ctl_o = control;
+	assign aluctrl_ctrl_o = control;
 
 endmodule

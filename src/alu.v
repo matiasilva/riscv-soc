@@ -1,5 +1,5 @@
 /*
-[ctl]
+[ctrl]
 4'b0000 ADD
 4'b1000 SUB
 4'b0010 SLT
@@ -17,7 +17,7 @@ module alu (
 	input         rst_n       ,
 	input  [31:0] alu_a_i         ,
 	input  [31:0] alu_b_i         ,
-	input  [ 3:0] aluctl_ctl_i,
+	input  [ 3:0] aluctrl_ctrl_i,
 	output [31:0] alu_out_o
 );
 
@@ -27,7 +27,7 @@ module alu (
 	reg [31:0] result;
 
 	always @(*) begin
-		case (aluctl_ctl_i)
+		case (aluctrl_ctrl_i)
 			4'b0000 : result = alu_a_i + alu_b_i;
 			4'b1000 : result = diff;
 			4'b0010 : begin
