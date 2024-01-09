@@ -2,14 +2,15 @@
 
 ## Naming conventions
 
-* signals use snake case and logical word units are joined with no _
+The code follows the [lowRISC coding style](https://github.com/lowRISC/style-guides/blob/master/VerilogCodingStyle.md) for Verilog for the most part. I wrote this myself in my free time so there will be deviations for no real reason.
+
+* signals use snake case
+	- note: logical word units are joined without underscore
 	- eg: memwrite expands to memory write (one action)
 	- eg: mem_to_reg expands to memory to register (no joining)
 * parameters use ALL CAPS
 * task names, module names are all snake case
-* no camel case anywhere
-
-control signals are packed from left to right in order of use, so the 1st pipeline stage (q1) is the most leftwards.
+* common abbreviations are used where possible (reg for register, mem for memory, ctrl for control, etc)
 
 ## Development
 
