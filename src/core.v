@@ -50,10 +50,10 @@ module core (
 
 // main control unit signals
 // TODO: is it more efficient to forward specific sub signals?
-	wire [CTRL_WIDTH - 1 : 0] ctrl_q2_o;
-	wire [CTRL_WIDTH - 1: 0] ctrl_q3_i = 
-	wire [CTRL_WIDTH - 1: 0] ctrl_q3_o;
-	wire [CTRL_WIDTH - 1] :0 ctrl_q4_i = {14'b0, ctrl_q3_o[1:0]};
+	wire [CTRL_WIDTH-1:0] ctrl_q2_i;
+	wire [CTRL_WIDTH-1:0] ctrl_q3_i;
+	wire [CTRL_WIDTH-1:0] ctrl_q4_i;
+	wire [CTRL_WIDTH-1:0] ctrl_q4_o;
 // alu
 	reg [31:0] imm_se_q2_i;
 	wire [31:0] alu_in1 = reg_rd_data1_q2_o;
@@ -62,7 +62,8 @@ module core (
 
 // alu control unit
 	wire [3:0] aluctrl_ctrl;
-	wire [3:0] funct = {funct7[5], funct3};
+	wire [3:0] funct_q2_i = {funct7[5], funct3};
+	wire [3:0] funct_q2_o;
 
 // memory
 	wire [31:0] mem_rdata_q4_i;
@@ -92,23 +93,18 @@ module core (
 		.reg_rd_data2_o(reg_rd_data1_q2_i),
 		.reg_wr_addr_i (reg_wr_addr      ),
 		.reg_wr_data_i (reg_wr_data      ),
-		.ctrl_reg_we_i (ctrl_reg_we      )
+		.ctrl_reg_we_i (ctrl_q4_o[CTRL_REG_WE])
 	);
 
 	control control_u (
-		.opcode_i            (opcode            ),
-		.aluop_o             (ctrl_aluop        ),
-		.ctrl_mem_re_o       (ctrl_mem_re       ),
-		.ctrl_mem_we_o       (ctrl_mem_we       ),
-		.ctrl_reg_we_o       (ctrl_reg_we       ),
-		.ctrl_is_mem_to_reg_o(ctrl_is_mem_to_reg),
-		.ctrl_is_branch_o    (ctrl_is_branch    ),
-		.ctrl_alusrc_o       (ctrl_alusrc       )
+		.opcode_i   (opcode   ),
+		.ctrl_q2_i_o(ctrl_q2_i)
 	);
 
+	wire [1:0] ctrl_aluop = {ctrl_q3_i[CTRL_ALUOP1], ctrl_q3_i[CTRL_ALUOP0]};
 	aluctrl alucontrol_u (
 		.ctrl_aluop_i     (ctrl_aluop),
-		.funct_i     (funct),
+		.funct_i     (funct_q2_o),
 		.aluctrl_ctrl_o(aluctrl_ctrl_o),
 	);
 
@@ -154,6 +150,10 @@ module core (
 		.rd_data2_o(reg_rd_data2_q2_o),
 		.wr_addr_i (reg_wr_addr      ),
 		.wr_addr_o (reg_wr_addr_q2_o )
+		.ctrl_q2_i (ctrl_q2_i),
+		.ctrl_q2_o (ctrl_q3_i),
+		.funct_i   (funct_q2_i),
+		.funct_o (funct_q2_o)
 	);
 
 	wire [31:0] pc_next_q3_i = (imm_se_q2_o << 2) | pc_incr_q2_o;
@@ -172,6 +172,8 @@ module core (
 		.rdata2_o (reg_rd_data2_q3_o),
 		.alu_out_i(alu_out_q3_i     ),
 		.alu_out_o(alu_out_q3_o     )
+		.ctrl_q3_i(ctrl_q3_i),
+		.ctrl_q3_o(ctrl_q4_i),
 	);
 
 	wire [31:0] alu_out_q4_o;
@@ -183,6 +185,8 @@ module core (
 		.alu_out_o  (alu_out_q4_o  ),
 		.mem_rdata_i(mem_rdata_q4_i),
 		.mem_rdata_o(mem_rdata_q4_o)
+		.ctrl_q4_i  (ctrl_q4_i),
+		.ctrl_q4_o  (ctrl_q4_o),
 	);
 
 /*
