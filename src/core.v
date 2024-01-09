@@ -1,7 +1,11 @@
 `include "memory.v"
-//`include "decoder.v"
 `include "alu.v"
 `include "registers.v"
+`include "instrmem.v"
+`include "control.v"
+`include "aluctrl.v"
+
+
 
 `include "pipeline_regs/IF_ID.v"
 `include "pipeline_regs/ID_EX.v"
@@ -32,12 +36,12 @@ wire [6:0] imm_upper = instr[31:25];
 wire [4:0] imm_lower = instr[11:7] ;
 
 // register file
-wire [31:0] reg_rd_data1;
-wire [31:0] reg_rd_data2;
+wire [31:0] reg_rd_data1_q2_i;
+wire [31:0] reg_rd_data2_q2_i;
 wire [ 4:0] reg_rd_1    = rs1;
 wire [ 4:0] reg_rd_2    = rs2;
 wire [ 4:0] reg_wr_addr    = rd;
-wire [31:0] reg_wr_data = is_mem_to_reg ? rdatamem : alu_out_q4_o;
+wire [31:0] reg_wr_data = is_mem_to_reg ? mem_rdata_q4_o : alu_out_q4_o;
 
 // main control unit signals
 wire [1:0] ctrl_aluop;
@@ -49,17 +53,17 @@ wire ctrl_is_branch;
 wire ctrl_alusrc;
 
 // alu
-reg [31:0] imm_se;
-wire [31:0] alu_in1 = rdata1;
+reg [31:0] imm_se_q2_i;
+wire [31:0] alu_in1 = reg_rd_data1_q2_o;
 wire [31:0] alu_in2 = alu_src ? reg_rd_data2 : imm_se_q2_o;
-wire [31:0] alu_out;
+wire [31:0] alu_out_q3_i;
 
 // alu control unit
 wire [3:0] aluctrl_ctrl;
 wire [3:0] funct = {funct7[5], funct3};
 
 // memory
-wire [31:0] mem_rdata;
+wire [31:0] mem_rdata_q4_i;
 
 instrmem instrmem_u (
 	.clk  (clk  ),
@@ -71,49 +75,49 @@ instrmem instrmem_u (
 alu alu_u (
 	.clk         (clk       ),
 	.rst_n       (rst_n     ),
-	.a_i         (alu_in1   ),
-	.b_i         (alu_in2   ),
-	.alucontrol_i(alucontrol),
-	.out_o       (alu_out   )
+	.alu_a_i         (alu_in1   ),
+	.alu_b_i         (alu_in2   ),
+	.aluctrl_ctrl_i(aluctrl_ctrl),
+	.alu_out_o       (alu_out_q3_i   )
 );
 
 regfile regfile_u (
-	.clk          (clk        ),
-	.rst_n        (rst_n      ),
-	.rr1_i        (rr1        ),
-	.rr2_i        (rr2        ),
-	.wrr_i        (wrr        ),
-	.rdata1_o     (rdata1     ),
-	.rdata2_o     (rdata2     ),
-	.wrdata_i     (     ),
-	.is_regwrite_i(is_regwrite)
+	.clk           (clk              ),
+	.rst_n         (rst_n            ),
+	.reg_rd_r1_i   (reg_rd_1         ),
+	.reg_rd_r2_i   (reg_rd_2         ),
+	.reg_rd_data1_o(reg_rd_data1_q2_i),
+	.reg_rd_data2_o(reg_rd_data12q2_i),
+	.reg_wr_addr_i (reg_wr_addr      ),
+	.reg_wr_data_i (reg_wr_data      ),
+	.ctrl_reg_we_i (ctrl_reg_we      )
 );
 
 control control_u (
-	.opcode_i       (opcode       ),
-	.aluop_o        (aluop        ),
-	.is_memread_o   (is_memread   ),
-	.is_memwrite_o  (is_memwrite  ),
-	.is_regwrite_o  (is_regwrite  ),
-	.is_mem_to_reg_o(is_mem_to_reg),
-	.is_branch_o    (is_branch    ),
-	.alu_src_o      (alu_src      )
+	.opcode_i            (opcode            ),
+	.aluop_o             (ctrl_aluop        ),
+	.ctrl_mem_re_o       (ctrl_mem_re       ),
+	.ctrl_mem_we_o       (ctrl_mem_we       ),
+	.ctrl_reg_we_o       (ctrl_reg_we       ),
+	.ctrl_is_mem_to_reg_o(ctrl_is_mem_to_reg),
+	.ctrl_is_branch_o    (ctrl_is_branch    ),
+	.ctrl_alusrc_o       (ctrl_alusrc       )
 );
 
 aluctrl alucontrol_u (
-	.aluop_i     (aluop),
+	.ctrl_aluop_i     (ctrl_aluop),
 	.funct_i     (funct),
-	.alucontrol_o(alucontrol),
+	.aluctrl_ctrl_o(aluctrl_ctrl_o),
 );
 
 memory memory_u (
-	.clk          (clk),
-	.rst_n        (rst_n),
-	.is_memread_i (is_memread),
-	.is_memwrite_i(is_memwrite),
-	.addr_i       (alu_out),
-	.wdata_i      (rs2),
-	.rdata_o      (rdatamem),
+	.clk          (clk              ),
+	.rst_n        (rst_n            ),
+	.ctrl_mem_re_i(ctrl_mem_re      ),
+	.ctrl_mem_we_i(ctrl_mem_we      ),
+	.addr_i       (alu_out_q3_o     ),
+	.wdata_i      (reg_rd_data2_q3_o),
+	.rdata_o      (mem_rdata_q4_i   )
 );
 
 // pipeline registers
@@ -138,13 +142,13 @@ wire [31:0] reg_wr_addr_q2_o;
 ID_EX id_ex_pregs (
 	.clk       (clk              ),
 	.rst_n     (rst_n            ),
-	.imm_se_i  (imm_se           ),
+	.imm_se_i  (imm_se_q2_i           ),
 	.imm_se_o  (imm_se_q2_o      ),
 	.pc_incr_i (pc_incr_q1_o     ),
 	.pc_incr_o (pc_incr_q2_o     ),
-	.rd_data1_i(reg_rd_data1     ),
+	.rd_data1_i(reg_rd_data1_q2_i     ),
 	.rd_data1_o(reg_rd_data1_q2_o),
-	.rd_data2_i(reg_rd_data2     ),
+	.rd_data2_i(reg_rd_data2_q2_i     ),
 	.rd_data2_o(reg_rd_data2_q2_o),
 	.wr_addr_i (reg_wr_addr      ),
 	.wr_addr_o (reg_wr_addr_q2_o )
@@ -164,18 +168,20 @@ EX_MEM ex_mem_pregs (
 	.wr_addr_o(reg_wr_addr_q3_o),
 	.rdata2_i (reg_rd_data2_q2_o),
 	.rdata2_o (reg_rd_data2_q3_o),
-	.alu_out_i(alu_out),
+	.alu_out_i(alu_out_q3_i),
 	.alu_out_o(alu_out_q3_o),
-	);
+);
 
 wire [31:0] alu_out_q4_o;
+wire [31:0] mem_rdata_q4_o;
 MEM_WB mem_wb_pregs (
 	.clk       (clk),
 	.rst_n     (rst_n),
 	.alu_out_i (alu_out_q3_o),
 	.alu_out_o (alu_out_q4_o),
-	.rdatamem_i(rdatamem_),
-	);
+	.mem_rdata_i(mem_rdata_q4_i),
+	.mem_rdata_o(mem_rdata_q4_o)
+);
 
 /*
 sign extension
@@ -185,7 +191,7 @@ does not affect the lower 5 bits of the immediate
 which is what we actually care about
 */
 always @(*) begin
-	imm_se = imm;
+	imm_se_q2_i = imm;
 end
 
 always @(*) begin
