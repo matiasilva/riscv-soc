@@ -25,11 +25,22 @@ module core (
 	input rst_n
 );
 
-	reg [31:0] pc;
-	reg [31:0] pc_incr;
-	wire [31:0] instr;
+/*
+	instruction fetch pipeline stage
+*/
 
-// instruction field select
+	reg  [31:0] pc          ;
+	reg  [31:0] pc_incr     ;
+	wire [31:0] instr       ;
+
+	wire [31:0] pc_incr_q1_o;
+	wire [31:0] instr_q1_i  ;
+	wire [31:0] instr_q1_o  ;
+
+/*
+	instruction decode and register file pipeline stage
+*/
+	// instruction decode
 	wire [ 4:0] rs1       = instr[19:15];
 	wire [ 4:0] rs2       = instr[24:20];
 	wire [ 4:0] rd        = instr[11:7] ;
@@ -40,33 +51,70 @@ module core (
 	wire [ 6:0] imm_upper = instr[31:25];
 	wire [ 4:0] imm_lower = instr[11:7] ;
 
-// register file
+	// register file
 	wire [31:0] reg_rd_data1_q2_i;
 	wire [31:0] reg_rd_data2_q2_i;
 	wire [ 4:0] reg_rd_1    = rs1;
 	wire [ 4:0] reg_rd_2    = rs2;
 	wire [ 4:0] reg_wr_addr    = rd;
-	wire [31:0] reg_wr_data = is_mem_to_reg ? mem_rdata_q4_o : alu_out_q4_o;
+	wire [31:0] reg_wr_data = ctrl_q4_o[CTRL_IS_MEM_TO_REG] ? mem_rdata_q4_o : alu_out_q4_o;
 
-// main control unit signals
+/*
+	ALU and instruction execute pipeline stage
+*/
+	// ALU
+	reg [31:0] imm_se_q2_i;
+	wire [31:0] alu_in1 = reg_rd_data1_q2_o;
+	wire [31:0] alu_in2 = ctrl_q3_i[CTRL_ALUSRC] ? reg_rd_data2 : imm_se_q2_o;
+	wire [31:0] alu_out_q3_i;
+
+	// ALU control
+	wire [3:0] aluctrl_ctrl;
+	wire [3:0] funct_q2_i = {funct7[5], funct3};
+	wire [3:0] funct_q2_o;
+
+	// pipeline wires
+	wire [31:0] imm_se_q2_o;
+	wire [31:0] pc_incr_q2_o;
+	wire [31:0] reg_rd_data1_q2_o;
+	wire [31:0] reg_rd_data2_q2_o;
+	wire [31:0] reg_wr_addr_q2_o;
+
+	// helpers
+	wire [1:0] ctrl_aluop = {ctrl_q3_i[CTRL_ALUOP1], ctrl_q3_i[CTRL_ALUOP0]};
+
+
+/*
+	memory access pipeline stage
+*/
+
+	wire [31:0] mem_rdata_q4_i;
+
+	// pipeline wires 
+	wire [31:0] pc_next_q3_i = (imm_se_q2_o << 2) | pc_incr_q2_o;
+	wire [31:0] pc_next_q3_o;
+	wire [31:0] reg_wr_addr_q3_o;
+	wire [31:0] reg_rd_data2_q3_o;
+	wire [31:0] alu_out_q3_o;
+
+
+/*
+	writeback pipeline stage
+*/
+
+	wire [31:0] alu_out_q4_o;
+	wire [31:0] mem_rdata_q4_o;
+
+
+/*
+	main control unit
+*/
 // TODO: is it more efficient to forward specific sub signals?
 	wire [CTRL_WIDTH-1:0] ctrl_q2_i;
 	wire [CTRL_WIDTH-1:0] ctrl_q3_i;
 	wire [CTRL_WIDTH-1:0] ctrl_q4_i;
 	wire [CTRL_WIDTH-1:0] ctrl_q4_o;
-// alu
-	reg [31:0] imm_se_q2_i;
-	wire [31:0] alu_in1 = reg_rd_data1_q2_o;
-	wire [31:0] alu_in2 = alu_src ? reg_rd_data2 : imm_se_q2_o;
-	wire [31:0] alu_out_q3_i;
 
-// alu control unit
-	wire [3:0] aluctrl_ctrl;
-	wire [3:0] funct_q2_i = {funct7[5], funct3};
-	wire [3:0] funct_q2_o;
-
-// memory
-	wire [31:0] mem_rdata_q4_i;
 
 	instrmem instrmem_u (
 		.clk    (clk       ),
@@ -101,27 +149,27 @@ module core (
 		.ctrl_q2_i_o(ctrl_q2_i)
 	);
 
-	wire [1:0] ctrl_aluop = {ctrl_q3_i[CTRL_ALUOP1], ctrl_q3_i[CTRL_ALUOP0]};
 	aluctrl alucontrol_u (
-		.ctrl_aluop_i     (ctrl_aluop),
-		.funct_i     (funct_q2_o),
-		.aluctrl_ctrl_o(aluctrl_ctrl_o),
+		.ctrl_aluop_i  (ctrl_aluop    ),
+		.funct_i       (funct_q2_o    ),
+		.aluctrl_ctrl_o(aluctrl_ctrl_o)
 	);
 
 	memory memory_u (
 		.clk          (clk              ),
 		.rst_n        (rst_n            ),
-		.ctrl_mem_re_i(ctrl_mem_re      ),
-		.ctrl_mem_we_i(ctrl_mem_we      ),
+		.ctrl_mem_re_i(ctrl_q4_i[CTRL_MEM_RE]      ),
+		.ctrl_mem_we_i(ctrl_q4_i[CTRL_MEM_WE]      ),
 		.addr_i       (alu_out_q3_o     ),
 		.wdata_i      (reg_rd_data2_q3_o),
 		.rdata_o      (mem_rdata_q4_i   )
 	);
 
-// pipeline registers
-	wire [31:0] pc_incr_q1_o;
-	wire [31:0] instr_q1_i;
-	wire [31:0] instr_q1_o;
+
+/*
+	pipeline registers
+*/
+
 	IFID if_id_pregs (
 		.clk      (clk         ),
 		.rst_n    (rst_n       ),
@@ -131,12 +179,6 @@ module core (
 		.pc_incr_o(pc_incr_q1_o)
 	);
 
-
-	wire [31:0] imm_se_q2_o;
-	wire [31:0] pc_incr_q2_o;
-	wire [31:0] reg_rd_data1_q2_o;
-	wire [31:0] reg_rd_data2_q2_o;
-	wire [31:0] reg_wr_addr_q2_o;
 	IDEX id_ex_pregs (
 		.clk       (clk              ),
 		.rst_n     (rst_n            ),
@@ -149,18 +191,13 @@ module core (
 		.rd_data2_i(reg_rd_data2_q2_i),
 		.rd_data2_o(reg_rd_data2_q2_o),
 		.wr_addr_i (reg_wr_addr      ),
-		.wr_addr_o (reg_wr_addr_q2_o )
-		.ctrl_q2_i (ctrl_q2_i),
-		.ctrl_q2_o (ctrl_q3_i),
-		.funct_i   (funct_q2_i),
-		.funct_o (funct_q2_o)
+		.wr_addr_o (reg_wr_addr_q2_o ),
+		.ctrl_q2_i (ctrl_q2_i        ),
+		.ctrl_q2_o (ctrl_q3_i        ),
+		.funct_i   (funct_q2_i       ),
+		.funct_o   (funct_q2_o       )
 	);
 
-	wire [31:0] pc_next_q3_i = (imm_se_q2_o << 2) | pc_incr_q2_o;
-	wire [31:0] pc_next_q3_o;
-	wire [31:0] reg_wr_addr_q3_o;
-	wire [31:0] reg_rd_data2_q3_o;
-	wire [31:0] alu_out_q3_o;
 	EXMEM ex_mem_pregs (
 		.clk      (clk              ),
 		.rst_n    (rst_n            ),
@@ -176,8 +213,6 @@ module core (
 		.ctrl_q3_o(ctrl_q4_i),
 	);
 
-	wire [31:0] alu_out_q4_o;
-	wire [31:0] mem_rdata_q4_o;
 	MEMWB mem_wb_pregs (
 		.clk        (clk           ),
 		.rst_n      (rst_n         ),
@@ -190,11 +225,11 @@ module core (
 	);
 
 /*
-sign extension
-note to self: SRLI, SLLI, SRAI use a specialization of the I-format
-but this does not affect our logic as a sign extension
-does not affect the lower 5 bits of the immediate
-which is what we actually care about
+	sign extension
+	note to self: SRLI, SLLI, SRAI use a specialization of the I-format
+	but this does not affect our logic as a sign extension
+	does not affect the lower 5 bits of the immediate
+	which is what we actually care about
 */
 	always @(*) begin
 		imm_se_q2_i = imm;
@@ -211,7 +246,5 @@ which is what we actually care about
 			pc_incr <= pc_incr + 4;
 		end
 	end
-
-
 
 endmodule
