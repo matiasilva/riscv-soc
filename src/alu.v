@@ -13,10 +13,10 @@
 */
 
 module alu (
-	input         clk         ,
-	input         rst_n       ,
-	input  [31:0] alu_a_i         ,
-	input  [31:0] alu_b_i         ,
+	input         clk           ,
+	input         rst_n         ,
+	input  [31:0] alu_a_i       ,
+	input  [31:0] alu_b_i       ,
 	input  [ 3:0] aluctrl_ctrl_i,
 	output [31:0] alu_out_o
 );

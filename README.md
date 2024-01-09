@@ -9,6 +9,8 @@
 * task names, module names are all snake case
 * no camel case anywhere
 
+control signals are packed from left to right in order of use, so the 1st pipeline stage (q1) is the most leftwards.
+
 ## Development
 
 While there is a great open source toolset for the iCESugar v1.5, it remains difficult to navigate the web of broken links to find what is really needed to get Verilog synthesized and 'running on' the FPGA. After lots of searching and reading tutorials, I've condensed it to this:
