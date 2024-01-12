@@ -8,7 +8,7 @@ generates the necessary control signals for muxes
 
 module control (
 	input [6:0] opcode_i,
-	output [CTRL_WIDTH - 1:0] ctrl_q2_i_o,
+	output [CTRL_WIDTH - 1:0] ctrl_q2_o,
 );
 
 	reg [1:0] aluop;
@@ -67,6 +67,6 @@ module control (
 	wire [2:0] q1_a = {aluop, alusrc};
 	wire [2:0] q1_b = {is_branch, mem_re, mem_we};
 	wire [1:0] q1_c = {reg_we, is_mem_to_reg}
-	assign ctrl_q2_i_o = {8'b0, q1_a, q1_b, q1_c};
+	assign ctrl_q2_o = {8'b0, q1_a, q1_b, q1_c};
 
 endmodule

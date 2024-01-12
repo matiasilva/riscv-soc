@@ -29,13 +29,13 @@ module core (
 	instruction fetch pipeline stage
 */
 
-	reg  [31:0] pc          ;
-	reg  [31:0] pc_incr     ;
-	wire [31:0] instr       ;
+	reg  [31:0] pc                  ;
+	reg  [31:0] pc_incr             ;
+	wire [31:0] instr   = instr_q2;
 
-	wire [31:0] pc_incr_q1_o;
-	wire [31:0] instr_q1_i  ;
-	wire [31:0] instr_q1_o  ;
+	wire [31:0] pc_incr_q2;
+	wire [31:0] instr_q1  ;
+	wire [31:0] instr_q2  ;
 
 /*
 	instruction decode and register file pipeline stage
@@ -52,67 +52,67 @@ module core (
 	wire [ 4:0] imm_lower = instr[11:7] ;
 
 	// register file
-	wire [31:0] reg_rd_data1_q2_i;
-	wire [31:0] reg_rd_data2_q2_i;
+	wire [31:0] reg_rd_data1_q2;
+	wire [31:0] reg_rd_data2_q2;
 	wire [ 4:0] reg_rd_1    = rs1;
 	wire [ 4:0] reg_rd_2    = rs2;
 	wire [ 4:0] reg_wr_addr    = rd;
-	wire [31:0] reg_wr_data = ctrl_q4_o[CTRL_IS_MEM_TO_REG] ? mem_rdata_q4_o : alu_out_q4_o;
+	wire [31:0] reg_wr_data = ctrl_q4_o[CTRL_IS_MEM_TO_REG] ? mem_rdata_q5 : alu_out_q5;
 
 /*
 	ALU and instruction execute pipeline stage
 */
 	// ALU
-	reg [31:0] imm_se_q2_i;
-	wire [31:0] alu_in1 = reg_rd_data1_q2_o;
-	wire [31:0] alu_in2 = ctrl_q3_i[CTRL_ALUSRC] ? reg_rd_data2 : imm_se_q2_o;
-	wire [31:0] alu_out_q3_i;
+	reg [31:0] imm_se_q2;
+	wire [31:0] alu_in1 = reg_rd_data1_q3;
+	wire [31:0] alu_in2 = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2 : imm_se_q3;
+	wire [31:0] alu_out_q3;
 
 	// ALU control
 	wire [3:0] aluctrl_ctrl;
-	wire [3:0] funct_q2_i = {funct7[5], funct3};
-	wire [3:0] funct_q2_o;
+	wire [3:0] funct_q2 = {funct7[5], funct3};
+	wire [3:0] funct_q3;
 
 	// pipeline wires
-	wire [31:0] imm_se_q2_o;
-	wire [31:0] pc_incr_q2_o;
-	wire [31:0] reg_rd_data1_q2_o;
-	wire [31:0] reg_rd_data2_q2_o;
-	wire [31:0] reg_wr_addr_q2_o;
+	wire [31:0] imm_se_q3;
+	wire [31:0] pc_incr_q3;
+	wire [31:0] reg_rd_data1_q3;
+	wire [31:0] reg_rd_data2_q3;
+	wire [31:0] reg_wr_addr_q3;
 
 	// helpers
-	wire [1:0] ctrl_aluop = {ctrl_q3_i[CTRL_ALUOP1], ctrl_q3_i[CTRL_ALUOP0]};
+	wire [1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
 
 
 /*
 	memory access pipeline stage
 */
 
-	wire [31:0] mem_rdata_q4_i;
+	wire [31:0] mem_rdata_q4;
 
 	// pipeline wires 
-	wire [31:0] pc_next_q3_i = (imm_se_q2_o << 2) | pc_incr_q2_o;
-	wire [31:0] pc_next_q3_o;
-	wire [31:0] reg_wr_addr_q3_o;
-	wire [31:0] reg_rd_data2_q3_o;
-	wire [31:0] alu_out_q3_o;
+	wire [31:0] pc_next_q3 = (imm_se_q3 << 2) | pc_incr_q3;
+	wire [31:0] pc_next_q4;
+	wire [31:0] reg_wr_addr_q4;
+	wire [31:0] reg_rd_data2_q4;
+	wire [31:0] alu_out_q4;
 
 
 /*
 	writeback pipeline stage
 */
 
-	wire [31:0] alu_out_q4_o;
-	wire [31:0] mem_rdata_q4_o;
+	wire [31:0] alu_out_q5;
+	wire [31:0] mem_rdata_q5;
 
 
 /*
 	main control unit
 */
 // TODO: is it more efficient to forward specific sub signals?
-	wire [CTRL_WIDTH-1:0] ctrl_q2_i;
-	wire [CTRL_WIDTH-1:0] ctrl_q3_i;
-	wire [CTRL_WIDTH-1:0] ctrl_q4_i;
+	wire [CTRL_WIDTH-1:0] ctrl_q2;
+	wire [CTRL_WIDTH-1:0] ctrl_q3;
+	wire [CTRL_WIDTH-1:0] ctrl_q4;
 	wire [CTRL_WIDTH-1:0] ctrl_q4_o;
 
 
@@ -120,7 +120,7 @@ module core (
 		.clk    (clk       ),
 		.rst_n  (rst_n     ),
 		.pc_i   (pc        ),
-		.instr_o(instr_q1_i)
+		.instr_o(instr_q1)
 	);
 
 	alu alu_u (
@@ -129,7 +129,7 @@ module core (
 		.alu_a_i       (alu_in1     ),
 		.alu_b_i       (alu_in2     ),
 		.aluctrl_ctrl_i(aluctrl_ctrl),
-		.alu_out_o     (alu_out_q3_i)
+		.alu_out_o     (alu_out_q3)
 	);
 
 	regfile regfile_u (
@@ -137,8 +137,8 @@ module core (
 		.rst_n         (rst_n            ),
 		.reg_rd_r1_i   (reg_rd_1         ),
 		.reg_rd_r2_i   (reg_rd_2         ),
-		.reg_rd_data1_o(reg_rd_data1_q2_i),
-		.reg_rd_data2_o(reg_rd_data1_q2_i),
+		.reg_rd_data1_o(reg_rd_data1_q2),
+		.reg_rd_data2_o(reg_rd_data2_q2),
 		.reg_wr_addr_i (reg_wr_addr      ),
 		.reg_wr_data_i (reg_wr_data      ),
 		.ctrl_reg_we_i (ctrl_q4_o[CTRL_REG_WE])
@@ -146,23 +146,23 @@ module core (
 
 	control control_u (
 		.opcode_i   (opcode   ),
-		.ctrl_q2_i_o(ctrl_q2_i)
+		.ctrl_q2_o(ctrl_q2)
 	);
 
 	aluctrl alucontrol_u (
 		.ctrl_aluop_i  (ctrl_aluop    ),
-		.funct_i       (funct_q2_o    ),
+		.funct_i       (funct_q3    ),
 		.aluctrl_ctrl_o(aluctrl_ctrl_o)
 	);
 
 	memory memory_u (
 		.clk          (clk              ),
 		.rst_n        (rst_n            ),
-		.ctrl_mem_re_i(ctrl_q4_i[CTRL_MEM_RE]      ),
-		.ctrl_mem_we_i(ctrl_q4_i[CTRL_MEM_WE]      ),
-		.addr_i       (alu_out_q3_o     ),
-		.wdata_i      (reg_rd_data2_q3_o),
-		.rdata_o      (mem_rdata_q4_i   )
+		.ctrl_mem_re_i(ctrl_q4[CTRL_MEM_RE]      ),
+		.ctrl_mem_we_i(ctrl_q4[CTRL_MEM_WE]      ),
+		.addr_i       (alu_out_q4     ),
+		.wdata_i      (reg_rd_data2_q4),
+		.rdata_o      (mem_rdata_q4   )
 	);
 
 
@@ -174,53 +174,53 @@ module core (
 		.clk      (clk         ),
 		.rst_n    (rst_n       ),
 		.pc_incr_i(pc_incr     ),
-		.instr_i  (instr_q1_i  ),
-		.instr_o  (instr_q1_o  ),
-		.pc_incr_o(pc_incr_q1_o)
+		.instr_i  (instr_q1  ),
+		.instr_o  (instr_q2  ),
+		.pc_incr_o(pc_incr_q2)
 	);
 
 	IDEX id_ex_pregs (
 		.clk       (clk              ),
 		.rst_n     (rst_n            ),
-		.imm_se_i  (imm_se_q2_i      ),
-		.imm_se_o  (imm_se_q2_o      ),
-		.pc_incr_i (pc_incr_q1_o     ),
-		.pc_incr_o (pc_incr_q2_o     ),
-		.rd_data1_i(reg_rd_data1_q2_i),
-		.rd_data1_o(reg_rd_data1_q2_o),
-		.rd_data2_i(reg_rd_data2_q2_i),
-		.rd_data2_o(reg_rd_data2_q2_o),
+		.imm_se_i  (imm_se_q2      ),
+		.imm_se_o  (imm_se_q3      ),
+		.pc_incr_i (pc_incr_q2     ),
+		.pc_incr_o (pc_incr_q3     ),
+		.rd_data1_i(reg_rd_data1_q2),
+		.rd_data1_o(reg_rd_data1_q3),
+		.rd_data2_i(reg_rd_data2_q2),
+		.rd_data2_o(reg_rd_data2_q3),
 		.wr_addr_i (reg_wr_addr      ),
-		.wr_addr_o (reg_wr_addr_q2_o ),
-		.ctrl_q2_i (ctrl_q2_i        ),
-		.ctrl_q2_o (ctrl_q3_i        ),
-		.funct_i   (funct_q2_i       ),
-		.funct_o   (funct_q2_o       )
+		.wr_addr_o (reg_wr_addr_q3 ),
+		.ctrl_q2 (ctrl_q2        ),
+		.ctrl_q2_o (ctrl_q3        ),
+		.funct_i   (funct_q2       ),
+		.funct_o   (funct_q3       )
 	);
 
 	EXMEM ex_mem_pregs (
 		.clk      (clk              ),
 		.rst_n    (rst_n            ),
-		.pc_next_i(pc_next_q3_i     ),
-		.pc_next_o(pc_next_q3_o     ),
-		.wr_addr_i(reg_wr_addr_q2_o ),
-		.wr_addr_o(reg_wr_addr_q3_o ),
-		.rdata2_i (reg_rd_data2_q2_o),
-		.rdata2_o (reg_rd_data2_q3_o),
-		.alu_out_i(alu_out_q3_i     ),
-		.alu_out_o(alu_out_q3_o     )
-		.ctrl_q3_i(ctrl_q3_i),
-		.ctrl_q3_o(ctrl_q4_i),
+		.pc_next_i(pc_next_q3     ),
+		.pc_next_o(pc_next_q4     ),
+		.wr_addr_i(reg_wr_addr_q3 ),
+		.wr_addr_o(reg_wr_addr_q4 ),
+		.rdata2_i (reg_rd_data2_q3),
+		.rdata2_o (reg_rd_data2_q4),
+		.alu_out_i(alu_out_q3     ),
+		.alu_out_o(alu_out_q4     )
+		.ctrl_q3(ctrl_q3),
+		.ctrl_q3_o(ctrl_q4),
 	);
 
 	MEMWB mem_wb_pregs (
 		.clk        (clk           ),
 		.rst_n      (rst_n         ),
-		.alu_out_i  (alu_out_q3_o  ),
-		.alu_out_o  (alu_out_q4_o  ),
-		.mem_rdata_i(mem_rdata_q4_i),
-		.mem_rdata_o(mem_rdata_q4_o)
-		.ctrl_q4_i  (ctrl_q4_i),
+		.alu_out_i  (alu_out_q4  ),
+		.alu_out_o  (alu_out_q5  ),
+		.mem_rdata_i(mem_rdata_q4),
+		.mem_rdata_o(mem_rdata_q5)
+		.ctrl_q4  (ctrl_q4),
 		.ctrl_q4_o  (ctrl_q4_o),
 	);
 
@@ -232,11 +232,11 @@ module core (
 	which is what we actually care about
 */
 	always @(*) begin
-		imm_se_q2_i = imm;
+		imm_se_q2 = imm;
 	end
 
 	always @(*) begin
-		pc = is_branch ? pc_next_q3_o: pc_incr;
+		pc = is_branch ? pc_next_q4: pc_incr;
 	end
 
 	always @(posedge clk or negedge rst_n) begin
