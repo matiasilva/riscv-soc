@@ -47,7 +47,7 @@ module alu (
 		endcase
 	end
 
-	assign alu_out = result;
+	assign alu_out_o = result;
 
 
 /*

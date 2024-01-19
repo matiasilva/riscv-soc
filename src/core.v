@@ -1,6 +1,6 @@
 `include "memory.v"
 `include "alu.v"
-`include "registers.v"
+`include "regfile.v"
 `include "instrmem.v"
 `include "control.v"
 `include "aluctrl.v"

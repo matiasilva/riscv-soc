@@ -21,13 +21,16 @@ module core_tb ();
 	localparam PDELAY = CLK * 0.001;
 	localparam N_TESTS = 1000;
 
-
 	// include duts here
-
+	core core_u (
+		.clk(clk),
+		.rst_n(rst_n)
+	);
+	
 	always #CLK clk = ~clk;
 
 	initial begin
-      	$dumpfile("core_tb.vcd");
+      	$dumpfile("build/core_tb.vcd");
       	$dumpvars(0, core_tb);
 
 	end
