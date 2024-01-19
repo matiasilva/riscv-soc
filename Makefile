@@ -1,4 +1,6 @@
-pcf_file = io.pcf
+pcf_file = sim/io.pcf
+HDL_PATH = src/$(DESIGN)
+BUILD_DIR = build
 
 ICELINK_DIR=$(shell df | grep iCELink | awk '{print $$6}')
 ${warning iCELink path: $(ICELINK_DIR)}
@@ -26,8 +28,9 @@ vis:
 	yosys -p "read_verilog leds.v; hierarchy -check; proc; opt; fsm; opt; memory; opt; show -prefix leds -format svg" leds.v
 
 sim:
-	iverilog $(design).v $(design)_tb.v
-	vvp  a.out
+	mkdir $(BUILD_DIR)
+	iverilog $(HDL_PATH).v $(HDL_PATH)_tb.v -o $(BUILD_DIR)/a.out
+	vvp  $(BUILD_DIR)/a.out
 
 clean:
-	rm -rf $(design).blif $(design).asc $(design).json $(design).bin $(design).out $(design)_tb.lxt2 $(design)_tb.vcd
+	rm -rf $(BUILD_DIR)
