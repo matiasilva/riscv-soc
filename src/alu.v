@@ -50,15 +50,4 @@ module alu (
 	assign alu_out_o = result;
 
 
-/*
-	always @(posedge clk or negedge rst_n) begin
-	if(~rst_n) begin
-	out <= 32'b0;
-	end else begin
-	out <= result;
-	end
-	end
-*/
-
-
 endmodule
