@@ -6,3 +6,4 @@
 *.asc
 *.out
 
+build/

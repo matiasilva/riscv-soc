@@ -1,4 +1,4 @@
-`timescale 1us / 1ns
+`timescale 1ns / 10ps
 
 `define assert(signal, value) \
         if (signal !== value) begin \
@@ -7,7 +7,7 @@
             #(HCLK) $finish; \
         end
 
-module core_tb ();
+module core_tb;
 
 	reg clk;
 	reg rst_n;
@@ -27,23 +27,35 @@ module core_tb ();
 		.rst_n(rst_n)
 	);
 	
+	integer idx;	
+
 	always #CLK clk = ~clk;
 
 	initial begin
-      	$dumpfile("build/core_tb.vcd");
+      	$dumpfile("build/core_tb.fst");
       	$dumpvars(0, core_tb);
-
+      	for (idx = 0; idx < 2; idx = idx + 1) $dumpvars(0, core_u.instrmem_u.mem[idx]);
 	end
 
 	// include tasks here
 
+	task init();
+		begin
+			#HCLK rst_n <= 0;
+			#HCLK rst_n <= 1;
+			#HCLK;
+		end
+	endtask
+
 	initial begin
       	clk <= 0;
       	rst_n <= 1;
-      	wavetext <= "start of test";
       	$display("start of test");
 
-
+      	init();
+      	@(posedge clk);
+      	wavetext <= "start of test";
+      	#100;
       	$display("end of test");
 		$finish;
 	end

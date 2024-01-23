@@ -4,7 +4,8 @@ this can be implemented as BRAM on FPGA
 
 module instrmem #(
 	parameter PRELOAD = 0,
-	parameter PRELOAD_FILE = ""
+	parameter PRELOAD_FILE = "",
+	parameter HARDCODED = 0
 ) (
 	input clk,    // Clock
 	input rst_n,  // Asynchronous reset active low
@@ -29,6 +30,18 @@ module instrmem #(
 				$finish;
 			end
 			$readmemh(PRELOAD_FILE,mem,0, 31);
+		end
+		if (HARDCODED) begin
+			@(posedge rst_n); // need two of these
+			@(posedge rst_n);
+			mem[0] <= 8'h03;
+			mem[1] <= 8'h21;
+			mem[2] <= 8'h00;
+			mem[3] <= 8'h00;
+			mem[4] <= 8'h03;
+			mem[5] <= 8'h21;
+			mem[6] <= 8'h00;
+			mem[7] <= 8'h00;
 		end
 	end
 

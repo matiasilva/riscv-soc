@@ -6,9 +6,12 @@ generates the necessary control signals for muxes
 [is_mem_to_reg] select whether ALU result or memory read is written to regfile
 */
 
-module control (
+
+module control
+	#(parameter CTRL_WIDTH = 16)
+ (
 	input [6:0] opcode_i,
-	output [CTRL_WIDTH - 1:0] ctrl_q2_o,
+	output [CTRL_WIDTH - 1:0] ctrl_o
 );
 
 	reg [1:0] aluop;
@@ -19,7 +22,7 @@ module control (
 	reg is_branch;
 	reg alusrc;
 
-	always @(*) begin :
+	always @(*) begin
 		case (opcode_i)
 			7'b0110011 : begin
 				// R-type
@@ -64,9 +67,9 @@ module control (
 		endcase
 	end
 
-	wire [2:0] q1_a = {aluop, alusrc};
-	wire [2:0] q1_b = {is_branch, mem_re, mem_we};
-	wire [1:0] q1_c = {reg_we, is_mem_to_reg}
-	assign ctrl_q2_o = {8'b0, q1_a, q1_b, q1_c};
+	wire [2:0] q3_bits = {aluop, alusrc};
+	wire [2:0] q4_bits = {is_branch, mem_re, mem_we};
+	wire [1:0] q5_bits = {reg_we, is_mem_to_reg};
+	assign ctrl_o = {8'b0, q3_bits, q4_bits, q5_bits};
 
 endmodule

@@ -5,6 +5,8 @@ TESTS_PATH := tests/tb/$(DESIGN)
 SIM_PATH := sim/$(DESIGN)
 BUILD_DIR = build
 
+IVERILOG_WARNINGS := -Wanachronisms -Wimplicit -Wimplicit-dimensions -Wmacro-replacement -Wportbind -Wselect-range -Wsensitivity-entire-array
+
 ICELINK_DIR=$(shell df | grep iCELink | awk '{print $$6}')
 ${warning iCELink path: $(ICELINK_DIR)}
 
@@ -33,8 +35,8 @@ vis:
 .PHONY: sim
 sim:
 	mkdir -p $(BUILD_DIR)
-	iverilog -Wall -f $(SIM_PATH).f -s $(DESIGN)_tb -o $(BUILD_DIR)/a.out
-	vvp  $(BUILD_DIR)/a.out
+	iverilog $(IVERILOG_WARNINGS) -f $(SIM_PATH).f -s $(DESIGN)_tb -o $(BUILD_DIR)/a.out
+	vvp  $(BUILD_DIR)/a.out -fst
 
 .PHONY: clean
 clean:

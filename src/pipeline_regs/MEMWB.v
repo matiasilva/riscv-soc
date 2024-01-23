@@ -1,12 +1,14 @@
-module MEMWB (
+
+module MEMWB 	#(parameter CTRL_WIDTH = 16)
+(
 	input clk,
 	input rst_n,
 	input [31:0] alu_out_i,
 	input [31:0] mem_rdata_i,
-	input [31:0] ctrl_q4_i,
+	input [CTRL_WIDTH-1:0] ctrl_q4_i,
 	output [31:0] alu_out_o,
 	output [31:0] mem_rdata_o,
-	output [31:0] ctrl_q4_o,
+	output [CTRL_WIDTH-1:0] ctrl_q4_o
 );
 
 reg [31:0] next_pc_incr;
