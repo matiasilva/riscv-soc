@@ -29,6 +29,15 @@ While there is a great open source toolset for the iCESugar v1.5, it remains dif
 
 I recommend building each of these tools from source to ensure the latest (working) version and in the case of `icesprog` you'll also need to add the binary directory to your `$PATH`. Each of these tools has their own required dependencies so look them up to find them. Then, a standard `make -j4` and `sudo make install` suffices, apart from the odd case when a `./configure` was needed. While I was wrapping my head around this, I found https://f4pga.readthedocs.io/en/latest/flows/index.html quite helpful in explaining each step of the design flow and how that interlinks with these open source tools.
 
+## TODO
+
+* source a RISC-V compiler to preload instruction memories
+* turn instrmem and regfile into BRAM, memory maybe SPRAM
+* write a simple linker script
+* fix latches in combinational logic: set all signals to 0
+* define a starting instruction (nop) addi x0, x0, 0
+* add pipeline stalls
+* change memories into word memories! RV32I is word aligned
 
 ## Extra steps
 
