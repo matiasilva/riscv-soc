@@ -236,7 +236,7 @@ does not affect the lower 5 bits of the immediate
 which is what we actually care about
 */
 always @(*) begin
-	imm_se_q2 = imm;
+	imm_se_q2 = {{20{imm[11]},imm};
 end
 
 always @(*) begin

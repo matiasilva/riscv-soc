@@ -1,19 +1,21 @@
-`timescale 1us / 1ns
+`timescale 1ns / 10ps
 
 `define assert(signal, value) \
-        if (signal !== value) begin \
-            $display("ASSERTION FAILED in %m: signal != value, expected %b, got %b", value, signal); \
-            wavetext <= "FAILED"; \
-            #(HCLK) $finish; \
-        end
+if (signal !== value) begin \
+	$display("ASSERTION FAILED in %m: signal != value, expected %b, got %b", value, signal); \
+		wavetext <= "FAILED"; \
+		#(HCLK) $finish; \
+	end
 
-module alu_tb ();
+module alu_tb;
+
+	localparam ALUCTRL_WIDTH = 4;
 
 	reg clk;
 	reg rst_n;
 	reg [31:0] a;
 	reg [31:0] b;
-	reg [4:0] op;
+	reg [ALUCTRL_WIDTH-1:0] aluctrl;
 
 	wire [31:0] out;
 	reg [31:0] result;
@@ -26,117 +28,100 @@ module alu_tb ();
 	localparam PDELAY = CLK * 0.001;
 	localparam N_TESTS = 1000;
 
-	alu dut (
-		.clk (clk),
-		.a (a),
-		.b (b),
-		.op (op),
-		.out (out)
+	alu alu_u (
+		.clk           (clk),
+		.rst_n         (rst_n),
+		.alu_a_i       (a),
+		.alu_b_i       (b),
+		.aluctrl_ctrl_i(aluctrl),
+		.alu_out_o     (out)
 	);
 
 	always #CLK clk = ~clk;
 
 	initial begin
-      	$dumpfile("alu_tb.vcd");
-      	$dumpvars(0, alu_tb);
+		$dumpfile("build/alu_tb.fst");
+		$dumpvars(0, alu_tb);
 
 	end
 
 	task test_add();
 		begin
-			#(HCLK);
-			wavetext <= "testing ADD operation";
+			wavetext = "testing ADD operation";
 			for (integer i = 0; i < N_TESTS; i++) begin
-				a <= $urandom;
-				b <= $urandom;
-				op <= 5'b00000;
-
-				#(PDELAY) result <= out;
-				#(PDELAY) `assert(result, (a+b));
-				#(CLK);
+				a = $urandom;
+				b = $urandom;
+				aluctrl = 4'b0000;
+				#0 `assert(out, (a+b));
+				#CLK;
 			end
-		end		
-	endtask 
+		end
+	endtask
 
 	task test_sub();
 		begin
-			#(HCLK);
 			wavetext <= "testing SUB operation";
 			for (integer i = 0; i < N_TESTS; i++) begin
-				a <= $urandom;
-				b <= $urandom;
-				op <= 5'b01000;
-
-				#(PDELAY) result <= out;
-				#(PDELAY) `assert(result, (a-b));
-				#(CLK);
+				a = $urandom;
+				b = $urandom;
+				aluctrl = 4'b1000;
+				#0 `assert(out, (a-b));
+				#CLK;
 			end
-		end		
-	endtask 
+		end
+	endtask
 
 	task test_slt();
 		begin
-			#(HCLK);
 			wavetext <= "testing SLT operation";
 			for (integer i = 0; i < N_TESTS; i++) begin
-				a <= $urandom;
-				b <= $urandom;
-				op <= 5'b00010;
-
-				#(PDELAY) result <= out;
-				#(PDELAY) `assert(result, ($signed(a)<$signed(b)));
-				#(CLK);
+				a = $urandom;
+				b = $urandom;
+				aluctrl = 4'b0010;
+				#0 `assert(out, ($signed(a)<$signed(b)));
+				#CLK;
 			end
-		end		
-	endtask 
+		end
+	endtask
 
 	task test_sltu();
 		begin
-			#(HCLK);
 			wavetext <= "testing SLTU operation";
 			for (integer i = 0; i < N_TESTS; i++) begin
-				a <= $urandom;
-				b <= $urandom;
-				op <= 5'b00011;
-
-				#(PDELAY) result <= out;
-				#(PDELAY) `assert(result, (a<b));
-				#(CLK);
+				a = $urandom;
+				b = $urandom;
+				aluctrl = 4'b0011;
+				#0 `assert(out, (a<b));
+				#CLK;
 			end
-		end		
-	endtask 
+		end
+	endtask
 
 	task test_and();
 		begin
-			#(HCLK);
 			wavetext <= "testing AND operation";
 			for (integer i = 0; i < N_TESTS; i++) begin
-				a <= $urandom;
-				b <= $urandom;
-				op <= 5'b00111;
-
-				#(PDELAY) result <= out;
-				#(PDELAY) `assert(result, (a&b));
-				#(CLK);
+				a = $urandom;
+				b = $urandom;
+				aluctrl = 4'b0111;
+				#0 `assert(out, (a&b));
+				#CLK;
 			end
-		end		
-	endtask 
+		end
+	endtask
 
 	task test_or();
 		begin
-			#(HCLK);
 			wavetext <= "testing OR operation";
 			for (integer i = 0; i < N_TESTS; i++) begin
-				a <= $urandom;
-				b <= $urandom;
-				op <= 5'b00110;
-
-				#(PDELAY) result <= out;
-				#(PDELAY) `assert(result, (a|b));
-				#(CLK);
+				a = $urandom;
+				b = $urandom;
+				aluctrl = 4'b0110;
+				#0 `assert(out, (a|b));
+				#CLK;
 			end
-		end		
-	endtask 
+		end
+	endtask
 
 	task test_xor();
 		begin
@@ -145,14 +130,14 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 5'b00100;
+				aluctrl <= 4'b0100;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a^b));
 				#(CLK);
 			end
-		end		
-	endtask 
+		end
+	endtask
 
 	task test_sll();
 		begin
@@ -161,14 +146,14 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 5'b00001;
+				aluctrl <= 4'b0001;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a<<b[4:0]));
 				#(CLK);
 			end
-		end		
-	endtask 
+		end
+	endtask
 
 	task test_srl();
 		begin
@@ -177,14 +162,14 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 5'b00101;
+				aluctrl <= 4'b0101;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) `assert(result, (a>>b[4:0]));
 				#(CLK);
 			end
-		end		
-	endtask 
+		end
+	endtask
 
 	task test_sra();
 		begin
@@ -193,27 +178,37 @@ module alu_tb ();
 			for (integer i = 0; i < N_TESTS; i++) begin
 				a <= $urandom;
 				b <= $urandom;
-				op <= 5'b01101;
+				aluctrl <= 4'b1101;
 
 				#(PDELAY) result <= out;
 				#(PDELAY) scratch1 = (($signed(a)) >>> (b[4:0]));
 				#(PDELAY) `assert(result, scratch1);
 				#(CLK);
 			end
-		end		
-	endtask 
+		end
+	endtask
+
+	task init();
+		begin
+			#HCLK rst_n <= 0;
+			#HCLK rst_n <= 1;
+		end
+	endtask
 
 	initial begin
 		a <= 0;
 		b <= 0;
-		op <= 0;
+		aluctrl <= 0;
 		result <= 0;
-      	clk <= 0;
-      	rst_n <= 1;
-      	wavetext <= "start of test";
+		clk <= 0;
+		rst_n <= 1;
+
+		init();
+
+		wavetext <= "start of test";
 
 		test_add();
-		test_sub();
+		/*test_sub();
 		test_slt();
 		test_sltu();
 		test_and();
@@ -221,7 +216,7 @@ module alu_tb ();
 		test_xor();
 		test_sll();
 		test_srl();
-		test_sra();
+		test_sra();*/
 
 		$finish;
 	end

@@ -44,6 +44,7 @@ module alu (
 			4'b0001 : result = alu_a_i << shamt;
 			4'b0101 : result = alu_a_i >> shamt;
 			4'b1101 : result = ($signed(alu_a_i) >>> shamt);
+			
 		endcase
 	end
 

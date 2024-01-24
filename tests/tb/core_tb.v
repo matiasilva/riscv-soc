@@ -43,7 +43,6 @@ module core_tb;
 		begin
 			#HCLK rst_n <= 0;
 			#HCLK rst_n <= 1;
-			#HCLK;
 		end
 	endtask
 

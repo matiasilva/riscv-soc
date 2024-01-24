@@ -29,7 +29,7 @@ module demo_tb ();
 	always #CLK clk = ~clk;
 
 	initial begin
-      	$dumpfile("demo_tb.vcd");
+      	$dumpfile("build/demo_tb.fst");
       	$dumpvars(0, demo_tb);
 
 	end

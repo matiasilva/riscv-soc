@@ -34,14 +34,14 @@ module instrmem #(
 		if (HARDCODED) begin
 			@(posedge rst_n); // need two of these
 			@(posedge rst_n);
-			mem[0] <= 8'h03;
-			mem[1] <= 8'h21;
-			mem[2] <= 8'h00;
+			mem[0] <= 8'h93;
+			mem[1] <= 8'h00;
+			mem[2] <= 8'h30;
 			mem[3] <= 8'h00;
-			mem[4] <= 8'h03;
-			mem[5] <= 8'h21;
-			mem[6] <= 8'h00;
-			mem[7] <= 8'h00;
+			mem[4] <= 8'h93;
+			mem[5] <= 8'h00;
+			mem[6] <= 8'hb0;
+			mem[7] <= 8'h07;
 		end
 	end
 

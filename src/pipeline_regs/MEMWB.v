@@ -14,7 +14,7 @@ module MEMWB 	#(parameter CTRL_WIDTH = 16)
 reg [31:0] next_pc_incr;
 reg [31:0] next_alu_out;
 reg [31:0] next_mem_rdata;
-reg [31:0] next_ctrl_q4;
+reg [CTRL_WIDTH-1:0] next_ctrl_q4;
 
 
 always @(posedge clk or negedge rst_n) begin
