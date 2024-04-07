@@ -14,6 +14,11 @@ module control
 	output [CTRL_WIDTH - 1:0] ctrl_o
 );
 
+ 	localparam OP_RTYPE = 7'b0110011;
+ 	localparam OP_ITYPE = 7'b0010011;
+ 	localparam OP_LOAD  = 7'b0000011;
+ 	localparam OP_STORE = 7'b0100011;
+
 	reg [1:0] aluop;
 	reg mem_re;
 	reg mem_we;
@@ -24,44 +29,49 @@ module control
 
 	always @(*) begin
 		case (opcode_i)
-			7'b0110011 : begin
-				// R-type
-				mem_re    = 1'b0;
-				mem_we   = 1'b0;
-				reg_we   = 1'b1;
+			OP_RTYPE : begin
+				mem_re        = 1'b0;
+				mem_we        = 1'b0;
+				reg_we        = 1'b1;
 				is_mem_to_reg = 1'b0;
 				is_branch     = 1'b0;
-				alusrc       = 1'b1;
+				alusrc        = 1'b1;
 				aluop         = 2'b10;
 			end
-			7'b0010011 : begin
-				// I-type
-				mem_re    = 1'b0;
-				mem_we   = 1'b0;
-				reg_we   = 1'b1;
+			OP_ITYPE : begin
+				mem_re        = 1'b0;
+				mem_we        = 1'b0;
+				reg_we        = 1'b1;
 				is_mem_to_reg = 1'b0;
 				is_branch     = 1'b0;
-				alusrc       = 1'b0;
+				alusrc        = 1'b0;
 				aluop         = 2'b10;
 			end
-			7'b0000011 : begin
-				// load
-				mem_re    = 1'b1;
-				mem_we   = 1'b0;
-				reg_we   = 1'b1;
+			OP_LOAD : begin
+				mem_re        = 1'b1;
+				mem_we        = 1'b0;
+				reg_we        = 1'b1;
 				is_mem_to_reg = 1'b1;
 				is_branch     = 1'b0;
-				alusrc       = 1'b0;
+				alusrc        = 1'b0;
 				aluop         = 2'b00;
 			end
-			7'b0100011 : begin
-				// store
-				mem_re    = 1'b0;
-				mem_we   = 1'b1;
-				reg_we   = 1'b0;
+			OP_STORE : begin
+				mem_re        = 1'b0;
+				mem_we        = 1'b1;
+				reg_we        = 1'b0;
 				is_mem_to_reg = 1'b0; // DC
 				is_branch     = 1'b0;
-				alusrc       = 1'b0;
+				alusrc        = 1'b0;
+				aluop         = 2'b00;
+			end
+			default : begin
+				mem_re        = 1'b0;
+				mem_we        = 1'b0;
+				reg_we        = 1'b0;
+				is_mem_to_reg = 1'b0; // DC
+				is_branch     = 1'b0;
+				alusrc        = 1'b0;
 				aluop         = 2'b00;
 			end
 		endcase
