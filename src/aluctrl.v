@@ -1,10 +1,10 @@
 /*
-	this module produces the required control signal for the ALU
+	this module produces the required ctrl signal for the ALU
 
-	[aluop] is a 2-bit signal coming from the main control unit
+	[aluop] is a 2-bit signal coming from the main ctrl unit
 
 	00 -> ADD (for lw, sw)
-	10 -> hand over control to funct (essentially passthrough)
+	10 -> hand over ctrl to funct (essentially passthrough)
 	11 -> not implemented
 	01 -> SLTU (for beq)
 
@@ -26,30 +26,28 @@ module aluctrl (
 	localparam ADD = 4'b0000;
 	localparam SETLESSTHANUNSIGNED = 4'b0011;
 
-	reg [3:0] control;
+	reg [3:0] ctrl;
 
 	always @(posedge clk or negedge rst_n) begin
 		if(~rst_n) begin
-			control <= 4'b0;
+			ctrl <= 4'b0;
 		end else begin
+			ctrl <= 0;
 			case (ctrl_aluop_i)
 				2'b00: begin
 					// SW/LW -> add
-					control = ADD;
+					ctrl <= ADD;
 				end
 				2'b01: begin
-					control = SETLESSTHANUNSIGNED;
+					ctrl <= SETLESSTHANUNSIGNED;
 				end
 				2'b10: begin
-					control = funct_i;
-				end
-				default: begin
-					control = 4'b0;
+					ctrl <= funct_i;
 				end
 			endcase
 		end
 	end
 
-	assign aluctrl_ctrl_o = control;
+	assign aluctrl_ctrl_o = ctrl;
 
 endmodule

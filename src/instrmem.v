@@ -16,8 +16,10 @@ module instrmem #(
 	localparam MEM_SIZE = 512;
 
 	// 512 bytes, 128 words
-	reg [7:0] mem [MEM_SIZE - 1:0];
+	reg [31:0] mem [MEM_SIZE - 1:0];
 	reg [31:0] next_instr;
+
+	wire pc_aligned = pc_i >> 2;
 
 	integer i;
 
@@ -34,14 +36,8 @@ module instrmem #(
 		if (HARDCODED) begin
 			@(posedge rst_n); // need two of these
 			@(posedge rst_n);
-			mem[0] <= 8'h93;
-			mem[1] <= 8'h00;
-			mem[2] <= 8'h30;
-			mem[3] <= 8'h00;
-			mem[4] <= 8'h93;
-			mem[5] <= 8'h00;
-			mem[6] <= 8'hb0;
-			mem[7] <= 8'h07;
+			mem[0] <= 32'h00300093; // add1, x1, x0, 3
+			mem[1] <= 32'h07b00093; // addi x1, x0, 123
 		end
 	end
 
@@ -50,9 +46,9 @@ module instrmem #(
 			for (i = 0; i < MEM_SIZE; i++) begin
 				mem[i] <= 0;
 			end
-			next_instr <= 0;
+			next_instr <= 32'h00000013; // nop
 		end else begin
-			next_instr <= {mem[pc_i + 3], mem[pc_i + 2], mem[pc_i + 1], mem[pc_i]};
+			next_instr <= mem[pc_aligned];
 		end
 	end
 

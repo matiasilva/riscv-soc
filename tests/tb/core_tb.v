@@ -1,17 +1,9 @@
 `timescale 1ns / 10ps
 
-`define assert(signal, value) \
-        if (signal !== value) begin \
-            $display("ASSERTION FAILED in %m: signal != value, expected %b, got %b", value, signal); \
-            wavetext <= "FAILED"; \
-            #(HCLK) $finish; \
-        end
-
 module core_tb;
 
 	reg clk;
 	reg rst_n;
-
 
 	reg [1023:0] wavetext;
 	integer scratch1;
@@ -22,7 +14,7 @@ module core_tb;
 	localparam N_TESTS = 1000;
 
 	// include duts here
-	core core_u (
+	core  core_u (
 		.clk(clk),
 		.rst_n(rst_n)
 	);
@@ -38,6 +30,16 @@ module core_tb;
 	end
 
 	// include tasks here
+
+	task assert_cond(input condition, input [255:0] str);
+		begin
+			if (!condition) begin 
+				$strobe("ASSERTION FAILED! %s %b", str, condition); 
+				wavetext <= str; 
+				#HCLK $finish; 
+			end
+		end
+	endtask
 
 	task init();
 		begin

@@ -6,8 +6,8 @@ module regfile (
 	// read interface
 	input  [ 4:0] reg_rd_r1_i   , // read register 1
 	input  [ 4:0] reg_rd_r2_i   , // read register 2
-	output [31:0] reg_rd_data1_o,
-	output [31:0] reg_rd_data2_o,
+	output [31:0] reg_rd_rdata1_o,
+	output [31:0] reg_rd_rdata2_o,
 	// write interface
 	input  [31:0] reg_wr_data_i ,
 	input  [ 4:0] reg_wr_reg_i , // write register
@@ -42,7 +42,7 @@ module regfile (
 		end
 	end
 
-	assign reg_rd_data1_o = isrd_r1zero ? 32'b0 :  next_rdata1;
-	assign reg_rd_data2_o = isrd_r2zero ? 32'b0 : next_rdata2;
+	assign reg_rd_rdata1_o = isrd_r1zero ? 32'b0 :  next_rdata1;
+	assign reg_rd_rdata2_o = isrd_r2zero ? 32'b0 : next_rdata2;
 
 endmodule

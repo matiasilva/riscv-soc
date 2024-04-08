@@ -1,11 +1,14 @@
 `timescale 1us / 1ns
 
-`define assert(signal, value) \
-        if (signal !== value) begin \
-            $display("ASSERTION FAILED in %m: signal != value, expected %b, got %b", value, signal); \
-            wavetext <= "FAILED"; \
-            #(HCLK) $finish; \
-        end
+task assert_cond(input condition, input [255:0] str);
+begin
+	if (!condition) begin 
+		$strobe("ASSERTION FAILED! %s %b", str, condition); 
+		wavetext <= str; 
+		#HCLK $finish; 
+	end
+end
+endtask
 
 module demo_tb ();
 
