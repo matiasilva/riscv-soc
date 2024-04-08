@@ -19,7 +19,7 @@ module instrmem #(
 	reg [31:0] mem [MEM_SIZE - 1:0];
 	reg [31:0] next_instr;
 
-	wire pc_aligned = pc_i >> 2;
+	wire [31:0] pc_aligned = pc_i >> 2;
 
 	integer i;
 
