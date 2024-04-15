@@ -39,6 +39,8 @@ sim:
 	iverilog $(IVERILOG_WARNINGS) -f $(SIM_PATH).f -s $(DESIGN)_tb -o $(BUILD_DIR)/a.out
 	vvp  $(BUILD_DIR)/a.out -fst
 
-.PHONY: clean
+waves:
+	gtkwave $(BUILD_DIR)/$(DESIGN)_tb.fst
+
 clean:
 	rm -rf $(BUILD_DIR)

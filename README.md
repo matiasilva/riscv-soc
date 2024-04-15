@@ -74,7 +74,9 @@ brew install --HEAD randomplum/gtkwave/gtkwave
 
 ### RISC-V decode filter in GTKWave
 
-https://github.com/mattvenn/gtkwave-python-filter-process
+Full credits go to [mattvenn](https://github.com/mattvenn/gtkwave-python-filter-process) for their GTKWave filter process that takes a RISC-V machine code (as one might find in the instruction memory) and transforms it into RV32I assembly.
+
+Note to self: the process file needs to be executable!
 
 ### RISC-V toolchain
 
