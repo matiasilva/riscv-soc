@@ -24,9 +24,7 @@ module instrmem #(
 	integer i;
 
 	initial begin
-		if (PRELOAD) begin
-			@(posedge rst_n); // need two of these
-			@(posedge rst_n);
+		if(PRELOAD) begin
 			if (PRELOAD_FILE === "") begin
 				$display("no preload file provided!");
 				$finish;
@@ -34,19 +32,20 @@ module instrmem #(
 			$readmemh(PRELOAD_FILE,mem,0, 31);
 		end
 		if (HARDCODED) begin
-			@(posedge rst_n); // need two of these
-			@(posedge rst_n);
-			mem[0] <= 32'h00300093; // add1, x1, x0, 3
-			mem[1] <= 32'h07b00093; // addi x1, x0, 123
+			//mem[] <= 32'h00300093; // addi, x1, x0, 3
+			mem[0] <= 32'h07b00093; // addi x1, x0, 123
+			mem[1] <= 32'h001100b3; // add x1, x2, x1
 		end
 	end
 
 	always @(posedge clk or negedge rst_n) begin
 		if(~rst_n) begin
+			`ifdef FPGA
 			for (i = 0; i < MEM_SIZE; i++) begin
 				mem[i] <= 0;
 			end
-			next_instr <= 32'h00000013; // nop
+			`endif
+			next_instr <= 32'h00000000; //  addi, x1, x0, 3
 		end else begin
 			next_instr <= mem[pc_aligned];
 		end

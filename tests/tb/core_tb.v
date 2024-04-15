@@ -9,7 +9,7 @@ module core_tb;
 	integer scratch1;
 
 	localparam CLK = 1;
-	localparam HCLK = CLK * 0.5;
+	localparam QCLK = CLK * 0.25;
 	localparam PDELAY = CLK * 0.001;
 	localparam N_TESTS = 1000;
 
@@ -26,7 +26,7 @@ module core_tb;
 	initial begin
       	$dumpfile("build/core_tb.fst");
       	$dumpvars(0, core_tb);
-      	for (idx = 0; idx < 2; idx = idx + 1) $dumpvars(0, core_u.instrmem_u.mem[idx]);
+      	for (idx = 0; idx < 2; idx = idx + 1) $dumpvars(0, core_u.regfile_u.x[idx]);
 	end
 
 	// include tasks here
@@ -36,15 +36,15 @@ module core_tb;
 			if (!condition) begin 
 				$strobe("ASSERTION FAILED! %s %b", str, condition); 
 				wavetext <= str; 
-				#HCLK $finish; 
+				#CLK $finish; 
 			end
 		end
 	endtask
 
 	task init();
 		begin
-			#HCLK rst_n <= 0;
-			#HCLK rst_n <= 1;
+			#QCLK rst_n <= 0;
+			#QCLK rst_n <= 1;
 		end
 	endtask
 
@@ -54,8 +54,6 @@ module core_tb;
       	$display("start of test");
 
       	init();
-      	@(posedge clk);
-      	wavetext <= "start of test";
       	#100;
       	$display("end of test");
 		$finish;

@@ -18,7 +18,6 @@ module regfile (
 // as we hard wire this to 0 on a read
 // but the register still exists for simplicity
 	reg [31:0] x [31:0];
-
 	reg [31:0] next_rdata1;
 	reg [31:0] next_rdata2;
 
@@ -34,7 +33,9 @@ module regfile (
 			end
 		end else begin
 			if (ctrl_reg_we_i) begin
-				x[reg_wr_reg_i] <= reg_wr_data_i;
+				if (reg_wr_reg_i !== 5'b0) begin
+					x[reg_wr_reg_i] <= reg_wr_data_i;
+				end
 			end else begin
 				next_rdata1 <= x[reg_rd_r1_i];
 				next_rdata2 <= x[reg_rd_r2_i];

@@ -83,3 +83,7 @@ Format of the process file: I wasn't able to find any strict documentation on th
 ### RISC-V toolchain
 
 https://github.com/riscv-software-src/homebrew-riscv?tab=readme-ov-file
+
+### macros
+
+FPGA
