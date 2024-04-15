@@ -5,7 +5,8 @@ TESTS_PATH := tests/tb/$(DESIGN)
 SIM_PATH := sim/$(DESIGN)
 BUILD_DIR = build
 
-IVERILOG_WARNINGS := -Wanachronisms -Wimplicit -Wimplicit-dimensions -Wmacro-replacement -Wportbind -Wselect-range -Wsensitivity-entire-array
+#IVERILOG_WARNINGS := -Wanachronisms -Wimplicit -Wimplicit-dimensions -Wmacro-replacement -Wportbind -Wselect-range -Wsensitivity-entire-array
+IVERILOG_WARNINGS := -Wall -Wno-timescale
 
 ICELINK_DIR=$(shell df | grep iCELink | awk '{print $$6}')
 ${warning iCELink path: $(ICELINK_DIR)}

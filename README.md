@@ -57,3 +57,25 @@ UUID=2702-1974 /mnt/iCELink vfat defaults,auto,users,rw,nofail 0 0
 ```
 
 and that was it!
+
+### Homebrew formula for  GTKWave for MacOS (M-series)
+
+GTKWave underwent a complete rewrite and somewhere along the line compatibility with newer Macs was broken. The author does not work on a Mac so couldn't provide correct build instructions. Some nice guy on the internet created a custom Homebrew formula with all the right steps to compile from source. I'm also testing a new waveform visualizer called "surfer".
+
+```
+brew update
+brew outdated
+brew upgrade
+brew cleanup
+brew uninstall gtkwave
+brew untap randomplum/gtkwave
+brew install --HEAD randomplum/gtkwave/gtkwave
+```
+
+### RISC-V decode filter in GTKWave
+
+https://github.com/mattvenn/gtkwave-python-filter-process
+
+### RISC-V toolchain
+
+https://github.com/riscv-software-src/homebrew-riscv?tab=readme-ov-file

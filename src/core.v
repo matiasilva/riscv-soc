@@ -117,7 +117,7 @@ writeback pipeline stage
 
 wire [31:0] alu_out_q5;
 wire [31:0] mem_rdata_q5;
-
+wire [4:0] reg_wr_reg_q5;
 
 /*
 main control unit
@@ -152,7 +152,7 @@ regfile regfile_u (
 	.reg_rd_r2_i   (reg_rd_2         ),
 	.reg_rd_rdata1_o(reg_rd_rdata1_q2),
 	.reg_rd_rdata2_o(reg_rd_rdata2_q2),
-	.reg_wr_reg_i (reg_wr_reg      ),
+	.reg_wr_reg_i (reg_wr_reg_q5      ),
 	.reg_wr_data_i (reg_wr_data      ),
 	.ctrl_reg_we_i (ctrl_q5[CTRL_REG_WE])
 );
@@ -208,8 +208,8 @@ IDEX #(.CTRL_WIDTH(CTRL_WIDTH)) id_ex_u (
 	.rd_rdata1_o(reg_rd_rdata1_q3),
 	.rd_rdata2_i(reg_rd_rdata2_q2),
 	.rd_rdata2_o(reg_rd_rdata2_q3),
-	.wr_reg_i (reg_wr_reg      ),
-	.wr_reg_o (reg_wr_reg_q3 ),
+	.reg_wr_reg_i (reg_wr_reg      ),
+	.reg_wr_reg_o (reg_wr_reg_q3 ),
 	.ctrl_q2_i (ctrl_q2        ),
 	.ctrl_q2_o (ctrl_q3        ),
 	.funct_i   (funct_q2       ),
@@ -235,6 +235,8 @@ MEMWB #(.CTRL_WIDTH(CTRL_WIDTH)) mem_wb_u (
 	.clk        (clk           ),
 	.rst_n      (rst_n         ),
 	.alu_out_i  (alu_out_q4  ),
+	.reg_wr_reg_i(reg_wr_reg_q4),
+	.reg_wr_reg_o(reg_wr_reg_q5),
 	.alu_out_o  (alu_out_q5  ),
 	.mem_rdata_i(mem_rdata_q4),
 	.mem_rdata_o(mem_rdata_q5),
