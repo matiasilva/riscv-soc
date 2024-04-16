@@ -42,6 +42,10 @@ module core (
   localparam OP_LOAD = 7'b0000011;
   localparam OP_STORE = 7'b0100011;
 
+  localparam FORWARD_Q2 = 2'b00;
+  localparam FORWARD_Q3 = 2'b01;
+  localparam FORWARD_Q4 = 2'b10;
+
   /*
 instruction fetch pipeline stage
 */
@@ -71,6 +75,10 @@ instruction fetch pipeline stage
 
   /* q2 out, q3 in */
   wire [31:0] instr_q3;
+  wire [6:0] opcode_q3 = instr_q3[6:0];
+  wire [4:0] rd_q3 = instr_q3[11:7];
+  wire [4:0] rs1_q3 = instr_q3[19:15];
+  wire [4:0] rs2_q3 = instr_q3[24:20];  
   wire [3:0] funct_q2 = {funct7[5], funct3};  // this can be cleaned up (absorbed into instr_q3s)
   wire [31:0] imm_se_q2;
   wire [3:0] funct_q3;
@@ -83,14 +91,19 @@ instruction fetch pipeline stage
 
   /* ALU and ALU control */
   wire [3:0] aluctrl_ctrl;
+  reg [31:0] alu_in1_forward;
+  reg [31:0] alu_in2_forward;
   wire [31:0] alu_in1 = reg_rd_data1_q3;
   wire [31:0] alu_in2 = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
   wire [1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
 
   /* q3 out, q4 in */
-
   wire [31:0] mem_rdata_q4;
   wire [31:0] instr_q4;
+  wire [6:0] opcode_q4 = instr_q4[6:0];
+  wire [4:0] rd_q4 = instr_q4[11:7];
+  wire [4:0] rs1_q4 = instr_q4[19:15];
+  wire [4:0] rs2_q4 = instr_q4[24:20];
   wire [31:0] pc_next_q3 = (imm_se_q3 << 2) | pc_incr_q3;
   wire [31:0] pc_next_q4;
   wire [4:0] reg_wr_port_q4;
@@ -98,7 +111,6 @@ instruction fetch pipeline stage
   wire [31:0] alu_out_q4;
 
   /* q4 out, q5 in */
-
   wire [31:0] alu_out_q5;
   wire [31:0] instr_q5;
   wire [31:0] mem_rdata_q5;
@@ -106,12 +118,14 @@ instruction fetch pipeline stage
   wire [31:0] reg_wr_data_q5 = ctrl_q5[CTRL_IS_MEM_TO_REG] ? mem_rdata_q5 : alu_out_q5;
 
   /* main control unit */
-
   wire [CTRL_WIDTH-1:0] ctrl_q2;
   wire [CTRL_WIDTH-1:0] ctrl_q3;
   wire [CTRL_WIDTH-1:0] ctrl_q4;
   wire [CTRL_WIDTH-1:0] ctrl_q5;
 
+  /* forwarding unit */
+  reg [1:0] forward_alu_a;
+  reg [1:0] forward_alu_b;
 
   instrmem #(
       .HARDCODED(1)
@@ -123,8 +137,8 @@ instruction fetch pipeline stage
   );
 
   alu alu_u (
-      .alu_a_i       (alu_in1),
-      .alu_b_i       (alu_in2),
+      .alu_a_i       (alu_in1_forward),
+      .alu_b_i       (alu_in2_forward),
       .aluctrl_ctrl_i(aluctrl_ctrl),
       .alu_out_o     (alu_out_q3)
   );
@@ -196,7 +210,9 @@ pipeline registers
       .ctrl_q2_i     (ctrl_q2),
       .ctrl_q2_o     (ctrl_q3),
       .funct_i       (funct_q2),
-      .funct_o       (funct_q3)
+      .funct_o       (funct_q3),
+      .instr_i       (instr_q2),
+      .instr_o       (instr_q3)
   );
 
   q3q4 #(
@@ -213,7 +229,9 @@ pipeline registers
       .alu_out_i     (alu_out_q3),
       .alu_out_o     (alu_out_q4),
       .ctrl_q3_i     (ctrl_q3),
-      .ctrl_q3_o     (ctrl_q4)
+      .ctrl_q3_o     (ctrl_q4),
+      .instr_i       (instr_q3),
+      .instr_o       (instr_q4)
   );
 
   q4q5 #(
@@ -228,7 +246,9 @@ pipeline registers
       .mem_rdata_i  (mem_rdata_q4),
       .mem_rdata_o  (mem_rdata_q5),
       .ctrl_q4_i    (ctrl_q4),
-      .ctrl_q4_o    (ctrl_q5)
+      .ctrl_q4_o    (ctrl_q5),
+      .instr_i      (instr_q4),
+      .instr_o      (instr_q5)
   );
 
   /*
@@ -251,6 +271,28 @@ which is what we actually care about
   end
 
   // simple forwarding logic
+  always @(*) begin
+  	forward_alu_a = FORWARD_Q2;
+  	forward_alu_b = FORWARD_Q2;
+  	if (ctrl_q3[CTRL_REG_WR_EN] && rd_q3 === rs1 && rd_q3 !== 5'b0) forward_alu_a = FORWARD_Q3;
+  	if (ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs1 && rd_q4 !== 5'b0) forward_alu_a = FORWARD_Q4;
+  	if (ctrl_q3[CTRL_REG_WR_EN] && rd_q3 === rs2 && rd_q3 !== 5'b0) forward_alu_b = FORWARD_Q3;
+  	if (ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2 && rd_q4 !== 5'b0) forward_alu_b = FORWARD_Q4;
+  end
 
+  always @(*) begin
+    case (forward_alu_a)
+          FORWARD_Q2: alu_in1_forward = alu_in1;
+          FORWARD_Q3: alu_in1_forward = alu_out_q4;
+          FORWARD_Q4: alu_in1_forward = alu_out_q5;
+    endcase
+  end
 
+  always @(*) begin
+    case (forward_alu_b)
+          FORWARD_Q2: alu_in2_forward = alu_in2;
+          FORWARD_Q3: alu_in2_forward = alu_out_q4;
+          FORWARD_Q4: alu_in2_forward = alu_out_q5;
+    endcase
+  end
 endmodule

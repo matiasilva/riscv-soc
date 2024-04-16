@@ -34,7 +34,7 @@ module instrmem #(
     if (HARDCODED) begin
       mem[0] <= 32'h07b00093;  // addi x1, x0, 123
       mem[1] <= 32'h00510113;  // addi x2, x0, 5
-      //mem[2] <= 32'h002081b3; // add x3, x2, x1
+      mem[2] <= 32'h002081b3; // add x3, x2, x1
     end
   end
 

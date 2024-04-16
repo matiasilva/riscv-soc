@@ -13,9 +13,7 @@ module q1q2 (
 
   always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
-`ifdef FPGA
-      next_instr <= 32'h00000013;
-`endif
+      next_instr <= 32'h00000013; //NOP
       next_pc_incr <= 0;
     end else begin
       next_instr   <= instr_i;
