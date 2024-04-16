@@ -3,6 +3,7 @@ DESIGN ?= core
 HDL_PATH := src/$(DESIGN)
 TESTS_PATH := tests/tb/$(DESIGN)
 SIM_PATH := sim/$(DESIGN)
+SRC_FILES := sim/*
 BUILD_DIR = build
 
 #IVERILOG_WARNINGS := -Wanachronisms -Wimplicit -Wimplicit-dimensions -Wmacro-replacement -Wportbind -Wselect-range -Wsensitivity-entire-array
@@ -41,6 +42,9 @@ sim:
 
 waves:
 	gtkwave $(BUILD_DIR)/$(DESIGN)_tb.fst
+
+format:
+	verible-verilog-format $(SRC_FILES)
 
 clean:
 	rm -rf $(BUILD_DIR)

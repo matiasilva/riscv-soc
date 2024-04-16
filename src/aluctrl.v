@@ -16,32 +16,32 @@
 */
 
 module aluctrl (
-	input [1:0] ctrl_aluop_i,
-	input [3:0] funct_i,
-	output [3:0] aluctrl_ctrl_o
+    input  [1:0] ctrl_aluop_i,
+    input  [3:0] funct_i,
+    output [3:0] aluctrl_ctrl_o
 );
 
-	localparam ADD = 4'b0000;
-	localparam SETLESSTHANUNSIGNED = 4'b0011;
+  localparam ADD = 4'b0000;
+  localparam SETLESSTHANUNSIGNED = 4'b0011;
 
-	reg [3:0] ctrl;
+  reg [3:0] ctrl;
 
-	always @(*) begin
-		ctrl = 4'hx;
-		case (ctrl_aluop_i)
-			2'b00: begin
-				// SW/LW -> add
-				ctrl = ADD;
-			end
-			2'b01: begin
-				ctrl = SETLESSTHANUNSIGNED;
-			end
-			2'b10: begin
-				ctrl = funct_i;
-			end
-		endcase
-	end
+  always @(*) begin
+    ctrl = 4'hx;
+    case (ctrl_aluop_i)
+      2'b00: begin
+        // SW/LW -> add
+        ctrl = ADD;
+      end
+      2'b01: begin
+        ctrl = SETLESSTHANUNSIGNED;
+      end
+      2'b10: begin
+        ctrl = funct_i;
+      end
+    endcase
+  end
 
-	assign aluctrl_ctrl_o = ctrl;
+  assign aluctrl_ctrl_o = ctrl;
 
 endmodule

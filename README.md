@@ -87,3 +87,7 @@ https://github.com/riscv-software-src/homebrew-riscv?tab=readme-ov-file
 ### macros
 
 FPGA
+
+### formatting
+
+https://github.com/chipsalliance/verible/blob/master/verilog/tools/formatter/README.md
