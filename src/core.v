@@ -7,10 +7,10 @@
 `include "control.v"
 `include "aluctrl.v"
 
-`include "pipeline_regs/IFID.v"
-`include "pipeline_regs/IDEX.v"
-`include "pipeline_regs/EXMEM.v"
-`include "pipeline_regs/MEMWB.v"
+`include "pipeline_regs/q1q2.v"
+`include "pipeline_regs/q2q3.v"
+`include "pipeline_regs/q3q4.v"
+`include "pipeline_regs/q4q5.v"
 
 /*
 	top level wrapper for a 5 stage RISC-V pipeline
@@ -65,11 +65,11 @@ wire [ 6:0] imm_upper = instr[31:25];
 wire [ 4:0] imm_lower = instr[11:7] ;
 
 // register file
-wire [31:0] reg_rd_rdata1_q2;
-wire [31:0] reg_rd_rdata2_q2;
+wire [31:0] reg_rd_data1_q2;
+wire [31:0] reg_rd_data2_q2;
 wire [ 4:0] reg_rd_1    = rs1;
 wire [ 4:0] reg_rd_2    = rs2;
-wire [ 4:0] reg_wr_reg    = rd;
+wire [ 4:0] reg_wr_port    = rd;
 wire [31:0] reg_wr_data = ctrl_q5[CTRL_IS_MEM_TO_REG] ? mem_rdata_q5 : alu_out_q5;
 
 /*
@@ -77,8 +77,8 @@ ALU and instruction execute pipeline stage
 */
 // ALU
 wire [31:0] imm_se_q2;
-wire [31:0] alu_in1 = reg_rd_rdata1_q3;
-wire [31:0] alu_in2 = ctrl_q3[CTRL_ALUSRC] ? reg_rd_rdata2_q3 : imm_se_q3;
+wire [31:0] alu_in1 = reg_rd_data1_q3;
+wire [31:0] alu_in2 = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
 wire [31:0] alu_out_q3;
 
 // ALU control
@@ -89,9 +89,9 @@ wire [3:0] funct_q3;
 // pipeline wires
 wire [31:0] imm_se_q3;
 wire [31:0] pc_incr_q3;
-wire [31:0] reg_rd_rdata1_q3;
-wire [31:0] reg_rd_rdata2_q3;
-wire [4:0] reg_wr_reg_q3;
+wire [31:0] reg_rd_data1_q3;
+wire [31:0] reg_rd_data2_q3;
+wire [4:0] reg_wr_port_q3;
 
 // helpers
 wire [1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
@@ -106,8 +106,8 @@ wire [31:0] mem_rdata_q4;
 // pipeline wires
 wire [31:0] pc_next_q3 = (imm_se_q3 << 2) | pc_incr_q3;
 wire [31:0] pc_next_q4;
-wire [4:0] reg_wr_reg_q4;
-wire [31:0] reg_rd_rdata2_q4;
+wire [4:0] reg_wr_port_q4;
+wire [31:0] reg_rd_data2_q4;
 wire [31:0] alu_out_q4;
 
 
@@ -117,7 +117,7 @@ writeback pipeline stage
 
 wire [31:0] alu_out_q5;
 wire [31:0] mem_rdata_q5;
-wire [4:0] reg_wr_reg_q5;
+wire [4:0] reg_wr_port_q5;
 
 /*
 main control unit
@@ -148,12 +148,12 @@ alu alu_u (
 regfile regfile_u (
 	.clk           (clk              ),
 	.rst_n         (rst_n            ),
-	.reg_rd_r1_i   (reg_rd_1         ),
-	.reg_rd_r2_i   (reg_rd_2         ),
-	.reg_rd_rdata1_o(reg_rd_rdata1_q2),
-	.reg_rd_rdata2_o(reg_rd_rdata2_q2),
-	.reg_wr_reg_i (reg_wr_reg_q5      ),
-	.reg_wr_data_i (reg_wr_data      ),
+	.rd_port1_i   (reg_rd_1         ),
+	.rd_port2_i   (reg_rd_2         ),
+	.rd_data1_o(reg_rd_data1_q2),
+	.rd_data2_o(reg_rd_data2_q2),
+	.wr_port_i (reg_wr_port_q5      ),
+	.wr_data_i (reg_wr_data      ),
 	.ctrl_reg_we_i (ctrl_q5[CTRL_REG_WE])
 );
 
@@ -179,7 +179,7 @@ memory memory_u (
 	.ctrl_mem_re_i(ctrl_q4[CTRL_MEM_RE]),
 	.ctrl_mem_we_i(ctrl_q4[CTRL_MEM_WE]),
 	.mem_addr_i       (alu_out_q4     ),
-	.mem_wdata_i      (reg_rd_rdata2_q4),
+	.mem_wdata_i      (reg_rd_data2_q4),
 	.mem_rdata_o      (mem_rdata_q4   )
 );
 
@@ -188,60 +188,60 @@ memory memory_u (
 pipeline registers
 */
 
-IFID if_id_u (
-	.clk      (clk         ),
-	.rst_n    (rst_n       ),
-	.pc_incr_i(pc_incr     ),
+q1q2 q1q2_u (
+	.clk      (clk       ),
+	.rst_n    (rst_n     ),
+	.pc_incr_i(pc_incr   ),
+	.pc_incr_o(pc_incr_q2),
 	.instr_i  (instr_q1  ),
-	.instr_o  (instr_q2  ),
-	.pc_incr_o(pc_incr_q2)
+	.instr_o  (instr_q2  )
 );
 
-IDEX #(.CTRL_WIDTH(CTRL_WIDTH)) id_ex_u (
-	.clk       (clk              ),
-	.rst_n     (rst_n            ),
-	.imm_se_i  (imm_se_q2      ),
-	.imm_se_o  (imm_se_q3      ),
-	.pc_incr_i (pc_incr_q2     ),
-	.pc_incr_o (pc_incr_q3     ),
-	.rd_rdata1_i(reg_rd_rdata1_q2),
-	.rd_rdata1_o(reg_rd_rdata1_q3),
-	.rd_rdata2_i(reg_rd_rdata2_q2),
-	.rd_rdata2_o(reg_rd_rdata2_q3),
-	.reg_wr_reg_i (reg_wr_reg      ),
-	.reg_wr_reg_o (reg_wr_reg_q3 ),
-	.ctrl_q2_i (ctrl_q2        ),
-	.ctrl_q2_o (ctrl_q3        ),
-	.funct_i   (funct_q2       ),
-	.funct_o   (funct_q3       )
+q2q3 #(.CTRL_WIDTH(CTRL_WIDTH)) q2q3_u (
+	.clk           (clk            ),
+	.rst_n         (rst_n          ),
+	.imm_se_i      (imm_se_q2      ),
+	.imm_se_o      (imm_se_q3      ),
+	.pc_incr_i     (pc_incr_q2     ),
+	.pc_incr_o     (pc_incr_q3     ),
+	.reg_rd_data1_i(reg_rd_data1_q2),
+	.reg_rd_data1_o(reg_rd_data1_q3),
+	.reg_rd_data2_i(reg_rd_data2_q2),
+	.reg_rd_data2_o(reg_rd_data2_q3),
+	.reg_wr_port_i (reg_wr_port    ),
+	.reg_wr_port_o (reg_wr_port_q3 ),
+	.ctrl_q2_i     (ctrl_q2        ),
+	.ctrl_q2_o     (ctrl_q3        ),
+	.funct_i       (funct_q2       ),
+	.funct_o       (funct_q3       )
 );
 
-EXMEM #(.CTRL_WIDTH(CTRL_WIDTH)) ex_mem_u (
-	.clk      (clk              ),
-	.rst_n    (rst_n            ),
-	.pc_next_i(pc_next_q3     ),
-	.pc_next_o(pc_next_q4     ),
-	.wr_reg_i(reg_wr_reg_q3 ),
-	.wr_reg_o(reg_wr_reg_q4 ),
-	.rdata2_i (reg_rd_rdata2_q3),
-	.rdata2_o (reg_rd_rdata2_q4),
-	.alu_out_i(alu_out_q3     ),
-	.alu_out_o(alu_out_q4     ),
-	.ctrl_q3_i (ctrl_q3),
-	.ctrl_q3_o(ctrl_q4)
+q3q4 #(.CTRL_WIDTH(CTRL_WIDTH)) q3q4_u (
+	.clk           (clk            ),
+	.rst_n         (rst_n          ),
+	.pc_next_i     (pc_next_q3     ),
+	.pc_next_o     (pc_next_q4     ),
+	.reg_wr_port_i (reg_wr_port_q3 ),
+	.reg_wr_port_o (reg_wr_port_q4 ),
+	.reg_rd_data2_i(reg_rd_data2_q3),
+	.reg_rd_data2_o(reg_rd_data2_q4),
+	.alu_out_i     (alu_out_q3     ),
+	.alu_out_o     (alu_out_q4     ),
+	.ctrl_q3_i     (ctrl_q3        ),
+	.ctrl_q3_o     (ctrl_q4        )
 );
 
-MEMWB #(.CTRL_WIDTH(CTRL_WIDTH)) mem_wb_u (
-	.clk        (clk           ),
-	.rst_n      (rst_n         ),
-	.alu_out_i  (alu_out_q4  ),
-	.reg_wr_reg_i(reg_wr_reg_q4),
-	.reg_wr_reg_o(reg_wr_reg_q5),
-	.alu_out_o  (alu_out_q5  ),
-	.mem_rdata_i(mem_rdata_q4),
-	.mem_rdata_o(mem_rdata_q5),
-	.ctrl_q4_i  (ctrl_q4),
-	.ctrl_q4_o  (ctrl_q5)
+q4q5 #(.CTRL_WIDTH(CTRL_WIDTH)) q4q5_u (
+	.clk          (clk           ),
+	.rst_n        (rst_n         ),
+	.alu_out_i    (alu_out_q4    ),
+	.reg_wr_port_i(reg_wr_port_q4),
+	.reg_wr_port_o(reg_wr_port_q5),
+	.alu_out_o    (alu_out_q5    ),
+	.mem_rdata_i  (mem_rdata_q4  ),
+	.mem_rdata_o  (mem_rdata_q5  ),
+	.ctrl_q4_i    (ctrl_q4       ),
+	.ctrl_q4_o    (ctrl_q5       )
 );
 
 /*

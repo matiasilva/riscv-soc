@@ -26,7 +26,7 @@ module core_tb;
 	initial begin
       	$dumpfile("build/core_tb.fst");
       	$dumpvars(0, core_tb);
-      	for (idx = 0; idx < 2; idx = idx + 1) $dumpvars(0, core_u.regfile_u.x[idx]);
+      	for (idx = 1; idx < 4; idx = idx + 1) $dumpvars(0, core_u.regfile_u.x[idx]);
 	end
 
 	// include tasks here

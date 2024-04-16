@@ -1,5 +1,5 @@
-
-module IFID (
+/* instruction fetch to instruction decode/register file access */
+module q1q2 (
 	input clk,
 	input rst_n,
 	input [31:0] instr_i,

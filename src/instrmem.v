@@ -32,9 +32,9 @@ module instrmem #(
 			$readmemh(PRELOAD_FILE,mem,0, 31);
 		end
 		if (HARDCODED) begin
-			//mem[] <= 32'h00300093; // addi, x1, x0, 3
 			mem[0] <= 32'h07b00093; // addi x1, x0, 123
-			mem[1] <= 32'h001100b3; // add x1, x2, x1
+			mem[1] <= 32'h00510113; // addi x2, x0, 5
+			mem[2] <= 32'h002081b3; // add x3, x2, x1
 		end
 	end
 
