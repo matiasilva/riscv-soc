@@ -50,10 +50,7 @@ wire [31:0] pc_incr_q2;
 wire [31:0] instr_q1  ;
 wire [31:0] instr_q2  ;
 
-/*
-instruction decode and register file pipeline stage
-*/
-// instruction decode
+/* q1 out, q2 in */
 wire [ 4:0] rs1       = instr[19:15];
 wire [ 4:0] rs2       = instr[24:20];
 wire [ 4:0] rd        = instr[11:7] ;
@@ -63,65 +60,46 @@ wire [ 6:0] opcode    = instr[6:0]  ;
 wire [11:0] imm       = instr[31:20];
 wire [ 6:0] imm_upper = instr[31:25];
 wire [ 4:0] imm_lower = instr[11:7] ;
-
-// register file
+wire [ 4:0] reg_rd_port1 = rs1;
+wire [ 4:0] reg_rd_port2 = rs2;
 wire [31:0] reg_rd_data1_q2;
 wire [31:0] reg_rd_data2_q2;
-wire [ 4:0] reg_rd_1    = rs1;
-wire [ 4:0] reg_rd_2    = rs2;
-wire [ 4:0] reg_wr_port    = rd;
-wire [31:0] reg_wr_data = ctrl_q5[CTRL_IS_MEM_TO_REG] ? mem_rdata_q5 : alu_out_q5;
+wire [ 4:0] reg_wr_port_q2 = rd;
 
-/*
-ALU and instruction execute pipeline stage
-*/
-// ALU
+/* q2 out, q3 in */
+wire [ 3:0] funct_q2 = {funct7[5], funct3};
 wire [31:0] imm_se_q2;
-wire [31:0] alu_in1 = reg_rd_data1_q3;
-wire [31:0] alu_in2 = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
+wire [ 3:0] funct_q3;
 wire [31:0] alu_out_q3;
-
-// ALU control
-wire [3:0] aluctrl_ctrl;
-wire [3:0] funct_q2 = {funct7[5], funct3};
-wire [3:0] funct_q3;
-
-// pipeline wires
 wire [31:0] imm_se_q3;
 wire [31:0] pc_incr_q3;
 wire [31:0] reg_rd_data1_q3;
 wire [31:0] reg_rd_data2_q3;
-wire [4:0] reg_wr_port_q3;
+wire [ 4:0] reg_wr_port_q3;
 
-// helpers
-wire [1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
+/* ALU and ALU control */
+wire [ 3:0] aluctrl_ctrl;
+wire [31:0] alu_in1 = reg_rd_data1_q3;
+wire [31:0] alu_in2 = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
+wire [ 1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
 
-
-/*
-memory access pipeline stage
-*/
+/* q3 out, q4 in */
 
 wire [31:0] mem_rdata_q4;
-
-// pipeline wires
 wire [31:0] pc_next_q3 = (imm_se_q3 << 2) | pc_incr_q3;
 wire [31:0] pc_next_q4;
-wire [4:0] reg_wr_port_q4;
+wire [ 4:0] reg_wr_port_q4;
 wire [31:0] reg_rd_data2_q4;
 wire [31:0] alu_out_q4;
 
-
-/*
-writeback pipeline stage
-*/
+/* q4 out, q5 in */
 
 wire [31:0] alu_out_q5;
 wire [31:0] mem_rdata_q5;
-wire [4:0] reg_wr_port_q5;
+wire [ 4:0] reg_wr_port_q5;
+wire [31:0] reg_wr_data_q5 = ctrl_q5[CTRL_IS_MEM_TO_REG] ? mem_rdata_q5 : alu_out_q5;
 
-/*
-main control unit
-*/
+/* main control unit */
 
 wire [CTRL_WIDTH-1:0] ctrl_q2;
 wire [CTRL_WIDTH-1:0] ctrl_q3;
@@ -146,15 +124,15 @@ alu alu_u (
 );
 
 regfile regfile_u (
-	.clk           (clk              ),
-	.rst_n         (rst_n            ),
-	.rd_port1_i   (reg_rd_1         ),
-	.rd_port2_i   (reg_rd_2         ),
-	.rd_data1_o(reg_rd_data1_q2),
-	.rd_data2_o(reg_rd_data2_q2),
-	.wr_port_i (reg_wr_port_q5      ),
-	.wr_data_i (reg_wr_data      ),
-	.ctrl_reg_we_i (ctrl_q5[CTRL_REG_WE])
+	.clk          (clk                 ),
+	.rst_n        (rst_n               ),
+	.rd_port1_i   (reg_rd_port1     ),
+	.rd_port2_i   (reg_rd_port1     ),
+	.rd_data1_o   (reg_rd_data1_q2     ),
+	.rd_data2_o   (reg_rd_data2_q2     ),
+	.wr_port_i    (reg_wr_port_q5      ),
+	.wr_data_i    (reg_wr_data_q5       ),
+	.ctrl_reg_we_i(ctrl_q5[CTRL_REG_WE])
 );
 
 control 	#(.CTRL_WIDTH(CTRL_WIDTH))
@@ -208,7 +186,7 @@ q2q3 #(.CTRL_WIDTH(CTRL_WIDTH)) q2q3_u (
 	.reg_rd_data1_o(reg_rd_data1_q3),
 	.reg_rd_data2_i(reg_rd_data2_q2),
 	.reg_rd_data2_o(reg_rd_data2_q3),
-	.reg_wr_port_i (reg_wr_port    ),
+	.reg_wr_port_i (reg_wr_port_q2 ),
 	.reg_wr_port_o (reg_wr_port_q3 ),
 	.ctrl_q2_i     (ctrl_q2        ),
 	.ctrl_q2_o     (ctrl_q3        ),
