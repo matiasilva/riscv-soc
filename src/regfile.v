@@ -26,20 +26,20 @@ module regfile (
 
 	integer i;
 
-	always @(posedge clk or negedge rst_n) begin
-		if(~rst_n) begin
-			for (i = 0; i < 32; i++) begin
-				x[i] <= 32'b0;
+	initial begin
+		for (i = 0; i < 32; i++) begin
+			x[i] = 32'b0;
+		end
+	end
+
+	always @(*) begin
+		if (ctrl_reg_we_i) begin
+			if (wr_port_i !== 5'b0) begin
+				x[wr_port_i] = wr_data_i;
 			end
 		end else begin
-			if (ctrl_reg_we_i) begin
-				if (wr_port_i !== 5'b0) begin
-					x[wr_port_i] <= wr_data_i;
-				end
-			end else begin
-				next_rd_data1 <= x[rd_port1_i];
-				next_rd_data2 <= x[rd_port2_i];
-			end
+			next_rd_data1 = x[rd_port1_i];
+			next_rd_data2 = x[rd_port2_i];
 		end
 	end
 

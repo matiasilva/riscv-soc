@@ -13,8 +13,6 @@
 */
 
 module alu (
-	input         clk           ,
-	input         rst_n         ,
 	input  [31:0] alu_a_i       ,
 	input  [31:0] alu_b_i       ,
 	input  [ 3:0] aluctrl_ctrl_i,
@@ -37,30 +35,26 @@ module alu (
 
 	reg [31:0] result;
 
-	always @(posedge clk or negedge rst_n) begin
-		if (~rst_n) begin
-			result <= 32'b0;
-		end else begin
-			result <= 32'b0;
-			case (aluctrl_ctrl_i)
-				OP_ADD : result <= alu_a_i + alu_b_i;
-				OP_SUB : result <= diff;
-				OP_SLT : begin
-					if (alu_a_i[31] ^ alu_b_i[31]) begin
-						result <= alu_a_i[31];
-					end else begin
-						result <= diff[31];
-					end
+	always @(*) begin
+		result = 32'b0;
+		case (aluctrl_ctrl_i)
+			OP_ADD : result = alu_a_i + alu_b_i;
+			OP_SUB : result = diff;
+			OP_SLT : begin
+				if (alu_a_i[31] ^ alu_b_i[31]) begin
+					result = alu_a_i[31];
+				end else begin
+					result = diff[31];
 				end
-				OP_SLTU : result <= alu_a_i < alu_b_i;
-				OP_AND : result <= alu_a_i & alu_b_i;
-				OP_OR : result <= alu_a_i | alu_b_i;
-				OP_XOR : result <= alu_a_i ^ alu_b_i;
-				OP_SLL : result <= alu_a_i << shamt;
-				OP_SRL : result <= alu_a_i >> shamt;
-				OP_SRA : result <= $signed(alu_a_i) >>> shamt;
-			endcase
-		end
+			end
+			OP_SLTU : result = alu_a_i < alu_b_i;
+			OP_AND : result = alu_a_i & alu_b_i;
+			OP_OR : result = alu_a_i | alu_b_i;
+			OP_XOR : result = alu_a_i ^ alu_b_i;
+			OP_SLL : result = alu_a_i << shamt;
+			OP_SRL : result = alu_a_i >> shamt;
+			OP_SRA : result = $signed(alu_a_i) >>> shamt;
+		endcase
 	end
 
 	assign alu_out_o = result;

@@ -13,7 +13,9 @@ reg [31:0] next_pc_incr;
 
 always @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
-		next_instr <= 0;
+		`ifdef FPGA
+		next_instr <= 32'h00000013;
+		`endif
 		next_pc_incr <= 0;
 	end else begin
 		next_instr <= instr_i;

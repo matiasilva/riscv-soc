@@ -16,7 +16,7 @@
 	top level wrapper for a 5 stage RISC-V pipeline
 
 	q1 (assumed)
-	q2 instruction decode
+	q2 instruction decode / register file
 	q3 execute / ALU
 	q4 memory access
 	q5 write back
@@ -42,24 +42,23 @@ localparam CTRL_IS_MEM_TO_REG = 0;
 instruction fetch pipeline stage
 */
 
-reg  [31:0] pc                  ;
+wire [31:0] pc                  ;
 reg  [31:0] pc_incr             ;
-wire [31:0] instr   = instr_q2;
+wire [31:0] instr_q1;
 
 wire [31:0] pc_incr_q2;
-wire [31:0] instr_q1  ;
-wire [31:0] instr_q2  ;
+wire [31:0] instr_q2;
 
 /* q1 out, q2 in */
-wire [ 4:0] rs1       = instr[19:15];
-wire [ 4:0] rs2       = instr[24:20];
-wire [ 4:0] rd        = instr[11:7] ;
-wire [ 2:0] funct3    = instr[14:12];
-wire [ 6:0] funct7    = instr[31:25];
-wire [ 6:0] opcode    = instr[6:0]  ;
-wire [11:0] imm       = instr[31:20];
-wire [ 6:0] imm_upper = instr[31:25];
-wire [ 4:0] imm_lower = instr[11:7] ;
+wire [ 4:0] rs1       = instr_q2[19:15];
+wire [ 4:0] rs2       = instr_q2[24:20];
+wire [ 4:0] rd        = instr_q2[11:7] ;
+wire [ 2:0] funct3    = instr_q2[14:12];
+wire [ 6:0] funct7    = instr_q2[31:25];
+wire [ 6:0] opcode    = instr_q2[6:0]  ;
+wire [11:0] imm       = instr_q2[31:20];
+wire [ 6:0] imm_upper = instr_q2[31:25];
+wire [ 4:0] imm_lower = instr_q2[11:7] ;
 wire [ 4:0] reg_rd_port1 = rs1;
 wire [ 4:0] reg_rd_port2 = rs2;
 wire [31:0] reg_rd_data1_q2;
@@ -115,8 +114,6 @@ instrmem #(.HARDCODED(1)) instrmem_u (
 );
 
 alu alu_u (
-	.clk           (clk         ),
-	.rst_n         (rst_n       ),
 	.alu_a_i       (alu_in1     ),
 	.alu_b_i       (alu_in2     ),
 	.aluctrl_ctrl_i(aluctrl_ctrl),
@@ -137,15 +134,11 @@ regfile regfile_u (
 
 control 	#(.CTRL_WIDTH(CTRL_WIDTH))
 	control_u (
-		.clk     (clk),
-		.rst_n   (rst_n),
 		.opcode_i   (opcode   ),
 		.ctrl_o(ctrl_q2)
 	);
 
 aluctrl alucontrol_u (
-	.clk           (clk),
-	.rst_n         (rst_n),
 	.ctrl_aluop_i  (ctrl_aluop    ),
 	.funct_i       (funct_q3    ),
 	.aluctrl_ctrl_o(aluctrl_ctrl)
@@ -171,8 +164,8 @@ q1q2 q1q2_u (
 	.rst_n    (rst_n     ),
 	.pc_incr_i(pc_incr   ),
 	.pc_incr_o(pc_incr_q2),
-	.instr_i  (instr_q1  ),
-	.instr_o  (instr_q2  )
+	.instr_i  (instr_q1),
+	.instr_o  (instr_q2)
 );
 
 q2q3 #(.CTRL_WIDTH(CTRL_WIDTH)) q2q3_u (
@@ -213,9 +206,9 @@ q4q5 #(.CTRL_WIDTH(CTRL_WIDTH)) q4q5_u (
 	.clk          (clk           ),
 	.rst_n        (rst_n         ),
 	.alu_out_i    (alu_out_q4    ),
+	.alu_out_o    (alu_out_q5    ),
 	.reg_wr_port_i(reg_wr_port_q4),
 	.reg_wr_port_o(reg_wr_port_q5),
-	.alu_out_o    (alu_out_q5    ),
 	.mem_rdata_i  (mem_rdata_q4  ),
 	.mem_rdata_o  (mem_rdata_q5  ),
 	.ctrl_q4_i    (ctrl_q4       ),
@@ -231,14 +224,11 @@ which is what we actually care about
 */
 assign imm_se_q2 = {{20{imm[11]}},imm};
 
-always @(*) begin
-	pc = ctrl_q4[CTRL_IS_BRANCH] ? pc_next_q4: pc_incr;
-end
+assign pc = ctrl_q4[CTRL_IS_BRANCH] ? pc_next_q4: pc_incr;
 
 always @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		pc_incr <= 0;
-		pc <= 0;
 	end else begin
 		pc_incr <= pc_incr + 4;
 	end

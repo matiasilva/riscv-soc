@@ -34,7 +34,7 @@ module instrmem #(
 		if (HARDCODED) begin
 			mem[0] <= 32'h07b00093; // addi x1, x0, 123
 			mem[1] <= 32'h00510113; // addi x2, x0, 5
-			mem[2] <= 32'h002081b3; // add x3, x2, x1
+			//mem[2] <= 32'h002081b3; // add x3, x2, x1
 		end
 	end
 
@@ -44,8 +44,8 @@ module instrmem #(
 			for (i = 0; i < MEM_SIZE; i++) begin
 				mem[i] <= 0;
 			end
+			next_instr <= 32'h00000013; //  NOP
 			`endif
-			next_instr <= 32'h00000000; //  addi, x1, x0, 3
 		end else begin
 			next_instr <= mem[pc_aligned];
 		end

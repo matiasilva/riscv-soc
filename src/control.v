@@ -10,8 +10,6 @@ generates the necessary control signals for muxes
 module control
 	#(parameter CTRL_WIDTH = 16)
  (
- 	input clk,
- 	input rst_n,
 	input [6:0] opcode_i,
 	output [CTRL_WIDTH - 1:0] ctrl_o
 );
@@ -28,8 +26,6 @@ module control
 	reg is_mem_to_reg;
 	reg is_branch;
 	reg alusrc;
-
-	reg [CTRL_WIDTH - 1:0] ctrl;
 
 	always @(*) begin
 		case (opcode_i)
@@ -85,14 +81,6 @@ module control
 	wire [2:0] q4_bits = {is_branch, mem_re, mem_we};
 	wire [1:0] q5_bits = {reg_we, is_mem_to_reg};
 
-	always @(posedge clk or negedge rst_n) begin
-		if(~rst_n) begin
-			ctrl <= 0;
-		end else begin
-			ctrl <= {8'b0, q3_bits, q4_bits, q5_bits};
-		end
-	end
-
-	assign ctrl_o = ctrl;
+	assign ctrl_o = {8'b0, q3_bits, q4_bits, q5_bits};
 
 endmodule
