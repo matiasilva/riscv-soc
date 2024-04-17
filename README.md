@@ -38,7 +38,7 @@ I recommend building each of these tools from source to ensure the latest (worki
 * define a starting instruction (nop) addi x0, x0, 0
 * add pipeline stalls
 * rename pc_incr to pc
-* change memories into word memories! RV32I is word aligned
+* double sw hazard, extra pipeline?
 
 ## Extra steps
 

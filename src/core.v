@@ -121,6 +121,9 @@ instruction fetch pipeline stage
   wire [4:0] reg_wr_port_q5;
   wire [31:0] reg_wr_data_q5 = ctrl_q5[CTRL_IS_MEM_TO_REG] ? mem_rdata_q5 : alu_out_q5;
 
+  /* data memory */
+  reg [31:0] mem_wdata_forwarded;
+
   /* main control unit */
   wire [CTRL_WIDTH-1:0] ctrl_q2;
   wire [CTRL_WIDTH-1:0] ctrl_q3;
@@ -130,6 +133,7 @@ instruction fetch pipeline stage
   /* forwarding unit */
   reg [1:0] forward_alu_in1;
   reg [1:0] forward_alu_in2;
+  reg [1:0] forward_mem_wdata;
 
   instrmem #(
       .HARDCODED(1)
@@ -178,7 +182,7 @@ instruction fetch pipeline stage
       .ctrl_mem_re_i(ctrl_q4[CTRL_MEM_RE]),
       .ctrl_mem_we_i(ctrl_q4[CTRL_MEM_WE]),
       .mem_addr_i   (alu_out_q4),
-      .mem_wdata_i  (reg_rd_data2_q4),
+      .mem_wdata_i  (mem_wdata_forwarded),
       .mem_rdata_o  (mem_rdata_q4)
   );
 
@@ -275,11 +279,13 @@ which is what we actually care about
   end
 
   // simple forwarding logic
-  reg hazard_a_in1, hazard_b_in1, hazard_c_in1;
-  reg hazard_a_in2, hazard_b_in2, hazard_c_in2;
+  // hazards a and b occur in the execution stage
+  reg hazard_a_in1, hazard_b_in1, hazard_a_in2, hazard_b_in2;
+  reg hazard_c;
   always @(*) begin
   	forward_alu_in1 = FORWARD_Q2;
   	forward_alu_in2 = FORWARD_Q2;
+  	forward_mem_wdata = FORWARD_Q2;
   	/*
   		add x1, x2, x3
   		add x4, x1, x5 // hazard a)
@@ -287,20 +293,25 @@ which is what we actually care about
 
   		add x1, x1, x2
   		add x1, x1, x3 // hazard a)
-  		add x1, x1, x4 // hazard c) requires values of x1 from 2nd instr
+  		add x1, x1, x4 // hazard b.2) requires values of x1 from 2nd instr
   	
 		add x1, x2, x3
-		sw x1, x3 // hazard a)
-		sw x1, x4 // hazard b)
+		sw x1, x3 // x3: hazard a, x1: hazard c, result required for MEM but not available until WB
+		sw x1, x4 // x1: hazard d
+
+		lw x1, x2
+		sw x1, x3 // hazard c: x1 forwarded from MEM/WB(q5) regs
   	*/
   	hazard_a_in1 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs1_q3 && rd_q4 !== 5'b0; // EX/MEM hazard
   	hazard_b_in1 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs1_q3 && rd_q5 !== 5'b0;  // MEM/WB hazard
   	hazard_a_in2 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2_q3 && rd_q4 !== 5'b0;
   	hazard_b_in2 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs2_q3 && rd_q5 !== 5'b0;
+  	hazard_c = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs2_q4 && rd_q5 !== 5'b0;
   	if (hazard_a_in1) forward_alu_in1 = FORWARD_Q4;
   	if (hazard_b_in1 && !hazard_a_in1) forward_alu_in1 = FORWARD_Q5; // always forward most recent value
   	if (hazard_a_in2) forward_alu_in2 = FORWARD_Q4;
   	if (hazard_b_in2 && !hazard_a_in2) forward_alu_in2 = FORWARD_Q5;
+  	if(hazard_c) forward_mem_wdata = FORWARD_Q5;
   end
 
   always @(*) begin
@@ -316,6 +327,13 @@ which is what we actually care about
           FORWARD_Q2: alu_in2_forwarded = alu_in2;
           FORWARD_Q4: alu_in2_forwarded = alu_out_q4;
           FORWARD_Q5: alu_in2_forwarded = alu_out_q5;
+    endcase
+  end
+
+  always @(*) begin
+    case (forward_mem_wdata)
+          FORWARD_Q2: mem_wdata_forwarded = reg_rd_data2_q4;
+          FORWARD_Q5: mem_wdata_forwarded = alu_out_q5;
     endcase
   end
 endmodule
