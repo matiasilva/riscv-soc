@@ -43,8 +43,8 @@ module core (
   localparam OP_STORE = 7'b0100011;
 
   localparam FORWARD_Q2 = 2'b00;
-  localparam FORWARD_Q3 = 2'b01;
-  localparam FORWARD_Q4 = 2'b10;
+  localparam FORWARD_Q4 = 2'b01;
+  localparam FORWARD_Q5 = 2'b10;
 
   /*
 instruction fetch pipeline stage
@@ -91,8 +91,8 @@ instruction fetch pipeline stage
 
   /* ALU and ALU control */
   wire [3:0] aluctrl_ctrl;
-  reg [31:0] alu_in1_forward;
-  reg [31:0] alu_in2_forward;
+  reg [31:0] alu_in1_forwarded;
+  reg [31:0] alu_in2_forwarded;
   wire [31:0] alu_in1 = reg_rd_data1_q3;
   wire [31:0] alu_in2 = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
   wire [1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
@@ -113,6 +113,10 @@ instruction fetch pipeline stage
   /* q4 out, q5 in */
   wire [31:0] alu_out_q5;
   wire [31:0] instr_q5;
+  wire [6:0] opcode_q5 = instr_q5[6:0];
+  wire [4:0] rd_q5 = instr_q5[11:7];
+  wire [4:0] rs1_q5 = instr_q5[19:15];
+  wire [4:0] rs2_q5 = instr_q5[24:20];
   wire [31:0] mem_rdata_q5;
   wire [4:0] reg_wr_port_q5;
   wire [31:0] reg_wr_data_q5 = ctrl_q5[CTRL_IS_MEM_TO_REG] ? mem_rdata_q5 : alu_out_q5;
@@ -124,8 +128,8 @@ instruction fetch pipeline stage
   wire [CTRL_WIDTH-1:0] ctrl_q5;
 
   /* forwarding unit */
-  reg [1:0] forward_alu_a;
-  reg [1:0] forward_alu_b;
+  reg [1:0] forward_alu_in1;
+  reg [1:0] forward_alu_in2;
 
   instrmem #(
       .HARDCODED(1)
@@ -137,8 +141,8 @@ instruction fetch pipeline stage
   );
 
   alu alu_u (
-      .alu_a_i       (alu_in1_forward),
-      .alu_b_i       (alu_in2_forward),
+      .alu_a_i       (alu_in1_forwarded),
+      .alu_b_i       (alu_in2_forwarded),
       .aluctrl_ctrl_i(aluctrl_ctrl),
       .alu_out_o     (alu_out_q3)
   );
@@ -271,28 +275,47 @@ which is what we actually care about
   end
 
   // simple forwarding logic
+  reg hazard_a_in1, hazard_b_in1, hazard_c_in1;
+  reg hazard_a_in2, hazard_b_in2, hazard_c_in2;
   always @(*) begin
-  	forward_alu_a = FORWARD_Q2;
-  	forward_alu_b = FORWARD_Q2;
-  	if (ctrl_q3[CTRL_REG_WR_EN] && rd_q3 === rs1 && rd_q3 !== 5'b0) forward_alu_a = FORWARD_Q3;
-  	if (ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs1 && rd_q4 !== 5'b0) forward_alu_a = FORWARD_Q4;
-  	if (ctrl_q3[CTRL_REG_WR_EN] && rd_q3 === rs2 && rd_q3 !== 5'b0) forward_alu_b = FORWARD_Q3;
-  	if (ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2 && rd_q4 !== 5'b0) forward_alu_b = FORWARD_Q4;
+  	forward_alu_in1 = FORWARD_Q2;
+  	forward_alu_in2 = FORWARD_Q2;
+  	/*
+  		add x1, x2, x3
+  		add x4, x1, x5 // hazard a)
+  		add x6, x7, x1 // hazard b)
+
+  		add x1, x1, x2
+  		add x1, x1, x3 // hazard a)
+  		add x1, x1, x4 // hazard c) requires values of x1 from 2nd instr
+  	
+		add x1, x2, x3
+		sw x1, x3 // hazard a)
+		sw x1, x4 // hazard b)
+  	*/
+  	hazard_a_in1 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs1_q3 && rd_q4 !== 5'b0; // EX/MEM hazard
+  	hazard_b_in1 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs1_q3 && rd_q5 !== 5'b0;  // MEM/WB hazard
+  	hazard_a_in2 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2_q3 && rd_q4 !== 5'b0;
+  	hazard_b_in2 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs2_q3 && rd_q5 !== 5'b0;
+  	if (hazard_a_in1) forward_alu_in1 = FORWARD_Q4;
+  	if (hazard_b_in1 && !hazard_a_in1) forward_alu_in1 = FORWARD_Q5; // always forward most recent value
+  	if (hazard_a_in2) forward_alu_in2 = FORWARD_Q4;
+  	if (hazard_b_in2 && !hazard_a_in2) forward_alu_in2 = FORWARD_Q5;
   end
 
   always @(*) begin
-    case (forward_alu_a)
-          FORWARD_Q2: alu_in1_forward = alu_in1;
-          FORWARD_Q3: alu_in1_forward = alu_out_q4;
-          FORWARD_Q4: alu_in1_forward = alu_out_q5;
+    case (forward_alu_in1)
+          FORWARD_Q2: alu_in1_forwarded = alu_in1;
+          FORWARD_Q4: alu_in1_forwarded = alu_out_q4;
+          FORWARD_Q5: alu_in1_forwarded = alu_out_q5;
     endcase
   end
 
   always @(*) begin
-    case (forward_alu_b)
-          FORWARD_Q2: alu_in2_forward = alu_in2;
-          FORWARD_Q3: alu_in2_forward = alu_out_q4;
-          FORWARD_Q4: alu_in2_forward = alu_out_q5;
+    case (forward_alu_in2)
+          FORWARD_Q2: alu_in2_forwarded = alu_in2;
+          FORWARD_Q4: alu_in2_forwarded = alu_out_q4;
+          FORWARD_Q5: alu_in2_forwarded = alu_out_q5;
     endcase
   end
 endmodule
