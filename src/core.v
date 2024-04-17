@@ -34,8 +34,8 @@ module core (
   localparam CTRL_ALUOP0 = 6;
   localparam CTRL_ALUSRC = 5;
   localparam CTRL_IS_BRANCH = 4;
-  localparam CTRL_MEM_RE = 3;
-  localparam CTRL_MEM_WE = 2;
+  localparam ctrl_mem_ren = 3;
+  localparam ctrl_mem_wren = 2;
   localparam CTRL_REG_WR_EN = 1;
   localparam CTRL_IS_MEM_TO_REG = 0;
 
@@ -150,7 +150,8 @@ instruction fetch pipeline stage
   wire [31:0] alu_out_q6;
 
   instrmem #(
-      .HARDCODED(1)
+      .PRELOAD(1),
+      .PRELOAD_FILE("build/core.hex")
   ) instrmem_u (
       .clk    (clk),
       .rst_n  (rst_n),
@@ -190,11 +191,13 @@ instruction fetch pipeline stage
       .aluctrl_ctrl_o(aluctrl_ctrl)
   );
 
-  memory memory_u (
-      .clk          (clk),
+  memory #(
+  	.PRELOAD     (1),
+ 	.PRELOAD_FILE("sim/dmem.hex")
+  ) memory_u (
       .rst_n        (rst_n),
-      .ctrl_mem_re_i(ctrl_q4[CTRL_MEM_RE]),
-      .ctrl_mem_we_i(ctrl_q4[CTRL_MEM_WE]),
+      .ctrl_mem_ren_i(ctrl_q4[ctrl_mem_ren]),
+      .ctrl_mem_wren_i(ctrl_q4[ctrl_mem_wren]),
       .mem_addr_i   (alu_out_q4),
       .mem_wdata_i  (mem_wdata_forwarded),
       .mem_rdata_o  (mem_rdata_q4)

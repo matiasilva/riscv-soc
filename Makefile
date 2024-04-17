@@ -3,8 +3,11 @@ DESIGN ?= core
 HDL_PATH := src/$(DESIGN)
 TESTS_PATH := tests/tb/$(DESIGN)
 SIM_PATH := sim/$(DESIGN)
-SRC_FILES := sim/*
+SIM_DIR := sim/
 BUILD_DIR = build
+
+# tool defs
+RESIZE_HEXFILE := tools/resize_hexfile.py
 
 #IVERILOG_WARNINGS := -Wanachronisms -Wimplicit -Wimplicit-dimensions -Wmacro-replacement -Wportbind -Wselect-range -Wsensitivity-entire-array
 IVERILOG_WARNINGS := -Wall -Wno-timescale
@@ -36,8 +39,11 @@ vis:
 
 .PHONY: sim
 sim:
-	mkdir -p $(BUILD_DIR)
-	iverilog $(IVERILOG_WARNINGS) -f $(SIM_PATH).f -s $(DESIGN)_tb -o $(BUILD_DIR)/a.out
+	mkdir -p $(SIM_DIR)
+	riscv64-unknown-elf-as -march=rv32i -o $(BUILD_DIR)/$(DESIGN).elf $(SIM_DIR)/instrmem.S
+	riscv64-unknown-elf-objcopy -S -O verilog $(BUILD_DIR)/$(DESIGN).elf $(BUILD_DIR)/$(DESIGN)_raw.hex
+	$(RESIZE_HEXFILE) -w 4 -i $(BUILD_DIR)/$(DESIGN)_raw.hex -o $(BUILD_DIR)/$(DESIGN).hex
+	iverilog $(IVERILOG_WARNINGS) -f "$(SIM_DIR)/$(DESIGN).f" -s '$(DESIGN)_tb' -o $(BUILD_DIR)/a.out
 	vvp  $(BUILD_DIR)/a.out -fst
 
 waves:

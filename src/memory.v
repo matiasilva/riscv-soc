@@ -6,10 +6,9 @@ module memory #(
     parameter PRELOAD = 0,
     parameter PRELOAD_FILE = ""
 ) (
-    input clk,
     input rst_n,
-    input ctrl_mem_re_i,
-    input ctrl_mem_we_i,
+    input ctrl_mem_ren_i,
+    input ctrl_mem_wren_i,
     input [31:0] mem_addr_i,
     input [31:0] mem_wdata_i,
     output [31:0] mem_rdata_o
@@ -25,8 +24,6 @@ module memory #(
 
   initial begin
     if (PRELOAD) begin
-      @(posedge rst_n);  // need two of these
-      @(posedge rst_n);
       if (PRELOAD_FILE === "") begin
         $display("no preload file provided!");
         $finish;
@@ -35,17 +32,19 @@ module memory #(
     end
   end
 
-  always @(posedge clk or negedge rst_n) begin
+  always @(*) begin
     if (~rst_n) begin
+      `ifdef FPGA
       for (i = 0; i < MEM_SIZE; i++) begin
         mem[i] <= 0;
       end
+      `endif
       next_rdata <= 0;
     end else begin
-      if (ctrl_mem_re_i) begin
+      if (ctrl_mem_ren_i) begin
         next_rdata <= {mem[mem_addr_i+3], mem[mem_addr_i+2], mem[mem_addr_i+1], mem[mem_addr_i]};
       end
-      if (ctrl_mem_we_i) begin
+      if (ctrl_mem_wren_i) begin
         for (i = 0; i < 4; i++) begin
           mem[mem_addr_i+i] <= mem_wdata_i[i+:8];
         end

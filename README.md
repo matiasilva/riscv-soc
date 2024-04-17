@@ -91,3 +91,8 @@ FPGA
 ### formatting
 
 https://github.com/chipsalliance/verible/blob/master/verilog/tools/formatter/README.md
+
+### verification 
+
+https://github.com/YosysHQ/riscv-formal
+https://github.com/riscv-software-src/riscv-tests/

@@ -27,8 +27,9 @@ module core_tb;
       	$dumpfile("build/core_tb.fst");
       	$dumpvars(0, core_tb);
       	for (idx = 1; idx < 4; idx = idx + 1) $dumpvars(0, core_u.regfile_u.x[idx]);
+      	for (idx = 1; idx < 4; idx = idx + 1) $dumpvars(0, core_u.memory_u.mem[idx]);
+      	for (idx = 1; idx < 4; idx = idx + 1) $dumpvars(0, core_u.instrmem_u.mem[idx]);
 	end
-
 	// include tasks here
 
 	task assert_cond(input condition, input [255:0] str);

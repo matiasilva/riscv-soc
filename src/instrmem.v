@@ -29,7 +29,7 @@ module instrmem #(
         $display("no preload file provided!");
         $finish;
       end
-      $readmemh(PRELOAD_FILE, mem, 0, 31);
+      $readmemh(PRELOAD_FILE, mem);
     end
     if (HARDCODED) begin
       mem[0] <= 32'h07b00093;  // addi x1, x0, 123
