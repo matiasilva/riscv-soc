@@ -31,14 +31,12 @@ I recommend building each of these tools from source to ensure the latest (worki
 
 ## TODO
 
-* source a RISC-V compiler to preload instruction memories
 * turn instrmem and regfile into BRAM, memory maybe SPRAM
 * write a simple linker script
-* fix latches in combinational logic: set all signals to 0
-* define a starting instruction (nop) addi x0, x0, 0
 * add pipeline stalls
 * rename pc_incr to pc
 * double sw hazard, extra pipeline?
+* if a clocked module requires the output of a previous stage, it should take it directly from that previous stage, not the pipeline register!
 
 ## Extra steps
 
@@ -74,7 +72,7 @@ brew install --HEAD randomplum/gtkwave/gtkwave
 
 ### RISC-V decode filter in GTKWave
 
-Full credits go to [mattvenn](https://github.com/mattvenn/gtkwave-python-filter-process) for their GTKWave filter process that takes RISC-V machine code and transforms it into RV32I assembly for easy visualization in the waveform viewer.
+Full credits go to [mattvenn](https://github.com/mattvenn/gtkwave-python-filter-process) for the initial code for the GTKWave filter process that takes RISC-V machine code and transforms it into RV32I assembly for easy visualization in the waveform viewer. It seems in between the time they wrote it and now, differences in `risv64-unknown-elf-as` output have broken it.
 
 Note to self: the process file needs to be executable!
 
@@ -92,7 +90,7 @@ FPGA
 
 https://github.com/chipsalliance/verible/blob/master/verilog/tools/formatter/README.md
 
-### verification 
+### verification
 
 https://github.com/YosysHQ/riscv-formal
 https://github.com/riscv-software-src/riscv-tests/

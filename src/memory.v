@@ -7,6 +7,7 @@ module memory #(
     parameter PRELOAD_FILE = ""
 ) (
     input rst_n,
+    input clk,
     input ctrl_mem_ren_i,
     input ctrl_mem_wren_i,
     input [31:0] mem_addr_i,
@@ -32,7 +33,7 @@ module memory #(
     end
   end
 
-  always @(*) begin
+  always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
       `ifdef FPGA
       for (i = 0; i < MEM_SIZE; i++) begin

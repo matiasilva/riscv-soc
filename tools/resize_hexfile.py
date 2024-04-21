@@ -11,6 +11,7 @@ def main():
 	parser.add_argument('-i', '--input', required=True) 
 	parser.add_argument('-o', '--output', required=True) 
 	parser.add_argument('-w', '--width', required=True) 
+	parser.add_argument('-r', '--reverse', action='store_true') 
 	args = parser.parse_args()
 	with open(Path(args.input), 'r') as infile:
 		outlines = []
@@ -22,7 +23,9 @@ def main():
 			if n_bytes % 2 != 0: sys.exit(1)
 			n_groups = len(bytes_in_line) // n_bytes
 			for i in range(n_groups):
-				outlines.append(''.join(bytes_in_line[i*n_bytes:(i+1)*n_bytes]))
+				bytes_to_write = bytes_in_line[i*n_bytes:(i+1)*n_bytes]
+				if args.reverse: bytes_to_write = reversed(bytes_to_write)
+				outlines.append(''.join(bytes_to_write))
 
 	with open(Path(args.output), 'w') as outfile:
 		for line in outlines:

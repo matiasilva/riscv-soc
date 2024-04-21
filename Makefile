@@ -40,9 +40,9 @@ vis:
 .PHONY: sim
 sim:
 	mkdir -p $(SIM_DIR)
-	riscv64-unknown-elf-as -march=rv32i -o $(BUILD_DIR)/$(DESIGN).elf $(SIM_DIR)/instrmem.S
+	riscv64-unknown-elf-as -march=rv32i -mabi=ilp32 -o $(BUILD_DIR)/$(DESIGN).elf $(SIM_DIR)/instrmem.S
 	riscv64-unknown-elf-objcopy -S -O verilog $(BUILD_DIR)/$(DESIGN).elf $(BUILD_DIR)/$(DESIGN)_raw.hex
-	$(RESIZE_HEXFILE) -w 4 -i $(BUILD_DIR)/$(DESIGN)_raw.hex -o $(BUILD_DIR)/$(DESIGN).hex
+	$(RESIZE_HEXFILE) -w 4 -i $(BUILD_DIR)/$(DESIGN)_raw.hex -o $(BUILD_DIR)/$(DESIGN).hex -r
 	iverilog $(IVERILOG_WARNINGS) -f "$(SIM_DIR)/$(DESIGN).f" -s '$(DESIGN)_tb' -o $(BUILD_DIR)/a.out
 	vvp  $(BUILD_DIR)/a.out -fst
 
