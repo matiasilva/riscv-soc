@@ -44,10 +44,9 @@ module memory #(
     end else begin
       if (ctrl_mem_ren_i) begin
         next_rdata <= {mem[mem_addr_i+3], mem[mem_addr_i+2], mem[mem_addr_i+1], mem[mem_addr_i]};
-      end
-      if (ctrl_mem_wren_i) begin
+      end else if (ctrl_mem_wren_i) begin
         for (i = 0; i < 4; i++) begin
-          mem[mem_addr_i+i] <= mem_wdata_i[i+:8];
+          mem[mem_addr_i+i] <= mem_wdata_i[i*8+:8];
         end
       end
     end
