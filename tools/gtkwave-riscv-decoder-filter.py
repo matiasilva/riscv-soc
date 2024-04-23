@@ -26,7 +26,7 @@ def main():
             lastline = result.stdout.splitlines()[-1]
             chunks = lastline.decode().split('\t')
 
-            opcodes = " ".join(chunks[2:])
+            opcodes = " ".join(chunks[2:4])
         
             fh_out.write("%s\n" % opcodes)
             fh_out.flush()
