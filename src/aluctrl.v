@@ -21,6 +21,10 @@ module aluctrl (
     output [3:0] aluctrl_ctrl_o
 );
 
+  localparam ALUOP_ADD   = 2'b00;
+  localparam ALUOP_FUNCT = 2'b10;
+  localparam ALUOP_SLTU  = 2'b01;
+
   localparam ADD = 4'b0000;
   localparam SETLESSTHANUNSIGNED = 4'b0011;
 
@@ -29,14 +33,14 @@ module aluctrl (
   always @(*) begin
     ctrl = 4'hx;
     case (ctrl_aluop_i)
-      2'b00: begin
+      ALUOP_ADD: begin
         // SW/LW -> add
         ctrl = ADD;
       end
-      2'b01: begin
+      ALUOP_SLTU: begin
         ctrl = SETLESSTHANUNSIGNED;
       end
-      2'b10: begin
+      ALUOP_FUNCT: begin
         ctrl = funct_i;
       end
     endcase

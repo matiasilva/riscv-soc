@@ -17,20 +17,23 @@ module core (
     input rst_n
 );
 
-  localparam CTRL_WIDTH = 16;
-  localparam CTRL_ALUOP1 = 7;
-  localparam CTRL_ALUOP0 = 6;
-  localparam CTRL_ALUSRC = 5;
-  localparam CTRL_IS_BRANCH = 4;
-  localparam CTRL_MEM_REN = 3;
-  localparam CTRL_MEM_WREN = 2;
-  localparam CTRL_REG_WR_EN = 1;
-  localparam CTRL_IS_MEM_TO_REG = 0;
+  localparam CTRL_WIDTH         = 16;
+  localparam CTRL_ALUOP1        = 7 ;
+  localparam CTRL_ALUOP0        = 6 ;
+  localparam CTRL_ALUSRC        = 5 ;
+  localparam CTRL_IS_BRANCH     = 4 ;
+  localparam CTRL_MEM_REN       = 3 ;
+  localparam CTRL_MEM_WREN      = 2 ;
+  localparam CTRL_REG_WR_EN     = 1 ;
+  localparam CTRL_IS_MEM_TO_REG = 0 ;
 
-  localparam OP_RTYPE = 7'b0110011;
-  localparam OP_ITYPE = 7'b0010011;
-  localparam OP_LOAD = 7'b0000011;
-  localparam OP_STORE = 7'b0100011;
+  localparam OP_RTYPE  = 7'b0110011;
+  localparam OP_ITYPE  = 7'b0010011;
+  localparam OP_LOAD   = 7'b0000011;
+  localparam OP_STORE  = 7'b0100011;
+  localparam OP_JAL    = 7'b1101111;
+  localparam OP_JALR   = 7'b1100111;
+  localparam OP_BRANCH = 7'b1100011;
 
   localparam FORWARD_Q2 = 2'b00; // use value read from regfile
   localparam FORWARD_Q4 = 2'b01; // use value from prev alu_out
@@ -62,7 +65,17 @@ module core (
   wire [ 2:0] funct3_q3    = instr_q3[14:12];
   wire [ 6:0] funct7_q3    = instr_q3[31:25];
   wire [ 3:0] funct_q3        = {funct7_q3[5], funct3_q3}; // this can be cleaned up
-  wire [11:0] imm_q3       = ctrl_q3[CTRL_MEM_WREN] ? {imm_upper_q3, imm_lower_q3} :  instr_q3[31:20];
+  wire [19:0] imm_jal_q3 = instr_q3[31:12];
+  reg [11:0] imm_q3;
+  always @(*) begin
+    if (ctrl_q3[CTRL_IS_BRANCH]) begin
+      imm_q3 = imm_jal_q3;
+    end else if (ctrl_q3[CTRL_MEM_WREN]) begin
+      imm_q3 = {imm_upper_q3, imm_lower_q3}
+    end else begin
+      imm_q3 = instr_q3[31:20];
+    end
+  end
   wire [ 6:0] imm_upper_q3 = instr_q3[31:25];
   wire [ 4:0] imm_lower_q3 = instr_q3[11:7] ;
 
