@@ -19,7 +19,7 @@ module control #(
   localparam OP_LOAD   = 7'b0000011;
   localparam OP_STORE  = 7'b0100011;
   localparam OP_JAL    = 7'b1101111;
-  localparam OP_JALR   = 7'b1100111;
+  localparam OP_JALR   = 7'b1100111; // executes immediately after decode
   localparam OP_BRANCH = 7'b1100011;
 
   localparam ALUOP_ADD   = 2'b00;
@@ -36,6 +36,7 @@ module control #(
   reg reg_wr_en;
   reg is_mem_to_reg;
   reg is_branch;
+  reg is_jump;
   reg alusrc;
 
   always @(*) begin
@@ -44,6 +45,7 @@ module control #(
     reg_wr_en     = 1'b0;
     is_mem_to_reg = 1'b0;
     is_branch     = 1'b0;
+    is_jump       = 1'b0;
     alusrc        = ALUSRC_IMM;
     aluop         = ALUOP_ADD;
     case (opcode_i)
@@ -65,7 +67,7 @@ module control #(
         mem_we        = 1'b1;
       end
       case OP_JAL: begin
-        is_branch = 1'b1;
+        is_jump = 1'b1;
         reg_wr_en = 1'b1;
       end
     endcase
