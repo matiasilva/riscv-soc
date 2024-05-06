@@ -17,127 +17,127 @@ module core (
     input rst_n
 );
 
-  localparam CTRL_WIDTH         = 16;
-  localparam CTRL_ALUOP1        = 7 ;
-  localparam CTRL_ALUOP0        = 6 ;
-  localparam CTRL_ALUSRC        = 5 ;
-  localparam CTRL_IS_BRANCH     = 4 ;
-  localparam CTRL_MEM_REN       = 3 ;
-  localparam CTRL_MEM_WREN      = 2 ;
-  localparam CTRL_REG_WR_EN     = 1 ;
-  localparam CTRL_IS_MEM_TO_REG = 0 ;
+  localparam CTRL_WIDTH = 16;
+  localparam CTRL_ALUOP1 = 7;
+  localparam CTRL_ALUOP0 = 6;
+  localparam CTRL_ALUSRC = 5;
+  localparam CTRL_IS_BRANCH = 4;
+  localparam CTRL_MEM_REN = 3;
+  localparam CTRL_MEM_WREN = 2;
+  localparam CTRL_REG_WR_EN = 1;
+  localparam CTRL_IS_MEM_TO_REG = 0;
 
-  localparam OP_RTYPE  = 7'b0110011;
-  localparam OP_ITYPE  = 7'b0010011;
-  localparam OP_LOAD   = 7'b0000011;
-  localparam OP_STORE  = 7'b0100011;
-  localparam OP_JAL    = 7'b1101111;
-  localparam OP_JALR   = 7'b1100111;
+  localparam OP_RTYPE = 7'b0110011;
+  localparam OP_ITYPE = 7'b0010011;
+  localparam OP_LOAD = 7'b0000011;
+  localparam OP_STORE = 7'b0100011;
+  localparam OP_JAL = 7'b1101111;
+  localparam OP_JALR = 7'b1100111;
   localparam OP_BRANCH = 7'b1100011;
 
-  localparam FORWARD_Q2 = 2'b00; // use value read from regfile
-  localparam FORWARD_Q4 = 2'b01; // use value from prev alu_out
-  localparam FORWARD_Q5 = 2'b10; // use value from prev prev alu_out or mem_rdata
+  localparam FORWARD_Q2 = 2'b00;  // use value read from regfile
+  localparam FORWARD_Q4 = 2'b01;  // use value from prev alu_out
+  localparam FORWARD_Q5 = 2'b10;  // use value from prev prev alu_out or mem_rdata
 
   wire [31:0] pc;
 
   /* instruction fetch q1 */
   reg  [31:0] pc_incr;
-  wire [31:0] instr_q1; // from instrmem (q1)
+  wire [31:0] instr_q1;  // from instrmem (q1)
   wire [ 4:0] rs1_q1 = instr_q1[19:15];
   wire [ 4:0] rs2_q1 = instr_q1[24:20];
 
   /* instruction decode, register file q1 out, q2 in */
-  wire [31:0] instr_q2                      ;
-  wire [ 4:0] rd_q2        = instr_q2[11:7] ;
-  wire [ 4:0] rs1_q2          = instr_q2[19:15]    ;
-  wire [ 4:0] rs2_q2          = instr_q2[24:20]    ;
-  wire [ 6:0] opcode_q2    = instr_q2[6:0]  ;
+  wire [31:0] instr_q2;
+  wire [ 4:0] rd_q2 = instr_q2[11:7];
+  wire [ 4:0] rs1_q2 = instr_q2[19:15];
+  wire [ 4:0] rs2_q2 = instr_q2[24:20];
+  wire [ 6:0] opcode_q2 = instr_q2[6:0];
 
   wire [31:0] pc_incr_q2;
 
   /* q2 out, q3 in */
-  wire [31:0] instr_q3                             ;
-  wire [ 6:0] opcode_q3 = instr_q3[6:0]      ;
-  wire [ 4:0] rd_q3           = instr_q3[11:7]     ;
-  wire [ 4:0] rs1_q3          = instr_q3[19:15]    ;
-  wire [ 4:0] rs2_q3          = instr_q3[24:20]    ;
-  wire [ 2:0] funct3_q3    = instr_q3[14:12];
-  wire [ 6:0] funct7_q3    = instr_q3[31:25];
-  wire [ 3:0] funct_q3        = {funct7_q3[5], funct3_q3}; // this can be cleaned up
+  wire [31:0] instr_q3;
+  wire [ 6:0] opcode_q3 = instr_q3[6:0];
+  wire [ 4:0] rd_q3 = instr_q3[11:7];
+  wire [ 4:0] rs1_q3 = instr_q3[19:15];
+  wire [ 4:0] rs2_q3 = instr_q3[24:20];
+  wire [ 2:0] funct3_q3 = instr_q3[14:12];
+  wire [ 6:0] funct7_q3 = instr_q3[31:25];
+  wire [ 3:0] funct_q3 = {funct7_q3[5], funct3_q3};  // this can be cleaned up
   wire [19:0] imm_jal_q3 = instr_q3[31:12];
-  reg [11:0] imm_q3;
+  reg  [11:0] imm_q3;
   always @(*) begin
     if (ctrl_q3[CTRL_IS_BRANCH]) begin
       imm_q3 = imm_jal_q3;
     end else if (ctrl_q3[CTRL_MEM_WREN]) begin
-      imm_q3 = {imm_upper_q3, imm_lower_q3}
+      imm_q3 = {imm_upper_q3, imm_lower_q3};
     end else begin
       imm_q3 = instr_q3[31:20];
     end
   end
-  wire [ 6:0] imm_upper_q3 = instr_q3[31:25];
-  wire [ 4:0] imm_lower_q3 = instr_q3[11:7] ;
+  wire [           6:0] imm_upper_q3 = instr_q3[31:25];
+  wire [           4:0] imm_lower_q3 = instr_q3[11:7];
 
-  wire [31:0] imm_se_q3                            ;
-  wire [31:0] alu_out_q3 = alu_out                          ;
-  wire [31:0] pc_incr_q3                           ;
+  wire [          31:0] imm_se_q3;
+  wire [          31:0] alu_out_q3 = alu_out;
+  wire [          31:0] pc_incr_q3;
 
   /* q3 out, q4 in */
-  wire [31:0] mem_rdata_q4 = mem_rdata;
-  wire [31:0] instr_q4;
-  wire [6:0] opcode_q4 = instr_q4[6:0];
-  wire [4:0] rd_q4 = instr_q4[11:7];
-  wire [4:0] rs1_q4 = instr_q4[19:15];
-  wire [4:0] rs2_q4 = instr_q4[24:20];
-  wire [31:0] pc_next_q3 = (imm_se_q3 << 2) | pc_incr_q3;
-  wire [31:0] pc_next_q4;
-  wire [31:0] alu_out_q4;
+  wire [          31:0] mem_rdata_q4 = mem_rdata;
+  wire [          31:0] instr_q4;
+  wire [           6:0] opcode_q4 = instr_q4[6:0];
+  wire [           4:0] rd_q4 = instr_q4[11:7];
+  wire [           4:0] rs1_q4 = instr_q4[19:15];
+  wire [           4:0] rs2_q4 = instr_q4[24:20];
+  wire [          31:0] pc_next_q3 = (imm_se_q3 << 2) | pc_incr_q3;
+  wire [          31:0] pc_next_q4;
+  wire [          31:0] alu_out_q4;
 
   /* q4 out, q5 in */
-  wire [31:0] alu_out_q5;
-  wire [31:0] instr_q5;
-  wire [ 6:0] opcode_q5 = instr_q5[6:0];
-  wire [ 4:0] rd_q5 = instr_q5[11:7];
-  wire [ 4:0] rs1_q5 = instr_q5[19:15];
-  wire [ 4:0] rs2_q5 = instr_q5[24:20];
-  wire [31:0] mem_rdata_q5;
+  wire [          31:0] alu_out_q5;
+  wire [          31:0] instr_q5;
+  wire [           6:0] opcode_q5 = instr_q5[6:0];
+  wire [           4:0] rd_q5 = instr_q5[11:7];
+  wire [           4:0] rs1_q5 = instr_q5[19:15];
+  wire [           4:0] rs2_q5 = instr_q5[24:20];
+  wire [          31:0] mem_rdata_q5;
 
   /* register file  */
-  wire [ 4:0] reg_rd_port1 = rs1_q1        ; // decode from q1, pipeline register "absorbed"
-  wire [ 4:0] reg_rd_port2 = rs2_q1         ;
-  wire [31:0] reg_rd_data1;
-  wire [31:0] reg_rd_data2;
-  wire [ 4:0] reg_wr_port  = reg_wr_port_q4 ;
-  wire [31:0] reg_wr_data  = reg_wr_data_q4 ;
+  wire [           4:0] reg_rd_port1 = rs1_q1;  // decode from q1, pipeline register "absorbed"
+  wire [           4:0] reg_rd_port2 = rs2_q1;
+  wire [          31:0] reg_rd_data1;
+  wire [          31:0] reg_rd_data2;
+  wire [           4:0] reg_wr_port = reg_wr_port_q4;
+  wire [          31:0] reg_wr_data = reg_wr_data_q4;
 
-  wire [31:0] reg_rd_data1_q2 = reg_rd_data1; // alu ops
-  wire [31:0] reg_rd_data2_q2 = reg_rd_data2; // alu ops or memory address
-  wire [31:0] reg_rd_data1_q3;
-  wire [31:0] reg_rd_data2_q3;
-  wire [31:0] reg_rd_data2_q4;
-  wire [4:0]  reg_wr_port_q2 = rd_q2; // pipelined to q5
-  wire [ 4:0] reg_wr_port_q3;
-  wire [ 4:0] reg_wr_port_q4;
-  wire [ 4:0] reg_wr_port_q5;
-  wire [31:0] reg_wr_data_q4 = ctrl_q4[CTRL_IS_MEM_TO_REG] ? mem_rdata : alu_out_q4;
+  wire [          31:0] reg_rd_data1_q2 = reg_rd_data1;  // alu ops
+  wire [          31:0] reg_rd_data2_q2 = reg_rd_data2;  // alu ops or memory address
+  wire [          31:0] reg_rd_data1_q3;
+  wire [          31:0] reg_rd_data2_q3;
+  wire [          31:0] reg_rd_data2_q4;
+  wire [           4:0] reg_wr_port_q2 = rd_q2;  // pipelined to q5
+  wire [           4:0] reg_wr_port_q3;
+  wire [           4:0] reg_wr_port_q4;
+  wire [           4:0] reg_wr_port_q5;
+  wire [          31:0] reg_wr_data_q4 = ctrl_q4[CTRL_IS_MEM_TO_REG] ? mem_rdata : alu_out_q4;
 
   /* alu & ctrl */
-  wire [31:0] alu_in1 = alu_in1_forwarded;
-  wire [31:0] alu_in2 = alu_in2_forwarded;
-  wire [ 3:0] aluctrl_ctrl;
-  wire [31:0] alu_out;
-  wire [31:0] alu_in1_pre = reg_rd_data1_q3;
-  wire [31:0] alu_in2_pre = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
-  wire [ 1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
+  wire [          31:0] alu_in1 = alu_in1_forwarded;
+  wire [          31:0] alu_in2 = alu_in2_forwarded;
+  wire [           3:0] aluctrl_ctrl;
+  wire [          31:0] alu_out;
+  wire [          31:0] alu_in1_pre = reg_rd_data1_q3;
+  wire [          31:0] alu_in2_pre = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
+  wire [           1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
 
   /* data memory */
-  wire ctrl_mem_ren = ctrl_q3[CTRL_MEM_REN];
-  wire ctrl_mem_wren = ctrl_q3[CTRL_MEM_WREN];
-  wire [31:0] mem_addr = alu_out_q3;
-  wire [31:0] mem_wdata = mem_wdata_forwarded;
-  wire [31:0] mem_rdata;
-  reg  [31:0] mem_wdata_forwarded;
+  wire                  ctrl_mem_ren = ctrl_q3[CTRL_MEM_REN];
+  wire                  ctrl_mem_wren = ctrl_q3[CTRL_MEM_WREN];
+  wire [          31:0] mem_addr = alu_out_q3;
+  wire [          31:0] mem_wdata = mem_wdata_forwarded;
+  wire [          31:0] mem_rdata;
+  reg  [          31:0] mem_wdata_forwarded;
 
   /* main control unit */
   wire [CTRL_WIDTH-1:0] ctrl_q2;
@@ -146,12 +146,12 @@ module core (
   wire [CTRL_WIDTH-1:0] ctrl_q5;
 
   /* forwarding unit */
-  reg [1:0] forward_alu_in1;
-  reg [1:0] forward_alu_in2;
-  reg [1:0] forward_mem_wdata;
+  reg  [           1:0] forward_alu_in1;
+  reg  [           1:0] forward_alu_in2;
+  reg  [           1:0] forward_mem_wdata;
 
-  reg [31:0] alu_in1_forwarded;
-  reg [31:0] alu_in2_forwarded;
+  reg  [          31:0] alu_in1_forwarded;
+  reg  [          31:0] alu_in2_forwarded;
 
   instrmem #(
       .PRELOAD(1),
@@ -175,7 +175,7 @@ module core (
       .rst_n           (rst_n),
       .rd_port1_i      (reg_rd_port1),
       .rd_port2_i      (reg_rd_port2),
-      .rd_data1_o      (reg_rd_data1), 
+      .rd_data1_o      (reg_rd_data1),
       .rd_data2_o      (reg_rd_data2),
       .wr_port_i       (reg_wr_port),
       .wr_data_i       (reg_wr_data),
@@ -196,16 +196,16 @@ module core (
   );
 
   memory #(
-    .PRELOAD     (1             ),
-    .PRELOAD_FILE("sim/dmem.hex")
+      .PRELOAD     (1),
+      .PRELOAD_FILE("sim/dmem.hex")
   ) memory_u (
-    .rst_n          (rst_n        ),
-    .clk            (clk          ),
-    .ctrl_mem_ren_i (ctrl_mem_ren ),
-    .ctrl_mem_wren_i(ctrl_mem_wren),
-    .mem_addr_i     (mem_addr     ),
-    .mem_wdata_i    (mem_wdata    ),
-    .mem_rdata_o    (mem_rdata    )
+      .rst_n          (rst_n),
+      .clk            (clk),
+      .ctrl_mem_ren_i (ctrl_mem_ren),
+      .ctrl_mem_wren_i(ctrl_mem_wren),
+      .mem_addr_i     (mem_addr),
+      .mem_wdata_i    (mem_wdata),
+      .mem_rdata_o    (mem_rdata)
   );
 
 
@@ -299,10 +299,10 @@ which is what we actually care about
   reg hazard_a_in1, hazard_b_in1, hazard_a_in2, hazard_b_in2;
   reg hazard_c, hazard_d;
   always @(*) begin
-  	forward_alu_in1 = FORWARD_Q2;
-  	forward_alu_in2 = FORWARD_Q2;
-  	forward_mem_wdata = FORWARD_Q2;
-  	/*
+    forward_alu_in1 = FORWARD_Q2;
+    forward_alu_in2 = FORWARD_Q2;
+    forward_mem_wdata = FORWARD_Q2;
+    /*
   		add x1, x2, x3
   		add x4, x1, x5 // hazard a)
   		add x6, x7, x1 // hazard b)
@@ -320,42 +320,43 @@ which is what we actually care about
 
     hazard b: do not forward ALU for sw op, hazard_b_in2 will go high without last condition
   	*/
-  	hazard_a_in1 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs1_q3 && rd_q4 !== 5'b0; // EX/MEM hazard
-  	hazard_b_in1 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs1_q3 && rd_q5 !== 5'b0;  // MEM/WB hazard
-  	hazard_a_in2 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2_q3 && rd_q4 !== 5'b0;
-  	hazard_b_in2 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs2_q3 && rd_q5 !== 5'b0 && !ctrl_q3[CTRL_MEM_WREN];
-  	hazard_c = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2_q3 && rd_q4 !== 5'b0;
-  	hazard_d = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs2_q3 && rd_q5 !== 5'b0;
-  	if (hazard_a_in1) forward_alu_in1 = FORWARD_Q4;
-  	if (hazard_b_in1 && !hazard_a_in1) forward_alu_in1 = FORWARD_Q5; // always forward most recent value
-  	if (hazard_a_in2) forward_alu_in2 = FORWARD_Q4;
-  	if (hazard_b_in2 && !hazard_a_in2) forward_alu_in2 = FORWARD_Q5;
-  	if (hazard_c) forward_mem_wdata = FORWARD_Q4;
-  	if (hazard_d) forward_mem_wdata = FORWARD_Q5;
+    hazard_a_in1 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs1_q3 && rd_q4 !== 5'b0;  // EX/MEM hazard
+    hazard_b_in1 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs1_q3 && rd_q5 !== 5'b0;  // MEM/WB hazard
+    hazard_a_in2 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2_q3 && rd_q4 !== 5'b0;
+    hazard_b_in2 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs2_q3 && rd_q5 !== 5'b0 && !ctrl_q3[CTRL_MEM_WREN];
+    hazard_c = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2_q3 && rd_q4 !== 5'b0;
+    hazard_d = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs2_q3 && rd_q5 !== 5'b0;
+    if (hazard_a_in1) forward_alu_in1 = FORWARD_Q4;
+    if (hazard_b_in1 && !hazard_a_in1)
+      forward_alu_in1 = FORWARD_Q5;  // always forward most recent value
+    if (hazard_a_in2) forward_alu_in2 = FORWARD_Q4;
+    if (hazard_b_in2 && !hazard_a_in2) forward_alu_in2 = FORWARD_Q5;
+    if (hazard_c) forward_mem_wdata = FORWARD_Q4;
+    if (hazard_d) forward_mem_wdata = FORWARD_Q5;
   end
 
   always @(*) begin
     case (forward_alu_in1)
-          FORWARD_Q2: alu_in1_forwarded = alu_in1_pre;
-          FORWARD_Q4: alu_in1_forwarded = alu_out_q4;
-          FORWARD_Q5: alu_in1_forwarded = alu_out_q5;
+      FORWARD_Q2: alu_in1_forwarded = alu_in1_pre;
+      FORWARD_Q4: alu_in1_forwarded = alu_out_q4;
+      FORWARD_Q5: alu_in1_forwarded = alu_out_q5;
     endcase
   end
 
   always @(*) begin
     case (forward_alu_in2)
-          FORWARD_Q2: alu_in2_forwarded = alu_in2_pre;
-          FORWARD_Q4: alu_in2_forwarded = alu_out_q4;
-          FORWARD_Q5: alu_in2_forwarded = alu_out_q5;
+      FORWARD_Q2: alu_in2_forwarded = alu_in2_pre;
+      FORWARD_Q4: alu_in2_forwarded = alu_out_q4;
+      FORWARD_Q5: alu_in2_forwarded = alu_out_q5;
     endcase
   end
 
   always @(*) begin
     // MEM is clocked so we must make the forwarded data immediately available (before clock edge)
     case (forward_mem_wdata)
-          FORWARD_Q2: mem_wdata_forwarded = reg_rd_data2_q3;
-          FORWARD_Q4: mem_wdata_forwarded = alu_out_q4;
-          FORWARD_Q5: mem_wdata_forwarded = alu_out_q5;
+      FORWARD_Q2: mem_wdata_forwarded = reg_rd_data2_q3;
+      FORWARD_Q4: mem_wdata_forwarded = alu_out_q4;
+      FORWARD_Q5: mem_wdata_forwarded = alu_out_q5;
     endcase
   end
 
