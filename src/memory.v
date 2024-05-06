@@ -35,11 +35,11 @@ module memory #(
 
   always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
-      `ifdef FPGA
+`ifdef FPGA
       for (i = 0; i < MEM_SIZE; i++) begin
         mem[i] <= 0;
       end
-      `endif
+`endif
       next_rdata <= 0;
     end else begin
       if (ctrl_mem_ren_i) begin

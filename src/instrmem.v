@@ -16,7 +16,7 @@ module instrmem #(
   localparam MEM_SIZE = 512;
 
   // 512 bytes, 128 words
-  reg [31:0] mem [MEM_SIZE - 1:0];
+  reg [31:0] mem[MEM_SIZE - 1:0];
   reg [31:0] next_instr;
 
   wire [31:0] pc_aligned = pc_i >> 2;
@@ -29,12 +29,12 @@ module instrmem #(
         $display("no preload file provided!");
         $finish;
       end
-      $readmemh(PRELOAD_FILE, mem, 0, MEM_SIZE-1);
+      $readmemh(PRELOAD_FILE, mem, 0, MEM_SIZE - 1);
     end
     if (HARDCODED) begin
       mem[0] <= 32'h07b00093;  // addi x1, x0, 123
       mem[1] <= 32'h00500113;  // addi x2, x0, 5
-      mem[2] <= 32'h002081b3; // add x3, x2, x1
+      mem[2] <= 32'h002081b3;  // add x3, x2, x1
     end
   end
 
