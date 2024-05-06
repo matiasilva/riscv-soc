@@ -36,7 +36,8 @@ module control #(
   reg reg_wr_en;
   reg is_mem_to_reg;
   reg is_branch;
-  reg is_jump;
+  reg is_jal; // q2
+  reg is_jalr; // q3
   reg alusrc;
 
   always @(*) begin
@@ -45,7 +46,7 @@ module control #(
     reg_wr_en     = 1'b0;
     is_mem_to_reg = 1'b0;
     is_branch     = 1'b0;
-    is_jump       = 1'b0;
+    is_jal       = 1'b0;
     alusrc        = ALUSRC_IMM;
     aluop         = ALUOP_ADD;
     case (opcode_i)
@@ -67,16 +68,17 @@ module control #(
         mem_we        = 1'b1;
       end
       case OP_JAL: begin
-        is_jump = 1'b1;
+        is_jal = 1'b1;
         reg_wr_en = 1'b1;
       end
     endcase
   end
 
+  wire q2_bits = is_jal;
   wire [2:0] q3_bits = {aluop, alusrc};
   wire [2:0] q4_bits = {is_branch, mem_re, mem_we};
   wire [1:0] q5_bits = {reg_wr_en, is_mem_to_reg};
 
-  assign ctrl_o = {8'b0, q3_bits, q4_bits, q5_bits};
+  assign ctrl_o = {7'b0, q2_bits, q3_bits, q4_bits, q5_bits};
 
 endmodule

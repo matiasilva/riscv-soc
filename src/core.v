@@ -39,105 +39,95 @@ module core (
   localparam FORWARD_Q4 = 2'b01;  // use value from prev alu_out
   localparam FORWARD_Q5 = 2'b10;  // use value from prev prev alu_out or mem_rdata
 
-  wire [31:0] pc;
-
   /* instruction fetch q1 */
-  reg  [31:0] pc_incr;
   wire [31:0] instr_q1;  // from instrmem (q1)
-  wire [ 4:0] rs1_q1 = instr_q1[19:15];
-  wire [ 4:0] rs2_q1 = instr_q1[24:20];
+  wire [4:0] rs1_q1 = instr_q1[19:15];
+  wire [4:0] rs2_q1 = instr_q1[24:20];
 
   /* instruction decode, register file q1 out, q2 in */
   wire [31:0] instr_q2;
-  wire [ 4:0] rd_q2 = instr_q2[11:7];
-  wire [ 4:0] rs1_q2 = instr_q2[19:15];
-  wire [ 4:0] rs2_q2 = instr_q2[24:20];
-  wire [ 6:0] opcode_q2 = instr_q2[6:0];
+  wire [4:0] rd_q2 = instr_q2[11:7];
+  wire [4:0] rs1_q2 = instr_q2[19:15];
+  wire [4:0] rs2_q2 = instr_q2[24:20];
+  wire [6:0] opcode_q2 = instr_q2[6:0];
+  wire [19:0] imm_jal_q2 = instr_q2[31:12];
 
+  wire [31:0] pc_q2;
   wire [31:0] pc_incr_q2;
 
   /* q2 out, q3 in */
   wire [31:0] instr_q3;
-  wire [ 6:0] opcode_q3 = instr_q3[6:0];
-  wire [ 4:0] rd_q3 = instr_q3[11:7];
-  wire [ 4:0] rs1_q3 = instr_q3[19:15];
-  wire [ 4:0] rs2_q3 = instr_q3[24:20];
-  wire [ 2:0] funct3_q3 = instr_q3[14:12];
-  wire [ 6:0] funct7_q3 = instr_q3[31:25];
-  wire [ 3:0] funct_q3 = {funct7_q3[5], funct3_q3};  // this can be cleaned up
-  wire [19:0] imm_jal_q3 = instr_q3[31:12];
-  reg  [11:0] imm_q3;
-  always @(*) begin
-    if (ctrl_q3[CTRL_IS_BRANCH]) begin
-      imm_q3 = imm_jal_q3;
-    end else if (ctrl_q3[CTRL_MEM_WREN]) begin
-      imm_q3 = {imm_upper_q3, imm_lower_q3};
-    end else begin
-      imm_q3 = instr_q3[31:20];
-    end
-  end
-  wire [           6:0] imm_upper_q3 = instr_q3[31:25];
-  wire [           4:0] imm_lower_q3 = instr_q3[11:7];
+  wire [6:0] opcode_q3 = instr_q3[6:0];
+  wire [4:0] rd_q3 = instr_q3[11:7];
+  wire [4:0] rs1_q3 = instr_q3[19:15];
+  wire [4:0] rs2_q3 = instr_q3[24:20];
+  wire [2:0] funct3_q3 = instr_q3[14:12];
+  wire [6:0] funct7_q3 = instr_q3[31:25];
+  wire [3:0] funct_q3 = {funct7_q3[5], funct3_q3};  // this can be cleaned up
+  wire [11:0] imm_q3 = ctrl_q3[CTRL_MEM_WREN] ? {imm_upper_q3, imm_lower_q3} : instr_q3[31:20];
+  wire [6:0] imm_upper_q3 = instr_q3[31:25];
+  wire [4:0] imm_lower_q3 = instr_q3[11:7];
 
-  wire [          31:0] imm_se_q3;
-  wire [          31:0] alu_out_q3 = alu_out;
-  wire [          31:0] pc_incr_q3;
+  wire [31:0] imm_se_q3;
+  wire [31:0] alu_out_q3 = alu_out;
+  wire [31:0] pc_q3;
+  wire [31:0] pc_incr_q3;
 
   /* q3 out, q4 in */
-  wire [          31:0] mem_rdata_q4 = mem_rdata;
-  wire [          31:0] instr_q4;
-  wire [           6:0] opcode_q4 = instr_q4[6:0];
-  wire [           4:0] rd_q4 = instr_q4[11:7];
-  wire [           4:0] rs1_q4 = instr_q4[19:15];
-  wire [           4:0] rs2_q4 = instr_q4[24:20];
-  wire [          31:0] pc_next_q3 = (imm_se_q3 << 2) | pc_incr_q3;
-  wire [          31:0] pc_next_q4;
-  wire [          31:0] alu_out_q4;
+  wire [31:0] mem_rdata_q4 = mem_rdata;
+  wire [31:0] instr_q4;
+  wire [6:0] opcode_q4 = instr_q4[6:0];
+  wire [4:0] rd_q4 = instr_q4[11:7];
+  wire [4:0] rs1_q4 = instr_q4[19:15];
+  wire [4:0] rs2_q4 = instr_q4[24:20];
+  wire [31:0] pc_next_q3 = (imm_se_q3 << 2) | pc_q3;  // this looks dodgy
+  wire [31:0] pc_next_q4;
+  wire [31:0] alu_out_q4;
 
   /* q4 out, q5 in */
-  wire [          31:0] alu_out_q5;
-  wire [          31:0] instr_q5;
-  wire [           6:0] opcode_q5 = instr_q5[6:0];
-  wire [           4:0] rd_q5 = instr_q5[11:7];
-  wire [           4:0] rs1_q5 = instr_q5[19:15];
-  wire [           4:0] rs2_q5 = instr_q5[24:20];
-  wire [          31:0] mem_rdata_q5;
+  wire [31:0] alu_out_q5;
+  wire [31:0] instr_q5;
+  wire [6:0] opcode_q5 = instr_q5[6:0];
+  wire [4:0] rd_q5 = instr_q5[11:7];
+  wire [4:0] rs1_q5 = instr_q5[19:15];
+  wire [4:0] rs2_q5 = instr_q5[24:20];
+  wire [31:0] mem_rdata_q5;
 
   /* register file  */
-  wire [           4:0] reg_rd_port1 = rs1_q1;  // decode from q1, pipeline register "absorbed"
-  wire [           4:0] reg_rd_port2 = rs2_q1;
-  wire [          31:0] reg_rd_data1;
-  wire [          31:0] reg_rd_data2;
-  wire [           4:0] reg_wr_port = reg_wr_port_q4;
-  wire [          31:0] reg_wr_data = reg_wr_data_q4;
+  wire [4:0] reg_rd_port1 = rs1_q1;  // decode from q1, pipeline register "absorbed"
+  wire [4:0] reg_rd_port2 = rs2_q1;
+  wire [31:0] reg_rd_data1;
+  wire [31:0] reg_rd_data2;
+  wire [4:0] reg_wr_port = reg_wr_port_q4;
+  wire [31:0] reg_wr_data = reg_wr_data_q4;
 
-  wire [          31:0] reg_rd_data1_q2 = reg_rd_data1;  // alu ops
-  wire [          31:0] reg_rd_data2_q2 = reg_rd_data2;  // alu ops or memory address
-  wire [          31:0] reg_rd_data1_q3;
-  wire [          31:0] reg_rd_data2_q3;
-  wire [          31:0] reg_rd_data2_q4;
-  wire [           4:0] reg_wr_port_q2 = rd_q2;  // pipelined to q5
-  wire [           4:0] reg_wr_port_q3;
-  wire [           4:0] reg_wr_port_q4;
-  wire [           4:0] reg_wr_port_q5;
-  wire [          31:0] reg_wr_data_q4 = ctrl_q4[CTRL_IS_MEM_TO_REG] ? mem_rdata : alu_out_q4;
+  wire [31:0] reg_rd_data1_q2 = reg_rd_data1;  // alu ops
+  wire [31:0] reg_rd_data2_q2 = reg_rd_data2;  // alu ops or memory address
+  wire [31:0] reg_rd_data1_q3;
+  wire [31:0] reg_rd_data2_q3;
+  wire [31:0] reg_rd_data2_q4;
+  wire [4:0] reg_wr_port_q2 = rd_q2;  // pipelined to q5
+  wire [4:0] reg_wr_port_q3;
+  wire [4:0] reg_wr_port_q4;
+  wire [4:0] reg_wr_port_q5;
+  wire [31:0] reg_wr_data_q4 = ctrl_q4[CTRL_IS_MEM_TO_REG] ? mem_rdata : alu_out_q4;
 
   /* alu & ctrl */
-  wire [          31:0] alu_in1 = alu_in1_forwarded;
-  wire [          31:0] alu_in2 = alu_in2_forwarded;
-  wire [           3:0] aluctrl_ctrl;
-  wire [          31:0] alu_out;
-  wire [          31:0] alu_in1_pre = reg_rd_data1_q3;
-  wire [          31:0] alu_in2_pre = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
-  wire [           1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
+  wire [31:0] alu_in1 = alu_in1_forwarded;
+  wire [31:0] alu_in2 = alu_in2_forwarded;
+  wire [3:0] aluctrl_ctrl;
+  wire [31:0] alu_out;
+  wire [31:0] alu_in1_pre = reg_rd_data1_q3;
+  wire [31:0] alu_in2_pre = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
+  wire [1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
 
   /* data memory */
-  wire                  ctrl_mem_ren = ctrl_q3[CTRL_MEM_REN];
-  wire                  ctrl_mem_wren = ctrl_q3[CTRL_MEM_WREN];
-  wire [          31:0] mem_addr = alu_out_q3;
-  wire [          31:0] mem_wdata = mem_wdata_forwarded;
-  wire [          31:0] mem_rdata;
-  reg  [          31:0] mem_wdata_forwarded;
+  wire ctrl_mem_ren = ctrl_q3[CTRL_MEM_REN];
+  wire ctrl_mem_wren = ctrl_q3[CTRL_MEM_WREN];
+  wire [31:0] mem_addr = alu_out_q3;
+  wire [31:0] mem_wdata = mem_wdata_forwarded;
+  wire [31:0] mem_rdata;
+  reg [31:0] mem_wdata_forwarded;
 
   /* main control unit */
   wire [CTRL_WIDTH-1:0] ctrl_q2;
@@ -146,12 +136,12 @@ module core (
   wire [CTRL_WIDTH-1:0] ctrl_q5;
 
   /* forwarding unit */
-  reg  [           1:0] forward_alu_in1;
-  reg  [           1:0] forward_alu_in2;
-  reg  [           1:0] forward_mem_wdata;
+  reg [1:0] forward_alu_in1;
+  reg [1:0] forward_alu_in2;
+  reg [1:0] forward_mem_wdata;
 
-  reg  [          31:0] alu_in1_forwarded;
-  reg  [          31:0] alu_in2_forwarded;
+  reg [31:0] alu_in1_forwarded;
+  reg [31:0] alu_in2_forwarded;
 
   instrmem #(
       .PRELOAD(1),
@@ -214,6 +204,8 @@ module core (
   q1q2 q1q2_u (
       .clk      (clk),
       .rst_n    (rst_n),
+      .pc_i     (pc),
+      .pc_o     (pc_q2),
       .pc_incr_i(pc_incr),
       .pc_incr_o(pc_incr_q2),
       .instr_i  (instr_q1),
@@ -225,6 +217,8 @@ module core (
   ) q2q3_u (
       .clk           (clk),
       .rst_n         (rst_n),
+      .pc_i          (pc_q2),
+      .pc_o          (pc_q3),
       .pc_incr_i     (pc_incr_q2),
       .pc_incr_o     (pc_incr_q3),
       .reg_rd_data1_i(reg_rd_data1_q2),
@@ -283,14 +277,22 @@ does not affect the lower 5 bits of the immediate
 which is what we actually care about
 */
   assign imm_se_q3 = {{20{imm_q3[11]}}, imm_q3};
-
-  assign pc = ctrl_q4[CTRL_IS_BRANCH] ? pc_next_q4 : pc_incr;
+  wire [31:0] pc_incr = pc + 4;
+  wire pc_jal_q2;
+  reg  [31:0] pc;  // need PC immediately in fetch
+  reg  [31:0] pc_incr_last;
+  always @(*) begin
+    pc = pc_incr_last;
+    if (ctrl_q4[CTRL_IS_BRANCH]) begin
+      pc = pc_next_q4;
+    end
+  end
 
   always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
-      pc_incr <= 0;
+      pc_incr_last <= 0;
     end else begin
-      pc_incr <= pc_incr + 4;
+      pc_incr_last <= pc_incr;
     end
   end
 
