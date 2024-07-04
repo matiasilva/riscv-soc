@@ -1,0 +1,29 @@
+\documentclass[12pt]{article}
+
+\input{toolchain/preamble}
+
+\begin{document}
+
+    % \newpagestyle{main}{
+    %     \sethead
+    %         [\thepage] % even-left
+    %         [Mirror Education (Teacher: Matias Silva)] % even-center
+    %         [] % even-right
+    %         {} % odd-left
+    %         {PID Robot Course} % odd-center
+    %         {\thepage} % odd-right
+    %     \setfoot{}{}{}
+    % }
+    \newpagestyle{main}[\small]{
+    \setheadrule{.55pt}%
+    \sethead{\colorbox{CornflowerBlue}{\thesection} \sectiontitle}
+            {RISC-V CPU}
+            {Matias Wang Silva}
+    \setfoot{}{\colorbox{black}{\color{white}{\thepage}}}{}
+    }
+    \pagestyle{main}
+    \pagenumbering{arabic}
+
+    \input{sections/introduction}
+
+\end{document}

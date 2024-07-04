@@ -283,6 +283,7 @@ which is what we actually care about
   reg  [31:0] pc_incr_last;
   always @(*) begin
     pc = pc_incr_last;
+    if(ctrl_q2[CTRL])
     if (ctrl_q4[CTRL_IS_BRANCH]) begin
       pc = pc_next_q4;
     end

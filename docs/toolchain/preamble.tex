@@ -1,0 +1,72 @@
+\usepackage[T1]{fontenc}
+
+% layout
+\usepackage[a4paper, margin=25mm, nomarginpar]{geometry}
+\usepackage{parskip}
+%\usepackage{fancyhdr}
+
+% format
+\usepackage[dvipsnames,usenames]{xcolor}
+\usepackage[pagestyles]{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+
+% typesetting
+\usepackage{fontspec}
+% Set up Tex Gyre fonts
+\setmainfont[Numbers=OldStyle]{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}  % Sans-serif font
+\setmonofont{TeX Gyre Cursor} % Monospace font
+\usepackage{amsmath}
+\usepackage{soul} % proper hyphenation
+\usepackage{gensymb} % more symbols
+% tables
+\usepackage{tabularx, booktabs, cellspace}
+\usepackage{multirow}
+
+% figures
+\usepackage{graphicx}
+\usepackage[labelfont={bf}, parskip=4pt]{caption}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usepackage[european]{circuitikz}
+
+% extras
+\usepackage{pdfpages}
+%\usepackage{listings}
+\usepackage{lipsum}
+\usepackage{tcolorbox}
+
+\graphicspath{ {../images/} }
+
+% square bullets
+\newcommand{\localtextbulletone}{{\raisebox{.45ex}{\rule{.6ex}{.6ex}}}}
+\renewcommand{\labelitemi}{\localtextbulletone}
+
+% section title
+\definecolor{gray75}{gray}{0.75}
+\titleformat{\section}[hang]{\huge\bfseries}{\thetitle\hspace{10pt}\textcolor{gray75}{|}\hspace{20pt}}{0pt}{\huge\bfseries}
+
+% header
+\setlength{\headheight}{15pt}
+
+% links
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=black,      
+    urlcolor=[rgb]{0,0,0.6},
+    citecolor=black,
+}
+
+% captions
+\captionsetup{justification=centering}
+
+% figure borders
+\setlength{\fboxsep}{5pt}
+\setlength{\fboxrule}{1pt}
+
+% subfigures
+\DeclareCaptionLabelFormat{continued}{#1 ~#2 (cont.)}
+\captionsetup[ContinuedFloat]{labelformat=continued}
