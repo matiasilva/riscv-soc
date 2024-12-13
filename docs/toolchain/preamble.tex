@@ -7,7 +7,7 @@
 
 % format
 \usepackage[dvipsnames,usenames]{xcolor}
-\usepackage[pagestyles]{titlesec}
+\usepackage[sf,pagestyles]{titlesec}
 \usepackage{enumitem}
 \usepackage{hyperref}
 
@@ -16,7 +16,7 @@
 \usepackage{fontspec}
 % Set up Tex Gyre fonts
 \setmainfont[Numbers=OldStyle]{TeX Gyre Pagella}
-\setsansfont{TeX Gyre Heros}  % Sans-serif font
+\setsansfont{Latin Modern Sans}  % Sans-serif font
 \setmonofont{TeX Gyre Cursor} % Monospace font
 \usepackage{amsmath}
 \usepackage{soul} % proper hyphenation
@@ -46,7 +46,7 @@
 
 % section title
 \definecolor{gray75}{gray}{0.75}
-\titleformat{\section}[hang]{\huge\bfseries}{\thetitle\hspace{10pt}\textcolor{gray75}{|}\hspace{20pt}}{0pt}{\huge\bfseries}
+\titleformat{\section}[hang]{\LARGE\bfseries\sffamily}{\thetitle\hspace{10pt}\textcolor{gray75}{|}\hspace{20pt}}{0pt}{\LARGE\sffamily}
 
 % header
 \setlength{\headheight}{15pt}
