@@ -1,16 +1,35 @@
-TARGET=main
-LATEX=latexmk
-BUILD_DIR=build
+# Web output
+SPHINXBUILD			?= sphinx-build
+SPHINXAUTOBUILD ?= sphinx-autobuild
+HTML_BUILDDIR  	:= build/html
 
-all: $(BUILD_DIR)/$(TARGET).pdf
+# PDF output
+LATEX       	:= latexmk
+PDF_TARGET  	:= main
+PDF_BUILDDIR	:= build/pdf
 
-$(BUILD_DIR)/$(TARGET).pdf: $(TARGET).tex | $(BUILD_DIR)
+SOURCEDIR 	:= src
+
+# uv
+UV := uv
+
+$(BUILD_DIR)/$(TARGET).pdf: $(TARGET).tex $(PDF_BUILDDIR)
 	$(LATEX) -output-directory=$(BUILD_DIR) -pdflua $(TARGET).tex
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+$(PDF_BUILDDIR) $(HTML_BUILDDIR):
+	mkdir -p $@
+
+htmllive: SPHINXBUILD=$(SPHINXAUTOBUILD)
+htmllive: html
+
+html: clean $(HTML_BUILDDIR)
+	$(UV) run $(SPHINXBUILD) -b html -n "$(SOURCEDIR)" "$(HTML_BUILDDIR)" -c .
+
+pdf: clean $(PDF_BUILDDIR)
+	$(UV) run $(SPHINXBUILD) -b latex -n "$(SOURCEDIR)" "$(PDF_BUILDDIR)" -c .
+	make -C ${PDF_BUILDDIR}
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(HTML_BUILDDIR) $(PDF_BUILDDIR)
 
-.PHONY: all clean
+.PHONY: clean test html
