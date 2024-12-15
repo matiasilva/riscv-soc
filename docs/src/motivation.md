@@ -4,8 +4,8 @@ I've
 [written about how I got into ASIC work](https://matiasilva.com/journal/riscv-from-scratch/)
 in my journal before. In a nutshell, it was very much accidentally. It wasn't by
 accident, though, that from a young age I was interested in computers and how
-they work. I was the family IT kid, even though what I knew back then vastly
-dwarfs what I know now.
+they work. I was the family IT kid, even though what I knew back then is vastly
+dwarfed by what I know now.
 
 My years spent coding everything from physics simulations, to microcontrollers,
 to entire ticketing platforms had taught me about the limitations of the
@@ -26,10 +26,11 @@ some FPGA experience and I wanted a challenge.
 
 What better project to work on than a RISC-V core? Well, that was what I thought
 until I saw that everyone and their uncle had gotten to that challenge years
-ago. While I've never looked at anyone else's cores before finishing my own, the
-vulgarity of the RISC-V core meant that it fell short of the learning tool I
-wanted it to be. The upshot was that there was plenty of good material online,
-with help ranging from tooling, to environment setup, to microarchitecture.
+ago[^defence]. While I've never looked at anyone else's cores before finishing
+my own, the vulgarity of the RISC-V core meant that it fell short of the
+learning tool I wanted it to be. The upshot was that there was plenty of good
+material online, with help ranging from tooling, to environment setup, to
+microarchitecture.
 
 A glaring similarity among many RISC-V projects out there was that few were ever
 able to "talk to" anything. In the real world, this is not how things work. CPU
@@ -49,3 +50,7 @@ My main goals with the project were to:
 
 Along the way, I greatly refined my command of Neovim for documentation writing
 and code, which I'd been trying to pick up for forever.
+
+[^defence]:
+    In my defence, I was 12 when the first RISC-V ISA came out and 16 when
+    homemade cores began entering the mainstream.
