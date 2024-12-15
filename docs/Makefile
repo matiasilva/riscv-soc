@@ -25,11 +25,13 @@ htmllive: html
 html: clean $(HTML_BUILDDIR)
 	$(UV) run $(SPHINXBUILD) -b html -n "$(SOURCEDIR)" "$(HTML_BUILDDIR)" -c .
 
+pdflive: pdf
+	make -C $(PDF_BUILDDIR)
+
 pdf: clean $(PDF_BUILDDIR)
 	$(UV) run $(SPHINXBUILD) -b latex -n "$(SOURCEDIR)" "$(PDF_BUILDDIR)" -c .
-	make -C ${PDF_BUILDDIR}
 
 clean:
 	rm -rf $(HTML_BUILDDIR) $(PDF_BUILDDIR)
 
-.PHONY: clean test html
+.PHONY: clean test html htmllive pdflive pdf
