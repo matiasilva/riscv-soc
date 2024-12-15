@@ -22,14 +22,16 @@ $(PDF_BUILDDIR) $(HTML_BUILDDIR):
 htmllive: SPHINXBUILD=$(SPHINXAUTOBUILD)
 htmllive: html
 
-html: clean $(HTML_BUILDDIR)
-	$(UV) run $(SPHINXBUILD) -b html -n "$(SOURCEDIR)" "$(HTML_BUILDDIR)" -c .
+html: $(HTML_BUILDDIR)
+	rm -rf $^
+	$(UV) run $(SPHINXBUILD) -b html -n "$(SOURCEDIR)" "$^" -c .
 
 pdflive: pdf
 	make -C $(PDF_BUILDDIR)
 
-pdf: clean $(PDF_BUILDDIR)
-	$(UV) run $(SPHINXBUILD) -b latex -n "$(SOURCEDIR)" "$(PDF_BUILDDIR)" -c .
+pdf: $(PDF_BUILDDIR)
+	rm -rf $^
+	$(UV) run $(SPHINXBUILD) -b latex -n "$(SOURCEDIR)" "$^" -c .
 
 clean:
 	rm -rf $(HTML_BUILDDIR) $(PDF_BUILDDIR)
