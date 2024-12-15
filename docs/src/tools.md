@@ -28,6 +28,17 @@ needed. While I was wrapping my head around this, I found
 explaining each step of the design flow and how that interlinks with these open
 source tools.
 
+## Codespell
+
+A painless way to prevent any spelling mistakes in source code and/or
+documentation is using
+[codespell](https://github.com/codespell-project/codespell/). This is a quick
+command to check spelling:
+
+```bash
+uv run codespell $ROOT/hdl $ROOT/docs/src
+```
+
 ## Extra steps
 
 ### Mounting the iCESugar board

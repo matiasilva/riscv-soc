@@ -1,6 +1,5 @@
 /*
 generates the necessary control signals for muxes
-
 [alusrc] select sign-extended immediate OR rs2 field of instruction
 [reg_wr_en] enable writeback to regfile
 [is_mem_to_reg] select whether ALU result or memory read is written to regfile

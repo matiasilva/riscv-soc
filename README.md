@@ -14,7 +14,7 @@ All Makefiles rely on the `$ROOT` variable being set, which you can get by
 sourcing the appropriately named `sourceme` file.
 
 Full information on running simulations and the project setup are available on
-the [project page](https://matiasilva.github.io/riscv-soc/tools.html)
+the [project page](https://matiasilva.github.io/riscv-soc/tools.html).
 
 ## Author
 
