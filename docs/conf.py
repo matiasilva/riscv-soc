@@ -28,6 +28,7 @@ html_theme_options = {
 myst_number_code_blocks = ["C", "python", "yaml"]
 myst_links_external_new_tab = True
 myst_heading_anchors = 3
+myst_enable_extensions = ["tasklist"]
 
 # LaTeX output
 latex_engine = "lualatex"
