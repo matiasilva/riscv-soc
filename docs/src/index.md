@@ -5,9 +5,11 @@
 :maxdepth: 2
 
 motivation
+specification
 core
-FPGAs
-journal
+fpgas
+testing
+log
 resources
 ```
 
@@ -22,9 +24,3 @@ dust their FPGAs off and get to work designing cool hardware.
 ```{note}
 This documentation is also available to download as a PDF.
 ```
-
-My main goals with the project were to:
-
-1. develop a deeper understanding of digital design, verification and compilers
-1. apply modern software methodologies to hardware design
-1. learn about RISC-V
