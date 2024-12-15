@@ -20,6 +20,7 @@ core
 fpgas
 testing
 log
+tools
 resources
 ```
 
