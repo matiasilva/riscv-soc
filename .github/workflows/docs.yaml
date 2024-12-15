@@ -3,6 +3,8 @@ name: Build HTML and PDF documentation
 on:
   push:
     branches: ["master"]
+    paths:
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -17,7 +19,7 @@ concurrency:
 jobs:
   # Build job
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -46,12 +48,13 @@ jobs:
         with:
           name: docs-pdf
           path: ./docs/build/pdf/minimalrisc-vsoc.pdf
+          compression-level: 0
   # Deployment job
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Deploy to GitHub Pages
