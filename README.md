@@ -5,6 +5,9 @@ This repository contains the source code for my Minimal RISC-V SoC.
 To view the datasheet and full documentation set associated with this project,
 [click here](https://matiasilva.github.io/riscv-soc).
 
+> [!NOTE]  
+> This project is a work in progress. I'm picking this up in my free time as and when I can.
+
 ## Development
 
 To run simulations, view waveforms, and flash Lattice/Gowin FPGAs, you'll need
