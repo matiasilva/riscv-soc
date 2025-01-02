@@ -23,6 +23,3 @@ log
 tools
 resources
 ```
-
-Use the table of contents above to navigate to the next section or use the
-sidebar to read at your own will!
