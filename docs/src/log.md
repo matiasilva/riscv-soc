@@ -28,7 +28,7 @@
 
 ### Memory Access Instructions
 
-- [ ] LB: Load Byte (Signed)
+- [x] LB: Load Byte (Signed)
 - [ ] LH: Load Halfword (Signed)
 - [ ] LW: Load Word
 - [ ] LBU: Load Byte Unsigned

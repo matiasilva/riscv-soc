@@ -1,0 +1,10 @@
+[project]
+name = "sim"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12.7"
+dependencies = [
+    "cocotb>=1.9.2",
+    "pytest>=8.3.4",
+]
