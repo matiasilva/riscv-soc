@@ -6,5 +6,5 @@
 *.asc
 *.out
 *.log
-
+__pycache__
 build/

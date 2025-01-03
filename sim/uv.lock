@@ -3,23 +3,10 @@ requires-python = ">=3.12.7"
 
 [[package]]
 name = "cocotb"
-version = "1.9.2"
-source = { registry = "https://pypi.org/simple" }
+version = "2.0.0.dev0+5237f9de"
+source = { git = "https://github.com/cocotb/cocotb.git#5237f9de3620aaf64e36d2e76960b9f7121bea96" }
 dependencies = [
     { name = "find-libpython" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5c/dc/4bd01e86f7ad85dfc6eec681a94db1a856aa35c58777a297e271100ac24c/cocotb-1.9.2.tar.gz", hash = "sha256:e4cdeaf51ec1b14e5430083ac56edc0b48ad05184f0307d90de44ff7bfdb1652", size = 300696 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f1/86/39f5f75366e46c665b86a46ab7acb5149994c55f4ad6f89057e99acc7400/cocotb-1.9.2-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:17c19553dbc5442f079495a2fd6e8fc7924cd9c527ae0d5c92d864f12d3ed865", size = 620182 },
-    { url = "https://files.pythonhosted.org/packages/f3/50/4e6c84dc1d2002e0cc4587a4516feb12c47e2953f43f8f2f136941e7c0bb/cocotb-1.9.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ff2460fb60444bfbe28a8119aad7f7297a97b53356426f03d0cdee2b90d3bc1a", size = 4213411 },
-    { url = "https://files.pythonhosted.org/packages/ad/1a/8875eecc17f681e6fd7bfff5e75a9338c156b3530c5559fe77753174e19a/cocotb-1.9.2-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:5a2333ee6e5f2316c425e501ea9a116439cf8f08ceb8816c762842fe88ea9748", size = 4094531 },
-    { url = "https://files.pythonhosted.org/packages/0c/ae/2a536de0f747bd5756e62165a429c9249c6e0715cc77c9a5fdd851821adb/cocotb-1.9.2-cp312-cp312-win32.whl", hash = "sha256:85d175f6e6054f3d046903790fe61ccf454e1a5e39392682c728a3418be935cf", size = 492077 },
-    { url = "https://files.pythonhosted.org/packages/05/b3/5026f529ffd707dcb6cf58d68d0b1b7d47fc6afecf009a4158bf7e2141b4/cocotb-1.9.2-cp312-cp312-win_amd64.whl", hash = "sha256:42fde03b858cd84e0284d9cee6bf34cc0892167921bd1da100abf181ac5e2ea4", size = 523524 },
-    { url = "https://files.pythonhosted.org/packages/4a/9b/68332cd317d449c32e5ed8318343805f59e73481d6c5dcb01b8060ac412e/cocotb-1.9.2-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:a60f6b3c4e4f5e9265a18c86927af1d773fb79b32edf577ce2ba8d59d74acafc", size = 611792 },
-    { url = "https://files.pythonhosted.org/packages/9a/79/dadc212d62e57bc381ab403bae8a442b8903f84c4807075bd236071092ce/cocotb-1.9.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9cc00e5ddf5fea392a8a3406869396c7e5a736a08afc8e0fe45ad159151438ba", size = 4213277 },
-    { url = "https://files.pythonhosted.org/packages/a0/22/4578c0f67443ae00e63f6d9987bd48287b1ad141941780277a9bd8faa4ce/cocotb-1.9.2-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6264826ee4dd6acc678dd2572f3cd683da6a48013af82de81bf8a45b5e064b8e", size = 4094427 },
-    { url = "https://files.pythonhosted.org/packages/29/71/6b77f173866dd64f3b898ec15ec1103eee43fb7b212108e51fea9b866a67/cocotb-1.9.2-cp313-cp313-win32.whl", hash = "sha256:7cdb25ca9dd2483d96f30b1cf3c070e4a6527d43e0af2d66660de29727c81cd4", size = 492087 },
-    { url = "https://files.pythonhosted.org/packages/01/f0/71d15e3735df2135f600cac25e2174c7fee55d250e46a00fe800417c1aab/cocotb-1.9.2-cp313-cp313-win_amd64.whl", hash = "sha256:c816972ec4b3360372075fb0563cf98e8ad7d0f158e8dfe3165824936383a888", size = 523541 },
 ]
 
 [[package]]
@@ -93,6 +80,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cocotb", specifier = ">=1.9.2" },
+    { name = "cocotb", git = "https://github.com/cocotb/cocotb.git" },
     { name = "pytest", specifier = ">=8.3.4" },
 ]

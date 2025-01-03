@@ -3,4 +3,10 @@ name = "sim"
 version = "0.1.0"
 description = "cocotb-based simulation flow"
 requires-python = ">=3.12.7"
-dependencies = ["cocotb>=1.9.2", "pytest>=8.3.4"]
+dependencies = [
+ "cocotb",
+ "pytest>=8.3.4",
+]
+
+[tool.uv.sources]
+cocotb = { git = "https://github.com/cocotb/cocotb.git" }
