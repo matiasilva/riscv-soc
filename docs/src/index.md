@@ -17,6 +17,7 @@ This documentation is also available to download as a PDF.
 motivation
 specification
 core
+uart
 fpgas
 testing
 log
