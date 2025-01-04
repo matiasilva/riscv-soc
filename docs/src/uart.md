@@ -12,7 +12,7 @@ accurate retrieval. A standard oversampling factor of 16 minimizes the error to
 1/16 from the middle point.
 
 ```{figure} img/uart-rx-proto.svg
-:width: 200px
+:width: 80%
 :align: center
 
 Transmission of a byte
