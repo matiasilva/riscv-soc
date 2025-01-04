@@ -1,9 +1,10 @@
 `include "platform.vh"
 `default_nettype none
 
-module baud_gen
-   #(parameter OVERSAMPLING = 16,
-   parameter BAUD_RATE = 115200) (
+module baud_gen #(
+   parameter OVERSAMPLING = 16,
+   parameter BAUD_RATE = 115200
+) (
    input wire clk,
    input wire rst_n,
 

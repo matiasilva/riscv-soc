@@ -1,15 +1,17 @@
 `default_nettype none
 
-module uart_rx_des
-   #( parameter WORD_WIDTH = 8,
-      parameter OVERSAMPLING = 16) (
+module uart_rx_des #(
+   parameter WORD_WIDTH = 8,
+   parameter OVERSAMPLING = 16
+) (
    input wire clk,
    input wire rst_n,
    input wire tick,
    input wire din,
    input wire parity_en,
-   output wire ready_tick,
-   output wire [DATA_WIDTH-1:0] dout
+   output wire [DATA_WIDTH-1:0] dout,
+   output reg frame_err,
+   output reg done
 );
 
 localparam TICK_MID_VAL = OVERSAMPLING / 2 - 1;
@@ -21,7 +23,7 @@ localparam [2:0]
    DATA       = 3'b010,
    STOP_BIT   = 3'b011;
 
-reg [2:0                     ] state, state_nxt;
+reg [2:0] state, state_nxt;
 
 // config
 reg parity, parity_nxt;
@@ -32,8 +34,7 @@ reg [$clog2(DATA_WIDTH)-1:0  ] bit_ctr, bit_ctr_nxt;
 wire [$clog2(DATA_WIDTH)-1:0] N = parity ? DATA_WIDTH : WORD_WIDTH;
 
 // outputs
-reg [DATA_WIDTH-1:0          ] d, d_nxt;
-reg ready;
+reg [DATA_WIDTH-1:0] d, d_nxt;
 
 always @(posedge clk or negedge rst_n) begin
    if (~rst_n) begin
@@ -57,7 +58,8 @@ always @(*) begin
    bit_ctr_nxt  = bit_ctr;
    d_nxt        = d;
    parity_nxt   = parity;
-   ready        = 1'b0;
+   done        = 1'b0;
+   frame_err    = 1'b0;
 
    case (state)
       IDLE: begin
@@ -94,7 +96,9 @@ always @(*) begin
             if (tick_ctr == 0) begin
                state_nxt = IDLE;
                if (din) // check data line deasserted
-                  ready = 1'b1;
+                  done = 1'b1;
+               else
+                  frame_err = 1'b1;
             end else
                tick_ctr_nxt = tick_ctr - 1;
          end
@@ -102,7 +106,6 @@ always @(*) begin
    endcase
 end
 
-assign ready_tick = ready;
 assign dout = d;
 
 endmodule
