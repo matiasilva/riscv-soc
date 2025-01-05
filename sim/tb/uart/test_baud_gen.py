@@ -10,7 +10,7 @@ from cocotb_tools import runner
 import pytest
 
 
-@cocotb.test()
+@cocotb.test
 async def simple_task(dut):
     cocotb.start_soon(Clock(dut.clk, 1, units="ns").start())
     dut.rst_n.value = 0
