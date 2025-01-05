@@ -10,7 +10,14 @@ author = "Matias Wang Silva"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["myst_parser", "sphinx_last_updated_by_git", "sphinx_copybutton"]
+extensions = [
+    "myst_parser",
+    "sphinx_last_updated_by_git",
+    "sphinx_copybutton",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+]
 
 templates_path = ["_templates"]
 exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
@@ -32,3 +39,10 @@ myst_enable_extensions = ["tasklist"]
 
 # LaTeX output
 latex_engine = "lualatex"
+
+import os
+import sys
+from pathlib import Path
+
+root = Path(os.getenv("ROOT", "../sim/tb"))
+sys.path.insert(0, str(root / "sim" / "tb"))
