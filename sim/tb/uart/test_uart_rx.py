@@ -78,7 +78,7 @@ async def one_byte(dut):
     dut._log.info("one byte test finished")
 
 
-@cocotb.test
+@cocotb.test()
 async def stress_test(dut):
     """send bytes consecutively with variable delay"""
 
@@ -105,7 +105,7 @@ async def stress_test(dut):
     dut._log.info(f"sent {target} bytes, stress test finished")
 
 
-@cocotb.test
+@cocotb.test()
 async def not_ready(dut):
     """tests valid/ready interface"""
 
@@ -134,13 +134,21 @@ async def not_ready(dut):
     dut._log.info("not ready test finished")
 
 
+# TODO: test parity error, frame error, buffer overrun error
+
+
 @pytest.mark.parametrize("parity", ["0", "1"])
 def test_uart_rx_runner(parity: int):
     sim = runner.Icarus()
     root = Path(str(os.getenv("ROOT"))) / "hdl"
     module = "uart_rx"
 
-    sources = [f"uart/{module}.v", "uart/uart_rx_des.v", "uart/baud_gen.v"]
+    sources = [
+        f"uart/{module}.v",
+        "uart/flag_buf.v",
+        "uart/uart_rx_des.v",
+        "uart/baud_gen.v",
+    ]
     sources = [root / s for s in sources]
 
     sim.build(
