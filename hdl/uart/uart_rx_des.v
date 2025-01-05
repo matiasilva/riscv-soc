@@ -28,8 +28,8 @@ reg [2:0] state, state_nxt;
 
 // internal
 reg [$clog2(OVERSAMPLING)-1:0] tick_ctr, tick_ctr_nxt;
-reg [$clog2(DATA_WIDTH)-1:0  ] bit_ctr, bit_ctr_nxt;
-wire [$clog2(DATA_WIDTH)-1:0] N = parity ? DATA_WIDTH : WORD_WIDTH;
+reg [$clog2(DATA_WIDTH+1)-1:0  ] bit_ctr, bit_ctr_nxt;
+wire [$clog2(DATA_WIDTH+1)-1:0] N = parity ? DATA_WIDTH : WORD_WIDTH;
 
 // outputs
 reg [DATA_WIDTH-1:0] d, d_nxt;
@@ -79,8 +79,7 @@ always @(*) begin
                if (bit_ctr == N) begin
                   state_nxt = STOP_BIT;
                   bit_ctr_nxt = 0;
-               end
-               else begin
+               end else begin
                   bit_ctr_nxt = bit_ctr + 1;
                   d_nxt = {din, d[DATA_WIDTH - 1 : 1]};
                end

@@ -1,5 +1,7 @@
 `default_nettype none
 
+/* one word buffer with flag */
+
 module flag_buf #(
    parameter WORD_WIDTH = 8
 ) (

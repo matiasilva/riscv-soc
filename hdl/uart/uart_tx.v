@@ -1,7 +1,12 @@
-module uart_tx(
+module uart_tx (
    input wire clk,
    input wire rst_n,
-   input wire [7:0] data.
+   input wire tick,
 
-   output wire sd
+   // write interface
+   input wire [WORD_WIDTH-1:0] wr_data,
+   input wire wr_valid,
+   output wire wr_ready,
+
+   output wire dout
 );

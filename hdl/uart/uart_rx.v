@@ -64,10 +64,10 @@ uart_rx_des #( .OVERSAMPLING(OVERSAMPLING), .WORD_WIDTH(WORD_WIDTH) )
 );
 
 wire [WORD_WIDTH-1:0] word = parity ? data [DATA_WIDTH-2:0] : data[DATA_WIDTH-1:1];
+wire parity_ok = data[DATA_WIDTH-1] == ~(^word);
 wire flag_clear;
 wire flag;
 wire [WORD_WIDTH-1:0] flag_data;
-wire parity_ok = data[DATA_WIDTH-1] == ~(^word);
 wire flag_set = des_done && (parity ? parity_ok : 1'b1);
 
 flag_buf #( .WORD_WIDTH(WORD_WIDTH) ) flag_buf0 (
