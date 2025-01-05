@@ -76,8 +76,10 @@ always @(*) begin
          if (tick) begin
             tick_ctr_nxt = tick_ctr - 1;
             if (tick_ctr == 0) begin
-               if (bit_ctr == N)
+               if (bit_ctr == N) begin
                   state_nxt = STOP_BIT;
+                  bit_ctr_nxt = 0;
+               end
                else begin
                   bit_ctr_nxt = bit_ctr + 1;
                   d_nxt = {din, d[DATA_WIDTH - 1 : 1]};

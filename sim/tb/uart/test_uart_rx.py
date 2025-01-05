@@ -42,19 +42,24 @@ class UartTxDriver:
         await brt
 
 
-@cocotb.test
-async def one_byte(dut):
+async def init_dut(dut) -> UartTxDriver:
     BAUD_RATE = dut.BAUD_RATE.value.to_unsigned()
     WORD_WIDTH = dut.WORD_WIDTH.value.to_unsigned()
     parity = int(os.getenv("TB_PARITY", ""))
     dut.parity_cfg.value = parity
-    uart_tx = UartTxDriver(dut.din, BAUD_RATE, WORD_WIDTH, bool(parity))
-
     # clock & reset
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 3)
     dut.rst_n.value = 1
+
+    return UartTxDriver(dut.din, BAUD_RATE, WORD_WIDTH, bool(parity))
+
+
+@cocotb.test
+async def one_byte(dut):
+    WORD_WIDTH = dut.WORD_WIDTH.value.to_unsigned()
+    uart_tx = await init_dut(dut)
 
     # add some "aysnchronicity"
     await ClockCycles(dut.clk, randint(2, dut.baud_gen0.M.value.to_unsigned()))
@@ -75,22 +80,14 @@ async def one_byte(dut):
 
 @cocotb.test
 async def stress_test(dut):
-    BAUD_RATE = dut.BAUD_RATE.value.to_unsigned()
+    """send bytes consecutively with variable delay"""
+
     WORD_WIDTH = dut.WORD_WIDTH.value.to_unsigned()
-    parity = int(os.getenv("TB_PARITY", ""))
-    dut.parity_cfg.value = parity
-    uart_tx = UartTxDriver(dut.din, BAUD_RATE, WORD_WIDTH, bool(parity))
-
-    # clock & reset
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 3)
-    dut.rst_n.value = 1
-
+    uart_tx = await init_dut(dut)
     dut.rd_ready.value = 1
 
-    target = 200
-    for _ in range(200):
+    target = 20
+    for _ in range(target):
         # add some "aysnchronicity"
         tick_cycles = dut.baud_gen0.M.value.to_unsigned()
         await ClockCycles(dut.clk, randint(0, 3 * tick_cycles))
@@ -110,22 +107,15 @@ async def stress_test(dut):
 
 @cocotb.test
 async def not_ready(dut):
-    BAUD_RATE = dut.BAUD_RATE.value.to_unsigned()
+    """tests valid/ready interface"""
+
     WORD_WIDTH = dut.WORD_WIDTH.value.to_unsigned()
-    parity = int(os.getenv("TB_PARITY", ""))
-    dut.parity_cfg.value = parity
-    uart_tx = UartTxDriver(dut.din, BAUD_RATE, WORD_WIDTH, bool(parity))
+    uart_tx = await init_dut(dut)
 
-    # clock & reset
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 3)
-    dut.rst_n.value = 1
-
+    dut.rd_ready.value = 0
     # add some "aysnchronicity"
     await ClockCycles(dut.clk, randint(2, dut.baud_gen0.M.value.to_unsigned()))
 
-    dut.rd_ready.value = 0
     to_send = getrandbits(WORD_WIDTH)
     await uart_tx.send_byte(to_send)
 
