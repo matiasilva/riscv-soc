@@ -17,6 +17,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
+    "sphinxcontrib-wavedrom",
 ]
 
 templates_path = ["_templates"]
@@ -46,3 +47,5 @@ from pathlib import Path
 
 root = Path(os.getenv("ROOT", "../sim/tb"))
 sys.path.insert(0, str(root / "sim" / "tb"))
+
+wavedrom_html_jsinline = False

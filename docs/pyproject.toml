@@ -12,4 +12,5 @@ dependencies = [
   "sphinx-autobuild>=2024.10.3",
   "codespell>=2.3.0",
   "sphinx-copybutton>=0.5.2",
+  "sphinxcontrib-wavedrom>=3.0.4",
 ]

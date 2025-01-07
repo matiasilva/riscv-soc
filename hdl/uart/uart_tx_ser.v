@@ -7,10 +7,15 @@ module uart_tx_ser #(
    input wire clk,
    input wire rst_n,
    input wire tick,
+
+   // data
    input wire [WORD_WIDTH-1:0] din,
    input wire tx_start,
+   output reg dout,
+
+   // config & flags
    input wire parity,
-   output reg dout
+   output wire active
 );
 
 localparam DATA_WIDTH = WORD_WIDTH + 1; // parity
@@ -94,5 +99,6 @@ always @(*) begin
    endcase
 end
 
+assign active = state != IDLE;
 
 endmodule
