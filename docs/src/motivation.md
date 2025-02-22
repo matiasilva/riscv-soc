@@ -4,9 +4,9 @@
 
 My main goals with the project were to:
 
-1. to understand the role of each tool involved in a tapeout
+1. understand the role of each tool involved in a tapeout
 1. develop a deeper understanding of digital design, verification and compilers
-1. to understand the hardware stack from the bottom up: gates to kernel to
+1. understand the hardware stack from the bottom up: gates to kernel to
    userland software
 1. learn about RISC-V, computer architecture and ISAs
 
