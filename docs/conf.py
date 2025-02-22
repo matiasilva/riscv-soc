@@ -17,7 +17,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "sphinxcontrib-wavedrom",
+    "sphinxcontrib.yowasp_wavedrom",
 ]
 
 templates_path = ["_templates"]
