@@ -28,27 +28,26 @@ async def simple_task(dut):
 @pytest.mark.parametrize("baud_rate", [9600, 19200, 115200])
 def test_baud_gen_runner(baud_rate: int):
     sim = runner.Icarus()
-    root = Path(str(os.getenv("ROOT"))) / "hdl"
-    module = "baud_gen"
 
-    sources = [f"uart/{module}.v"]
-    sources = [root / s for s in sources]
+    core_root = Path(__file__).parent.parent
+    hdl_root = core_root / "hdl"
+    sim_root = core_root / "sim"
+
+    module = "baud_gen"
+    sources = [f"{module}.v"]
+    sources = [hdl_root / s for s in sources]
 
     sim.build(
         sources=sources,
-        includes=[root, root / "uart"],
+        includes=[hdl_root],
         hdl_toplevel=module,
         timescale=("1ns", "1ps"),
-        build_dir=f"build/build_{module}_{baud_rate}",
+        build_dir=f"{str(sim_root)}/{__name__}/build_{module}_{baud_rate}",
         parameters={
             "BAUD_RATE": baud_rate,
         },
         waves=True,
     )
 
-    test_opts = {"test_module": "test_baud_gen,", "waves": False}
+    test_opts = {"test_module": "test_baud_gen,", "waves": True}
     sim.test(hdl_toplevel=module, **test_opts)
-
-
-if __name__ == "__main__":
-    test_baud_gen_runner()

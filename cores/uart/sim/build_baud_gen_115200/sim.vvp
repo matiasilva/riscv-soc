@@ -1,0 +1,86 @@
+#! /opt/homebrew/Cellar/icarus-verilog/12.0/bin/vvp
+:ivl_version "12.0 (stable)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 12;
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/system.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/v2005_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/va_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/v2009.vpi";
+S_0x127e04db0 .scope package, "$unit" "$unit" 2 1;
+ .timescale -9 -12;
+S_0x127e04f20 .scope module, "baud_gen" "baud_gen" 3 3;
+ .timescale -9 -12;
+    .port_info 0 /INPUT 1 "clk";
+    .port_info 1 /INPUT 1 "rst_n";
+    .port_info 2 /OUTPUT 1 "tick";
+P_0x127e05090 .param/l "BAUD_RATE" 0 3 5, +C4<00000000000000011100001000000000>;
+P_0x127e050d0 .param/l "FREQ" 0 3 6, +C4<00000010111110101111000010000000>;
+P_0x127e05110 .param/l "M" 1 3 15, +C4<000000000000000000000000000000000000000000000000000000000000011100>;
+P_0x127e05150 .param/l "N" 1 3 16, +C4<00000000000000000000000000000101>;
+P_0x127e05190 .param/l "OVERSAMLING_FREQ" 1 3 14, +C4<0000000000000000000000000000000000000000000111000010000000000000>;
+P_0x127e051d0 .param/l "OVERSAMPLING" 0 3 4, +C4<00000000000000000000000000010000>;
+v0x600002314900_0 .net *"_ivl_0", 65 0, L_0x600002014140;  1 drivers
+L_0x1180780e8 .functor BUFT 1, C4<00001>, C4<0>, C4<0>, C4<0>;
+v0x600002314990_0 .net/2u *"_ivl_10", 4 0, L_0x1180780e8;  1 drivers
+v0x600002314a20_0 .net *"_ivl_12", 4 0, L_0x600002014280;  1 drivers
+v0x600002314ab0_0 .net *"_ivl_16", 65 0, L_0x6000020143c0;  1 drivers
+L_0x118078130 .functor BUFT 1, C4<0000000000000000000000000000000000000000000000000000000000000>, C4<0>, C4<0>, C4<0>;
+v0x600002314b40_0 .net *"_ivl_19", 60 0, L_0x118078130;  1 drivers
+L_0x118078178 .functor BUFT 1, C4<000000000000000000000000000000000000000000000000000000000000011011>, C4<0>, C4<0>, C4<0>;
+v0x600002314bd0_0 .net/2u *"_ivl_20", 65 0, L_0x118078178;  1 drivers
+L_0x118078010 .functor BUFT 1, C4<0000000000000000000000000000000000000000000000000000000000000>, C4<0>, C4<0>, C4<0>;
+v0x600002314c60_0 .net *"_ivl_3", 60 0, L_0x118078010;  1 drivers
+L_0x118078058 .functor BUFT 1, C4<000000000000000000000000000000000000000000000000000000000000011011>, C4<0>, C4<0>, C4<0>;
+v0x600002314cf0_0 .net/2u *"_ivl_4", 65 0, L_0x118078058;  1 drivers
+v0x600002314d80_0 .net *"_ivl_6", 0 0, L_0x6000020141e0;  1 drivers
+L_0x1180780a0 .functor BUFT 1, C4<00000>, C4<0>, C4<0>, C4<0>;
+v0x600002314e10_0 .net/2u *"_ivl_8", 4 0, L_0x1180780a0;  1 drivers
+o0x1180401f0 .functor BUFZ 1, C4<z>; HiZ drive
+v0x600002314ea0_0 .net "clk", 0 0, o0x1180401f0;  0 drivers
+v0x600002314f30_0 .var "cnt", 4 0;
+v0x600002314fc0_0 .net "cnt_next", 4 0, L_0x600002014320;  1 drivers
+o0x118040280 .functor BUFZ 1, C4<z>; HiZ drive
+v0x600002315050_0 .net "rst_n", 0 0, o0x118040280;  0 drivers
+v0x6000023150e0_0 .net "tick", 0 0, L_0x600002014460;  1 drivers
+E_0x600000415dc0/0 .event negedge, v0x600002315050_0;
+E_0x600000415dc0/1 .event posedge, v0x600002314ea0_0;
+E_0x600000415dc0 .event/or E_0x600000415dc0/0, E_0x600000415dc0/1;
+L_0x600002014140 .concat [ 5 61 0 0], v0x600002314f30_0, L_0x118078010;
+L_0x6000020141e0 .cmp/eq 66, L_0x600002014140, L_0x118078058;
+L_0x600002014280 .arith/sum 5, v0x600002314f30_0, L_0x1180780e8;
+L_0x600002014320 .functor MUXZ 5, L_0x600002014280, L_0x1180780a0, L_0x6000020141e0, C4<>;
+L_0x6000020143c0 .concat [ 5 61 0 0], v0x600002314f30_0, L_0x118078130;
+L_0x600002014460 .cmp/eq 66, L_0x6000020143c0, L_0x118078178;
+S_0x127e07390 .scope module, "cocotb_iverilog_dump" "cocotb_iverilog_dump" 4 1;
+ .timescale -9 -12;
+    .scope S_0x127e04f20;
+T_0 ;
+    %wait E_0x600000415dc0;
+    %load/vec4 v0x600002315050_0;
+    %inv;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_0.0, 8;
+    %pushi/vec4 0, 0, 5;
+    %assign/vec4 v0x600002314f30_0, 0;
+    %jmp T_0.1;
+T_0.0 ;
+    %load/vec4 v0x600002314fc0_0;
+    %assign/vec4 v0x600002314f30_0, 0;
+T_0.1 ;
+    %jmp T_0;
+    .thread T_0;
+    .scope S_0x127e07390;
+T_1 ;
+    %vpi_call/w 4 3 "$dumpfile", "/Users/matias/projects/riscv-cpu/cores/uart/sim/build_baud_gen_115200/baud_gen.fst" {0 0 0};
+    %vpi_call/w 4 4 "$dumpvars", 32'sb00000000000000000000000000000000, S_0x127e04f20 {0 0 0};
+    %end;
+    .thread T_1;
+# The file index is used to find the file name in the following table.
+:file_names 5;
+    "N/A";
+    "<interactive>";
+    "-";
+    "/Users/matias/projects/riscv-cpu/cores/uart/hdl/baud_gen.v";
+    "/Users/matias/projects/riscv-cpu/cores/uart/sim/build_baud_gen_115200/cocotb_iverilog_dump.v";

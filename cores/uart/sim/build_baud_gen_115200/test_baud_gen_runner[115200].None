@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1740215554" />
+    <testcase name="simple_task" classname="test_baud_gen" file="/Users/matias/projects/riscv-cpu/cores/uart/tests/test_baud_gen.py" lineno="13" time="0.003699064254760742" sim_time_ns="142.0" ratio_time="38388.08688366097" />
+  </testsuite>
+</testsuites>

@@ -140,23 +140,26 @@ async def not_ready(dut):
 @pytest.mark.parametrize("parity", ["0", "1"])
 def test_uart_rx_runner(parity: int):
     sim = runner.Icarus()
-    root = Path(str(os.getenv("ROOT"))) / "hdl"
-    module = "uart_rx"
 
+    core_root = Path(__file__).parent.parent
+    hdl_root = core_root / "hdl"
+    sim_root = core_root / "sim"
+
+    module = "uart_rx"
     sources = [
-        f"uart/{module}.v",
-        "uart/flag_buf.v",
-        "uart/uart_rx_des.v",
-        "uart/baud_gen.v",
+        f"{module}.v",
+        "flag_buf.v",
+        "uart_rx_des.v",
+        "baud_gen.v",
     ]
-    sources = [root / s for s in sources]
+    sources = [hdl_root / s for s in sources]
 
     sim.build(
         sources=sources,
-        includes=[root, root / "uart"],
+        includes=[hdl_root],
         hdl_toplevel=module,
         timescale=("1ns", "1ps"),
-        build_dir=f"build/build_{module}_{parity}",
+        build_dir=f"{str(sim_root)}/{__name__}/build_{module}_{parity}",
         clean=True,
         waves=True,
     )
