@@ -2,12 +2,12 @@
 module q1q2 (
     input clk,
     input rst_n,
-    input [31:0] instr_i,
-    input [31:0] pc_i,
-    input [31:0] pc_incr_i,
-    output [31:0] instr_o,
-    output [31:0] pc_o
-    output [31:0] pc_incr_o,
+    input [31:0] instr_ip,
+    input [31:0] pc_ip,
+    input [31:0] pc_incr_ip,
+    output [31:0] instr_op,
+    output [31:0] pc_op,
+    output [31:0] pc_incr_op
 );
 
   reg [31:0] next_instr;
@@ -20,14 +20,14 @@ module q1q2 (
       next_pc <= 0;
       next_pc_incr <= 0;
     end else begin
-      next_instr   <= instr_i;
-      next_pc <= pc_i;
-      next_pc_incr <= pc_incr_i;
+      next_instr   <= instr_ip;
+      next_pc <= pc_ip;
+      next_pc_incr <= pc_incr_ip;
     end
   end
 
-  assign instr_o   = next_instr;
-  assign pc_o = next_pc;
-  assign pc_incr_o = next_pc_incr;
+  assign instr_op   = next_instr;
+  assign pc_op = next_pc;
+  assign pc_incr_op = next_pc_incr;
 
 endmodule

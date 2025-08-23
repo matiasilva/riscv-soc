@@ -4,14 +4,14 @@ module regfile (
     input         clk,
     input         rst_n,
     // read interface
-    input  [ 4:0] rd_port1_i,       // read register 1
-    input  [ 4:0] rd_port2_i,       // read register 2
-    output [31:0] rd_data1_o,
-    output [31:0] rd_data2_o,
+    input  [ 4:0] rd_port1_ip,       // read register 1
+    input  [ 4:0] rd_port2_ip,       // read register 2
+    output [31:0] rd_data1_op,
+    output [31:0] rd_data2_op,
     // write interface
-    input  [31:0] wr_data_i,
-    input  [ 4:0] wr_port_i,        // write register
-    input         ctrl_reg_wr_en_i
+    input  [31:0] wr_data_ip,
+    input  [ 4:0] wr_port_ip,        // write register
+    input         ctrl_reg_wr_en_ip
 );
 
   // we don't care about the contents of x[0]
@@ -36,34 +36,34 @@ module regfile (
       rd_data1 <= 32'b0;
       rd_data2 <= 32'b0;
     end else begin
-      if (ctrl_reg_wr_en_i) begin
-        if (wr_port_i !== 5'b0) begin
-          x[wr_port_i] <= wr_data_i;
+      if (ctrl_reg_wr_en_ip) begin
+        if (wr_port_ip !== 5'b0) begin
+          x[wr_port_ip] <= wr_data_ip;
         end
       end
-      rd_data1 <= x[rd_port1_i];
-      rd_data2 <= x[rd_port2_i];
+      rd_data1 <= x[rd_port1_ip];
+      rd_data2 <= x[rd_port2_ip];
     end
   end
 
   always @(posedge clk) begin
-    case (rd_port1_i)
+    case (rd_port1_ip)
       5'b0: next_rd_data1 <= 32'b0;
-      wr_port_i:
-      next_rd_data1 <= wr_data_i;  // same cycle read and write supported (hazard prevention)
+      wr_port_ip:
+      next_rd_data1 <= wr_data_ip;  // same cycle read and write supported (hazard prevention)
       default: next_rd_data1 <= rd_data1;
     endcase
   end
 
   always @(posedge clk) begin
-    case (rd_port2_i)
+    case (rd_port2_ip)
       5'b0:      next_rd_data2 <= 32'b0;
-      wr_port_i: next_rd_data2 <= wr_data_i;
+      wr_port_ip: next_rd_data2 <= wr_data_ip;
       default:   next_rd_data2 <= rd_data2;
     endcase
   end
 
-  assign rd_data1_o = next_rd_data1;
-  assign rd_data2_o = next_rd_data2;
+  assign rd_data1_op = next_rd_data1;
+  assign rd_data2_op = next_rd_data2;
 
 endmodule

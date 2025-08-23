@@ -8,11 +8,11 @@ module memory #(
 ) (
     input rst_n,
     input clk,
-    input ctrl_mem_ren_i,
-    input ctrl_mem_wren_i,
-    input [31:0] mem_addr_i,
-    input [31:0] mem_wdata_i,
-    output [31:0] mem_rdata_o
+    input ctrl_mem_ren_ip,
+    input ctrl_mem_wren_ip,
+    input [31:0] mem_addr_ip,
+    input [31:0] mem_wdata_ip,
+    output [31:0] mem_rdata_op
 );
 
   localparam MEM_SIZE = 512;
@@ -42,16 +42,16 @@ module memory #(
 `endif
       next_rdata <= 0;
     end else begin
-      if (ctrl_mem_ren_i) begin
-        next_rdata <= {mem[mem_addr_i+3], mem[mem_addr_i+2], mem[mem_addr_i+1], mem[mem_addr_i]};
-      end else if (ctrl_mem_wren_i) begin
+      if (ctrl_mem_ren_ip) begin
+        next_rdata <= {mem[mem_addr_ip+3], mem[mem_addr_ip+2], mem[mem_addr_ip+1], mem[mem_addr_ip]};
+      end else if (ctrl_mem_wren_ip) begin
         for (i = 0; i < 4; i++) begin
-          mem[mem_addr_i+i] <= mem_wdata_i[i*8+:8];
+          mem[mem_addr_ip+i] <= mem_wdata_ip[i*8+:8];
         end
       end
     end
   end
 
-  assign mem_rdata_o = next_rdata;
+  assign mem_rdata_op = next_rdata;
 
 endmodule

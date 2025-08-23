@@ -4,20 +4,20 @@ module q2q3 #(
 ) (
     input                   clk,
     input                   rst_n,
-    input  [          31:0] pc_i,
-    output [          31:0] pc_o,
-    input  [          31:0] reg_rd_data1_i,
-    output [          31:0] reg_rd_data1_o,
-    input  [          31:0] reg_rd_data2_i,
-    output [          31:0] reg_rd_data2_o,
-    input  [           4:0] reg_wr_port_i,
-    output [           4:0] reg_wr_port_o,
-    input  [CTRL_WIDTH-1:0] ctrl_q2_i,
-    output [CTRL_WIDTH-1:0] ctrl_q2_o,
-    input  [          31:0] instr_i,
-    output [          31:0] instr_o,
-    input  [          31:0] pc_incr_i,
-    output [          31:0] pc_incr_o
+    input  [          31:0] pc_ip,
+    output [          31:0] pc_op,
+    input  [          31:0] reg_rd_data1_ip,
+    output [          31:0] reg_rd_data1_op,
+    input  [          31:0] reg_rd_data2_ip,
+    output [          31:0] reg_rd_data2_op,
+    input  [           4:0] reg_wr_port_ip,
+    output [           4:0] reg_wr_port_op,
+    input  [CTRL_WIDTH-1:0] ctrl_q2_ip,
+    output [CTRL_WIDTH-1:0] ctrl_q2_op,
+    input  [          31:0] instr_ip,
+    output [          31:0] instr_op,
+    input  [          31:0] pc_incr_ip,
+    output [          31:0] pc_incr_op
 
 );
 
@@ -41,23 +41,23 @@ module q2q3 #(
       next_pc_incr      <= 0;
 
     end else begin
-      next_pc           <= pc_i;
-      next_reg_rd_data1 <= reg_rd_data1_i;
-      next_reg_rd_data2 <= reg_rd_data2_i;
-      next_reg_wr_port  <= reg_wr_port_i;
-      next_ctrl_q2      <= ctrl_q2_i;
-      next_instr        <= instr_i;
-      next_pc_incr      <= pc_incr_i;
+      next_pc           <= pc_ip;
+      next_reg_rd_data1 <= reg_rd_data1_ip;
+      next_reg_rd_data2 <= reg_rd_data2_ip;
+      next_reg_wr_port  <= reg_wr_port_ip;
+      next_ctrl_q2      <= ctrl_q2_ip;
+      next_instr        <= instr_ip;
+      next_pc_incr      <= pc_incr_ip;
 
     end
   end
 
-  assign pc_o           = next_pc;
-  assign pc_incr_o      = next_pc_incr;
+  assign pc_op           = next_pc;
+  assign pc_incr_op      = next_pc_incr;
 
-  assign reg_rd_data1_o = next_reg_rd_data1;
-  assign reg_rd_data2_o = next_reg_rd_data2;
-  assign reg_wr_port_o  = next_reg_wr_port;
-  assign ctrl_q2_o      = next_ctrl_q2;
-  assign instr_o        = next_instr;
+  assign reg_rd_data1_op = next_reg_rd_data1;
+  assign reg_rd_data2_op = next_reg_rd_data2;
+  assign reg_wr_port_op  = next_reg_wr_port;
+  assign ctrl_q2_op      = next_ctrl_q2;
+  assign instr_op        = next_instr;
 endmodule

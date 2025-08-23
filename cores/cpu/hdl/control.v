@@ -9,8 +9,8 @@ generates the necessary control signals for muxes
 module control #(
     parameter CTRL_WIDTH = 16
 ) (
-    input [6:0] opcode_i,
-    output [CTRL_WIDTH - 1:0] ctrl_o
+    input [6:0] opcode_ip,
+    output [CTRL_WIDTH - 1:0] ctrl_op
 );
 
   localparam OP_RTYPE  = 7'b0110011;
@@ -48,7 +48,7 @@ module control #(
     is_jal       = 1'b0;
     alusrc        = ALUSRC_IMM;
     aluop         = ALUOP_ADD;
-    case (opcode_i)
+    case (opcode_ip)
       OP_RTYPE: begin
         reg_wr_en     = 1'b1;
         alusrc        = ALUSRC_REG;
@@ -78,6 +78,6 @@ module control #(
   wire [2:0] q4_bits = {is_branch, mem_re, mem_we};
   wire [1:0] q5_bits = {reg_wr_en, is_mem_to_reg};
 
-  assign ctrl_o = {7'b0, q2_bits, q3_bits, q4_bits, q5_bits};
+  assign ctrl_op = {7'b0, q2_bits, q3_bits, q4_bits, q5_bits};
 
 endmodule

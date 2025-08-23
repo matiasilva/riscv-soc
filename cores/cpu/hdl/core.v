@@ -147,126 +147,126 @@ module core (
       .PRELOAD(1),
       .PRELOAD_FILE("build/core.hex")
   ) instrmem_u (
-      .clk    (clk),
-      .rst_n  (rst_n),
-      .pc_i   (pc),
-      .instr_o(instr_q1)
+      .clk     (clk),
+      .rst_n   (rst_n),
+      .pc_ip   (pc),
+      .instr_op(instr_q1)
   );
 
   alu alu_u (
-      .alu_a_i       (alu_in1),
-      .alu_b_i       (alu_in2),
-      .aluctrl_ctrl_i(aluctrl_ctrl),
-      .alu_out_o     (alu_out)
+      .alu_a_ip       (alu_in1),
+      .alu_b_ip       (alu_in2),
+      .aluctrl_ctrl_ip(aluctrl_ctrl),
+      .alu_out_op     (alu_out)
   );
 
   regfile regfile_u (
-      .clk             (clk),
-      .rst_n           (rst_n),
-      .rd_port1_i      (reg_rd_port1),
-      .rd_port2_i      (reg_rd_port2),
-      .rd_data1_o      (reg_rd_data1),
-      .rd_data2_o      (reg_rd_data2),
-      .wr_port_i       (reg_wr_port),
-      .wr_data_i       (reg_wr_data),
-      .ctrl_reg_wr_en_i(ctrl_q5[CTRL_REG_WR_EN])
+      .clk              (clk),
+      .rst_n            (rst_n),
+      .rd_port1_ip      (reg_rd_port1),
+      .rd_port2_ip      (reg_rd_port2),
+      .rd_data1_op      (reg_rd_data1),
+      .rd_data2_op      (reg_rd_data2),
+      .wr_port_ip       (reg_wr_port),
+      .wr_data_ip       (reg_wr_data),
+      .ctrl_reg_wr_en_ip(ctrl_q5[CTRL_REG_WR_EN])
   );
 
   control #(
       .CTRL_WIDTH(CTRL_WIDTH)
   ) control_u (
-      .opcode_i(opcode_q2),
-      .ctrl_o  (ctrl_q2)
+      .opcode_ip(opcode_q2),
+      .ctrl_op  (ctrl_q2)
   );
 
   aluctrl alucontrol_u (
-      .ctrl_aluop_i  (ctrl_aluop),
-      .funct_i       (funct_q3),
-      .aluctrl_ctrl_o(aluctrl_ctrl)
+      .ctrl_aluop_ip  (ctrl_aluop),
+      .funct_ip       (funct_q3),
+      .aluctrl_ctrl_op(aluctrl_ctrl)
   );
 
   memory #(
       .PRELOAD     (1),
       .PRELOAD_FILE("sim/dmem.hex")
   ) memory_u (
-      .rst_n          (rst_n),
-      .clk            (clk),
-      .ctrl_mem_ren_i (ctrl_mem_ren),
-      .ctrl_mem_wren_i(ctrl_mem_wren),
-      .mem_addr_i     (mem_addr),
-      .mem_wdata_i    (mem_wdata),
-      .mem_rdata_o    (mem_rdata)
+      .rst_n           (rst_n),
+      .clk             (clk),
+      .ctrl_mem_ren_ip (ctrl_mem_ren),
+      .ctrl_mem_wren_ip(ctrl_mem_wren),
+      .mem_addr_ip     (mem_addr),
+      .mem_wdata_ip    (mem_wdata),
+      .mem_rdata_op    (mem_rdata)
   );
 
 
   /* pipeline registers */
 
   q1q2 q1q2_u (
-      .clk      (clk),
-      .rst_n    (rst_n),
-      .pc_i     (pc),
-      .pc_o     (pc_q2),
-      .pc_incr_i(pc_incr),
-      .pc_incr_o(pc_incr_q2),
-      .instr_i  (instr_q1),
-      .instr_o  (instr_q2)
+      .clk       (clk),
+      .rst_n     (rst_n),
+      .pc_ip     (pc),
+      .pc_op     (pc_q2),
+      .pc_incr_ip(pc_incr),
+      .pc_incr_op(pc_incr_q2),
+      .instr_ip  (instr_q1),
+      .instr_op  (instr_q2)
   );
 
   q2q3 #(
       .CTRL_WIDTH(CTRL_WIDTH)
   ) q2q3_u (
-      .clk           (clk),
-      .rst_n         (rst_n),
-      .pc_i          (pc_q2),
-      .pc_o          (pc_q3),
-      .pc_incr_i     (pc_incr_q2),
-      .pc_incr_o     (pc_incr_q3),
-      .reg_rd_data1_i(reg_rd_data1_q2),
-      .reg_rd_data1_o(reg_rd_data1_q3),
-      .reg_rd_data2_i(reg_rd_data2_q2),
-      .reg_rd_data2_o(reg_rd_data2_q3),
-      .reg_wr_port_i (reg_wr_port_q2),
-      .reg_wr_port_o (reg_wr_port_q3),
-      .ctrl_q2_i     (ctrl_q2),
-      .ctrl_q2_o     (ctrl_q3),
-      .instr_i       (instr_q2),
-      .instr_o       (instr_q3)
+      .clk            (clk),
+      .rst_n          (rst_n),
+      .pc_ip          (pc_q2),
+      .pc_op          (pc_q3),
+      .pc_incr_ip     (pc_incr_q2),
+      .pc_incr_op     (pc_incr_q3),
+      .reg_rd_data1_ip(reg_rd_data1_q2),
+      .reg_rd_data1_op(reg_rd_data1_q3),
+      .reg_rd_data2_ip(reg_rd_data2_q2),
+      .reg_rd_data2_op(reg_rd_data2_q3),
+      .reg_wr_port_ip (reg_wr_port_q2),
+      .reg_wr_port_op (reg_wr_port_q3),
+      .ctrl_q2_ip     (ctrl_q2),
+      .ctrl_q2_op     (ctrl_q3),
+      .instr_ip       (instr_q2),
+      .instr_op       (instr_q3)
   );
 
   q3q4 #(
       .CTRL_WIDTH(CTRL_WIDTH)
   ) q3q4_u (
-      .clk           (clk),
-      .rst_n         (rst_n),
-      .pc_next_i     (pc_next_q3),
-      .pc_next_o     (pc_next_q4),
-      .reg_wr_port_i (reg_wr_port_q3),
-      .reg_wr_port_o (reg_wr_port_q4),
-      .reg_rd_data2_i(reg_rd_data2_q3),
-      .reg_rd_data2_o(reg_rd_data2_q4),
-      .alu_out_i     (alu_out_q3),
-      .alu_out_o     (alu_out_q4),
-      .ctrl_q3_i     (ctrl_q3),
-      .ctrl_q3_o     (ctrl_q4),
-      .instr_i       (instr_q3),
-      .instr_o       (instr_q4)
+      .clk            (clk),
+      .rst_n          (rst_n),
+      .pc_next_ip     (pc_next_q3),
+      .pc_next_op     (pc_next_q4),
+      .reg_wr_port_ip (reg_wr_port_q3),
+      .reg_wr_port_op (reg_wr_port_q4),
+      .reg_rd_data2_ip(reg_rd_data2_q3),
+      .reg_rd_data2_op(reg_rd_data2_q4),
+      .alu_out_ip     (alu_out_q3),
+      .alu_out_op     (alu_out_q4),
+      .ctrl_q3_ip     (ctrl_q3),
+      .ctrl_q3_op     (ctrl_q4),
+      .instr_ip       (instr_q3),
+      .instr_op       (instr_q4)
   );
 
   q4q5 #(
       .CTRL_WIDTH(CTRL_WIDTH)
   ) q4q5_u (
-      .clk          (clk),
-      .rst_n        (rst_n),
-      .alu_out_i    (alu_out_q4),
-      .alu_out_o    (alu_out_q5),
-      .reg_wr_port_i(reg_wr_port_q4),
-      .reg_wr_port_o(reg_wr_port_q5),
-      .mem_rdata_i  (mem_rdata_q4),
-      .mem_rdata_o  (mem_rdata_q5),
-      .ctrl_q4_i    (ctrl_q4),
-      .ctrl_q4_o    (ctrl_q5),
-      .instr_i      (instr_q4),
-      .instr_o      (instr_q5)
+      .clk           (clk),
+      .rst_n         (rst_n),
+      .alu_out_ip    (alu_out_q4),
+      .alu_out_op    (alu_out_q5),
+      .reg_wr_port_ip(reg_wr_port_q4),
+      .reg_wr_port_op(reg_wr_port_q5),
+      .mem_rdata_ip  (mem_rdata_q4),
+      .mem_rdata_op  (mem_rdata_q5),
+      .ctrl_q4_ip    (ctrl_q4),
+      .ctrl_q4_op    (ctrl_q5),
+      .instr_ip      (instr_q4),
+      .instr_op      (instr_q5)
   );
 
   /*
