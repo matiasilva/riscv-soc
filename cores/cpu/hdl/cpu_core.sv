@@ -12,7 +12,7 @@
 	q5 write back
 */
 
-module core (
+module cpu_core (
     input clk,
     input rst_n
 );
@@ -279,14 +279,14 @@ which is what we actually care about
   assign imm_se_q3 = {{20{imm_q3[11]}}, imm_q3};
   wire [31:0] pc_incr = pc + 4;
   wire pc_jal_q2;
-  reg  [31:0] pc;  // need PC immediately in fetch
-  reg  [31:0] pc_incr_last;
+  reg [31:0] pc;  // need PC immediately in fetch
+  reg [31:0] pc_incr_last;
   always @(*) begin
     pc = pc_incr_last;
-    if(ctrl_q2[CTRL])
-    if (ctrl_q4[CTRL_IS_BRANCH]) begin
-      pc = pc_next_q4;
-    end
+    if (ctrl_q2[CTRL])
+      if (ctrl_q4[CTRL_IS_BRANCH]) begin
+        pc = pc_next_q4;
+      end
   end
 
   always @(posedge clk or negedge rst_n) begin

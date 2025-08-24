@@ -1,3 +1,3 @@
-src/alu.v
-tests/tb/alu_tb.v
-src/alu.v
+src/alu.sv
+tests/tb/alu_tb.sv
+src/alu.sv
