@@ -1,0 +1,19 @@
+HDL_DIR := "hdl/"
+SRCS := "cpu_core.sv \
+				instrmem.sv aluctrl.sv control.sv regfile.sv \
+				alu.sv memory.sv \
+				pipeline/q1q2.sv pipeline/q2q3.sv pipeline/q3q4.sv pipeline/q4q5.sv"
+FULL_SRCS := prepend(HDL_DIR, SRCS)
+
+# use slang to lint cpu_core
+lint:
+  slang {{FULL_SRCS}}
+
+# run all cocotb tests
+test:
+  -uv run pytest -s
+
+# run tests, launch gtkwave
+sim: test
+  gtkwave sim_build/*.fst
+
