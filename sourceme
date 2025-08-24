@@ -1,2 +1,4 @@
 #!/usr/bin/env bash
 export ROOT="$(dirname "$(realpath "$0")")"
+export CORES_ROOT=$ROOT/cores
+export CPU_ROOT=$CORES_ROOT/cpu
