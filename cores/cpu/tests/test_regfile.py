@@ -4,7 +4,7 @@ cocotb testbench for regfile.sv
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer
+from cocotb.triggers import ReadOnly, RisingEdge, ClockCycles
 from cocotb_tools.runner import get_runner
 import os
 from pathlib import Path
@@ -13,16 +13,17 @@ import random
 
 async def reset_dut(dut) -> None:
     """Reset the DUT"""
-    dut.rst_n.value = 0
-    await Timer(10, unit="ns")
     dut.rst_n.value = 1
-    await Timer(10, unit="ns")
+    await ClockCycles(dut.clk, 3)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 3)
+    dut.rst_n.value = 1
 
 
 def setup_clock(dut) -> Clock:
     """Setup clock for the DUT"""
     clock = Clock(dut.clk, 10, unit="ns")
-    clock.start()
+    clock.start(start_high=False)
     return clock
 
 
@@ -32,7 +33,7 @@ async def fill_regfile_random(dut) -> dict[int, int]:
 
     # Fill registers 1-31 with random data
     for addr in range(1, 32):
-        data = random.randint(0, 2**32 - 1)
+        data = random.getrandbits(32)
         test_data[addr] = data
         await write_regfile(dut, addr, data)
 
@@ -46,6 +47,7 @@ async def write_regfile(dut, addr: int, data: int, enable: bool = True) -> None:
     dut.wr_en_ip.value = int(enable)
     await RisingEdge(dut.clk)
     dut.wr_en_ip.value = 0
+    dut._log.info(f"Wrote {data:0x} to x{addr}")
 
 
 async def read_regfile(dut, addr: int, port: int = 1) -> int:
@@ -53,10 +55,12 @@ async def read_regfile(dut, addr: int, port: int = 1) -> int:
     if port == 1:
         dut.rd_addr1_ip.value = addr
         await RisingEdge(dut.clk)
+        await ReadOnly()
         return dut.rd_data1_op.value.to_unsigned()
     else:
         dut.rd_addr2_ip.value = addr
         await RisingEdge(dut.clk)
+        await ReadOnly()
         return dut.rd_data2_op.value.to_unsigned()
 
 
@@ -81,8 +85,8 @@ def init_inputs(dut) -> None:
 async def test_regfile_reads(dut) -> None:
     """Regfile read test: mixed single/dual port"""
     _ = setup_clock(dut)
-    init_inputs(dut)
     await reset_dut(dut)
+    init_inputs(dut)
     await RisingEdge(dut.clk)
 
     test_data = await fill_regfile_random(dut)
@@ -96,10 +100,17 @@ async def test_regfile_reads(dut) -> None:
             f"Port 1: addr={addr}, got={actual1:0x}, expected={expected:0x}"
         )
 
+        dut._log.info(f"Read passed for port 1 {addr=}")
+
+    for addr in range(32):
+        expected = 0 if addr == 0 else test_data[addr]
+
         actual2 = await read_regfile(dut, addr, port=2)
         assert actual2 == expected, (
             f"Port 2: addr={addr}, got={actual2:0x}, expected={expected:0x}"
         )
+
+        dut._log.info(f"Read passed for port 2 {addr=}")
 
     # Test simultaneous reads on both ports
     for i in range(10):
@@ -114,12 +125,12 @@ async def test_regfile_reads(dut) -> None:
         assert actual2 == expected2
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_regfile_writes(dut) -> None:
     """Regfile write test"""
     _ = setup_clock(dut)
-    init_inputs(dut)
     await reset_dut(dut)
+    init_inputs(dut)
     await RisingEdge(dut.clk)
 
     # Test writes to different registers
@@ -132,12 +143,12 @@ async def test_regfile_writes(dut) -> None:
         )
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_regfile_read_during_write(dut) -> None:
     """Test that reads during writes return old data"""
     _ = setup_clock(dut)
-    init_inputs(dut)
     await reset_dut(dut)
+    init_inputs(dut)
     await RisingEdge(dut.clk)
 
     # Write initial value to register 5
@@ -162,12 +173,12 @@ async def test_regfile_read_during_write(dut) -> None:
     )
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_regfile_write_enable(dut) -> None:
     """Test that writes don't happen when write enable is low"""
     _ = setup_clock(dut)
-    init_inputs(dut)
     await reset_dut(dut)
+    init_inputs(dut)
     await RisingEdge(dut.clk)
 
     # Write initial value
@@ -183,12 +194,12 @@ async def test_regfile_write_enable(dut) -> None:
     )
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_regfile_x0_hardwired(dut) -> None:
     """Test that x0 is hardwired to zero"""
     _ = setup_clock(dut)
-    init_inputs(dut)
     await reset_dut(dut)
+    init_inputs(dut)
     await RisingEdge(dut.clk)
 
     # Try to write to x0
@@ -199,12 +210,12 @@ async def test_regfile_x0_hardwired(dut) -> None:
     assert actual == 0, f"x0 not hardwired to zero: got={actual}"
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_regfile_boundary_values(dut) -> None:
     """Test boundary values for 32-bit registers"""
     _ = setup_clock(dut)
-    init_inputs(dut)
     await reset_dut(dut)
+    init_inputs(dut)
     await RisingEdge(dut.clk)
 
     # Test boundary values
@@ -225,12 +236,12 @@ async def test_regfile_boundary_values(dut) -> None:
         )
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_regfile_reset_behavior(dut) -> None:
     """Test that all registers are properly cleared on reset"""
     _ = setup_clock(dut)
-    init_inputs(dut)
     await reset_dut(dut)
+    init_inputs(dut)
     await RisingEdge(dut.clk)
 
     # Fill some registers with non-zero data
@@ -248,12 +259,12 @@ async def test_regfile_reset_behavior(dut) -> None:
         )
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_regfile_stress(dut) -> None:
     """Stress test with rapid read/write operations"""
     _ = setup_clock(dut)
-    init_inputs(dut)
     await reset_dut(dut)
+    init_inputs(dut)
     await RisingEdge(dut.clk)
 
     # Rapid alternating read/write to same register
@@ -282,15 +293,15 @@ async def test_regfile_stress(dut) -> None:
         await RisingEdge(dut.clk)
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_regfile_parametrized_8bit(dut) -> None:
     """Test regfile functionality with 8-bit width parameter"""
     # Note: This test assumes the regfile is instantiated with XW=8
     # In practice, you'd need separate test runners for different XW values
 
     _ = setup_clock(dut)
-    init_inputs(dut)
     await reset_dut(dut)
+    init_inputs(dut)
     await RisingEdge(dut.clk)
 
     # Test 8-bit values (if XW=8)

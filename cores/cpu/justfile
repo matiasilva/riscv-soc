@@ -15,5 +15,5 @@ test:
 
 # run tests, launch gtkwave
 sim: test
-  gtkwave sim_build/*.fst
+  gtkwave sim/*.fst
 

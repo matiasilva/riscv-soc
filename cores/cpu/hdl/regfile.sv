@@ -1,7 +1,7 @@
 // register file
 
 module regfile #(
-    parameter int XW = 32
+    parameter XW = 32
 ) (
     input  logic          clk,
     input  logic          rst_n,
@@ -23,26 +23,34 @@ module regfile #(
   logic [XW-1:0] next_rd_data1;
   logic [XW-1:0] next_rd_data2;
 
+  logic [XW-1:0] x1;
+  logic [XW-1:0] x2;
+
   integer i;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
       for (i = 0; i < 31; i++) begin
-        x[i] <= {XW{1'b0}};
+        x[i] <= '0;
       end
-      next_rd_data1 <= {XW{1'b0}};
-      next_rd_data2 <= {XW{1'b0}};
-      rd_data1 <= {XW{1'b0}};
-      rd_data2 <= {XW{1'b0}};
+      // next_rd_data1 <= {XW{1'b0}};
+      // next_rd_data2 <= {XW{1'b0}};
+      rd_data1 <= '0;
+      rd_data2 <= '0;
     end else begin
       if (wr_en_ip) begin
-        if (wr_addr_ip !== 5'b0) begin  // protect against writes to x[0]
+        if (wr_addr_ip != 5'b0) begin  // protect against writes to x[0]
           x[wr_addr_ip-1] <= wr_data_ip;
         end
       end
       rd_data1 <= rd_addr1_ip == 0 ? '0 : x[rd_addr1_ip-1];
       rd_data2 <= rd_addr2_ip == 0 ? '0 : x[rd_addr2_ip-1];
     end
+  end
+
+  always_comb begin
+    x1 = x[0];
+    x2 = x[1];
   end
 
   // always_ff @(posedge clk) begin
