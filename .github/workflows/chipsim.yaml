@@ -18,6 +18,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
 
       - name: Cache OSS CAD Suite
         uses: actions/cache@v4
@@ -42,8 +44,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.OSS_CAD_SUITE_VERSION }}
 
+      - name: Fix OSS CAD Suite
+        run: |
+          rm -rf ${{ runner.temp }}/oss-cad-suite/bin/python*
+
       - name: Run block tests
         run: |
           source sourceme
-          printenv
           cd $CPU_ROOT && just test
