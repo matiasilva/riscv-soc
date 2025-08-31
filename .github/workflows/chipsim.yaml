@@ -7,7 +7,6 @@ on:
 
 env:
   OSS_CAD_SUITE_VERSION: "2025-08-31"
-  JUST_VERSION: 1.
 
 jobs:
   build:
@@ -36,9 +35,6 @@ jobs:
       - name: Setup just
         uses: taiki-e/install-action@just
 
-      - name: temp1
-        run: "pwd"
-
       - name: Setup OSS CAD Suite
         if: steps.oss-cad-cache.outputs.cache-hit != 'true'
         uses: YosysHQ/setup-oss-cad-suite@v3
@@ -46,10 +42,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.OSS_CAD_SUITE_VERSION }}
 
-      - name: temp2
-        run: "pwd"
-
       - name: Run block tests
         run: |
           source sourceme
+          printenv
           cd $CPU_ROOT && just test
