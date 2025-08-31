@@ -16,13 +16,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
       - name: Cache OSS CAD Suite
         uses: actions/cache@v4
         id: oss-cad-cache
         with:
           path: |
-            ~/.cache/oss-cad-suite
-            ~/oss-cad-suite
+            ${{ runner.temp }}/oss-cad-suite
           key: oss-cad-suite-${{ runner.os }}-${{ env.OSS_CAD_SUITE_VERSION }}
 
       - name: Setup OSS CAD Suite
@@ -32,7 +34,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.OSS_CAD_SUITE_VERSION }}
 
-      - name: Verify installation
+      - name: Test OSS CAD Suite
         run: |
           yosys --version
           nextpnr-ice40 --version
