@@ -7,6 +7,7 @@ on:
 
 env:
   OSS_CAD_SUITE_VERSION: "2025-08-31"
+  JUST_VERSION: 1.
 
 jobs:
   build:
@@ -14,24 +15,29 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
-
-      - name: Setup just
-        uses: taiki-e/install-action@just
 
       - name: Cache OSS CAD Suite
         uses: actions/cache@v4
         id: oss-cad-cache
         with:
-          path: |
-            ${{ runner.temp }}/oss-cad-suite
+          path: ${{ runner.temp }}/oss-cad-suite
           key: oss-cad-suite-${{ runner.os }}-${{ env.OSS_CAD_SUITE_VERSION }}
 
+      - name: Cache just
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/just
+          key: just-${{ runner.os }}
+
+      - name: Setup just
+        uses: taiki-e/install-action@just
+
       - name: Setup OSS CAD Suite
-        if: steps.cache-oss-cad.outputs.cache-hit != 'true'
+        if: steps.oss-cad-cache.outputs.cache-hit != 'true'
         uses: YosysHQ/setup-oss-cad-suite@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
