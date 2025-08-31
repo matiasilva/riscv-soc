@@ -1,0 +1,38 @@
+name: CI jobs for chip simulation
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master]
+
+env:
+  OSS_CAD_SUITE_VERSION: "2025-08-31"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache OSS CAD Suite
+        uses: actions/cache@v4
+        id: oss-cad-cache
+        with:
+          path: |
+            ~/.cache/oss-cad-suite
+            ~/oss-cad-suite
+          key: oss-cad-suite-${{ runner.os }}-${{ env.OSS_CAD_SUITE_VERSION }}
+
+      - name: Setup OSS CAD Suite
+        if: steps.cache-oss-cad.outputs.cache-hit != 'true'
+        uses: YosysHQ/setup-oss-cad-suite@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ env.OSS_CAD_SUITE_VERSION }}
+
+      - name: Verify installation
+        run: |
+          yosys --version
+          nextpnr-ice40 --version
