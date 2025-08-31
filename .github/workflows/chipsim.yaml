@@ -19,6 +19,9 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
 
+      - name: Setup just
+        uses: taiki-e/install-action@just
+
       - name: Cache OSS CAD Suite
         uses: actions/cache@v4
         id: oss-cad-cache
@@ -34,7 +37,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.OSS_CAD_SUITE_VERSION }}
 
-      - name: Test OSS CAD Suite
+      - name: Run block tests
         run: |
-          yosys --version
-          nextpnr-ice40 --version
+          source sourceme
+          cd $CPU_ROOT && just test
