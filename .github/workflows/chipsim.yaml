@@ -9,9 +9,10 @@ env:
   OSS_CAD_SUITE_VERSION: "2025-08-31"
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-22.04
-
+    env:
+      WAVES: 0
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
