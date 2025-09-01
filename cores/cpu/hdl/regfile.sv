@@ -25,6 +25,7 @@ module regfile #(
 
   logic [XW-1:0] x1;
   logic [XW-1:0] x2;
+  logic [XW-1:0] x31;
 
   integer i;
 
@@ -49,8 +50,9 @@ module regfile #(
   end
 
   always_comb begin
-    x1 = x[0];
-    x2 = x[1];
+    x1  = x[0];
+    x2  = x[1];
+    x31 = x[4];
   end
 
   // always_ff @(posedge clk) begin

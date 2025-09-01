@@ -37,6 +37,7 @@ async def fill_regfile_random(dut) -> dict[int, int]:
         test_data[addr] = data
         await write_regfile(dut, addr, data)
 
+    test_data[0] = 0
     return test_data
 
 
@@ -47,139 +48,126 @@ async def write_regfile(dut, addr: int, data: int, enable: bool = True) -> None:
     dut.wr_en_ip.value = int(enable)
     await RisingEdge(dut.clk)
     dut.wr_en_ip.value = 0
-    dut._log.info(f"Wrote {data:0x} to x{addr}")
+    dut._log.debug(f"Wrote {data:0x} to x{addr}")
 
 
-async def read_regfile(dut, addr: int, port: int = 1) -> int:
-    """Read data from a register on specified port (1 or 2)"""
-    if port == 1:
-        dut.rd_addr1_ip.value = addr
-        await RisingEdge(dut.clk)
-        await ReadOnly()
-        return dut.rd_data1_op.value.to_unsigned()
-    else:
-        dut.rd_addr2_ip.value = addr
-        await RisingEdge(dut.clk)
-        await ReadOnly()
-        return dut.rd_data2_op.value.to_unsigned()
-
-
-async def read_regfile_dual(dut, addr1: int, addr2: int) -> tuple[int, int]:
-    """Read from both ports simultaneously"""
-    dut.rd_addr1_ip.value = addr1
-    dut.rd_addr2_ip.value = addr2
+async def read_launch_regfile(dut, addr: int, port=1) -> None:
+    """Launch read address"""
+    port2sig = {1: dut.rd_addr1_ip, 2: dut.rd_addr2_ip}
+    port2sig[port].value = addr
     await RisingEdge(dut.clk)
-    return dut.rd_data1_op.value.to_unsigned(), dut.rd_data2_op.value.to_unsigned()
 
 
-def init_inputs(dut) -> None:
+def read_capture_regfile(dut, port=1) -> None:
+    """Launch read address"""
+    port2sig = {1: dut.rd_data1_op, 2: dut.rd_data2_op}
+    return port2sig[port].value.to_unsigned()
+
+
+async def read_launch_regfile_dual(dut, addr: tuple[int, int]) -> None:
+    """Launch read address dual"""
+    dut.rd_addr1_ip.value = addr[0]
+    dut.rd_addr2_ip.value = addr[1]
+    await RisingEdge(dut.clk)
+
+
+async def init_inputs(dut) -> None:
     """Initialize all inputs to known state"""
     dut.rd_addr1_ip.value = 0
     dut.rd_addr2_ip.value = 0
     dut.wr_addr_ip.value = 0
     dut.wr_data_ip.value = 0
     dut.wr_en_ip.value = 0
+    await RisingEdge(dut.clk)
 
 
 @cocotb.test()
-async def test_regfile_reads(dut) -> None:
-    """Regfile read test: mixed single/dual port"""
+@cocotb.parametrize(port=[1, 2])
+async def test_regfile_rw_single(dut, port) -> None:
+    """Regfile read/write test: mixed single port"""
     _ = setup_clock(dut)
     await reset_dut(dut)
-    init_inputs(dut)
-    await RisingEdge(dut.clk)
+    await init_inputs(dut)
 
     test_data = await fill_regfile_random(dut)
 
-    # Test single port reads
-    for addr in range(32):
-        expected = 0 if addr == 0 else test_data[addr]
-
-        actual1 = await read_regfile(dut, addr, port=1)
-        assert actual1 == expected, (
-            f"Port 1: addr={addr}, got={actual1:0x}, expected={expected:0x}"
-        )
-
-        dut._log.info(f"Read passed for port 1 {addr=}")
-
-    for addr in range(32):
-        expected = 0 if addr == 0 else test_data[addr]
-
-        actual2 = await read_regfile(dut, addr, port=2)
-        assert actual2 == expected, (
-            f"Port 2: addr={addr}, got={actual2:0x}, expected={expected:0x}"
-        )
-
-        dut._log.info(f"Read passed for port 2 {addr=}")
-
-    # Test simultaneous reads on both ports
-    for i in range(10):
-        addr1 = random.randint(0, 31)
-        addr2 = random.randint(0, 31)
-
-        actual1, actual2 = await read_regfile_dual(dut, addr1, addr2)
-
-        expected1 = 0 if addr1 == 0 else test_data[addr1]
-        expected2 = 0 if addr2 == 0 else test_data[addr2]
-        assert actual1 == expected1
-        assert actual2 == expected2
+    # set up initial state
+    addr = 0
+    expected = test_data[addr]
+    await read_launch_regfile(dut, addr, port=port)
+    for addr in range(1, 32):
+        # launch next address
+        await read_launch_regfile(dut, addr, port=port)
+        # read and assert previous
+        actual = read_capture_regfile(dut, port=port)
+        assert actual == expected, f"{port=}: {addr=}, {actual=:0x}, {expected=:0x}"
+        expected = test_data[addr]
 
 
-@cocotb.test(skip=True)
-async def test_regfile_writes(dut) -> None:
-    """Regfile write test"""
+@cocotb.test()
+async def test_regfile_rw_dual(dut) -> None:
+    """Regfile read/write test: mixed dual port"""
     _ = setup_clock(dut)
     await reset_dut(dut)
-    init_inputs(dut)
-    await RisingEdge(dut.clk)
+    await init_inputs(dut)
 
-    # Test writes to different registers
-    test_values = [0x12345678, 0xABCDEF00, 0xDEADBEEF]
-    for i, val in enumerate(test_values, 1):
-        await write_regfile(dut, i, val)
-        actual = await read_regfile(dut, i)
-        assert actual == val, (
-            f"Write test failed: addr={i}, got={actual:08x}, expected={val:08x}"
+    test_data = await fill_regfile_random(dut)
+    pattern = [(random.randint(0, 31), random.randint(0, 31)) for _ in range(10)]
+
+    # set up initial state
+    addr1, addr2 = pattern.pop(0)
+    await read_launch_regfile_dual(dut, (addr1, addr2))
+    expected = (test_data[addr1], test_data[addr2])
+    for addr1, addr2 in pattern:
+        # launch next addresses
+        await read_launch_regfile_dual(dut, (addr1, addr2))
+
+        # read and assert previous
+        actual = (
+            dut.rd_data1_op.value.to_unsigned(),
+            dut.rd_data2_op.value.to_unsigned(),
         )
+        assert expected == actual
+        expected = (test_data[addr1], test_data[addr2])
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def test_regfile_read_during_write(dut) -> None:
-    """Test that reads during writes return old data"""
+    """Test that a read during a write returns old write data"""
     _ = setup_clock(dut)
     await reset_dut(dut)
-    init_inputs(dut)
-    await RisingEdge(dut.clk)
+    await init_inputs(dut)
 
-    # Write initial value to register 5
-    await write_regfile(dut, 5, 0x11111111)
+    addr = random.randint(1, 31)
+    values = (random.getrandbits(32), random.getrandbits(32))
 
-    # Read and write simultaneously - should get old data
-    dut.rd_addr1_ip.value = 5
-    dut.wr_addr_ip.value = 5
-    dut.wr_data_ip.value = 0x22222222
-    dut.wr_en_ip.value = 1
-    await RisingEdge(dut.clk)
+    # write initial data
+    await write_regfile(dut, addr, values[0])
 
-    # Should read old value (0x11111111)
-    assert dut.rd_data1_op.value == 0x11111111, (
-        f"Read during write failed: got={dut.rd_data1_op.value:08x}, expected=0x11111111"
+    # write next data
+    dut.rd_addr1_ip.value = addr  # launch read
+    await write_regfile(dut, addr, values[1])
+    await RisingEdge(dut.clk)  # capture first read
+
+    # should read old value
+    assert dut.rd_data1_op.value.to_unsigned() == values[0], (
+        f"Read during write failed: got={dut.rd_data1_op.value.to_unsigned():08x}, expected={values[0]}"
     )
 
-    # Next cycle should show new value
-    actual = await read_regfile(dut, 5)
-    assert actual == 0x22222222, (
-        f"Post-write read failed: got={actual:08x}, expected=0x22222222"
+    # capture second read
+    await RisingEdge(dut.clk)
+    actual = dut.rd_data1_op.value.to_unsigned()
+    assert actual == values[1], (
+        f"Post-write read failed: got={actual:08x}, expected={values[1]}"
     )
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def test_regfile_write_enable(dut) -> None:
     """Test that writes don't happen when write enable is low"""
     _ = setup_clock(dut)
     await reset_dut(dut)
-    init_inputs(dut)
-    await RisingEdge(dut.clk)
+    await init_inputs(dut)
 
     # Write initial value
     await write_regfile(dut, 10, 0x12345678)
@@ -188,35 +176,41 @@ async def test_regfile_write_enable(dut) -> None:
     await write_regfile(dut, 10, 0xDEADBEEF, enable=False)
 
     # Read back - should still have original value
-    actual = await read_regfile(dut, 10)
+    await read_launch_regfile(dut, 10)
+    await RisingEdge(dut.clk)
+    actual = dut.rd_data1_op.value.to_unsigned()
     assert actual == 0x12345678, (
         f"Write enable test failed: got={actual:08x}, expected=0x12345678"
     )
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def test_regfile_x0_hardwired(dut) -> None:
     """Test that x0 is hardwired to zero"""
     _ = setup_clock(dut)
     await reset_dut(dut)
-    init_inputs(dut)
-    await RisingEdge(dut.clk)
+    await init_inputs(dut)
 
     # Try to write to x0
     await write_regfile(dut, 0, 0xDEADBEEF)
 
     # Read x0 - should always be 0
-    actual = await read_regfile(dut, 0)
-    assert actual == 0, f"x0 not hardwired to zero: got={actual}"
+    await read_launch_regfile_dual(dut, (0, 0))
+    await RisingEdge(dut.clk)  # capture
+    for actual in (
+        dut.rd_data1_op.value.to_unsigned(),
+        dut.rd_data2_op.value.to_unsigned(),
+    ):
+        assert actual == 0, f"x0 not hardwired to zero: got={actual}"
 
 
-@cocotb.test(skip=True)
-async def test_regfile_boundary_values(dut) -> None:
+@cocotb.test()
+@cocotb.parametrize(port=[1, 2])
+async def test_regfile_boundary_values(dut, port) -> None:
     """Test boundary values for 32-bit registers"""
     _ = setup_clock(dut)
     await reset_dut(dut)
-    init_inputs(dut)
-    await RisingEdge(dut.clk)
+    await init_inputs(dut)
 
     # Test boundary values
     boundary_values = [
@@ -230,18 +224,20 @@ async def test_regfile_boundary_values(dut) -> None:
 
     for i, val in enumerate(boundary_values, 1):
         await write_regfile(dut, i, val)
-        actual = await read_regfile(dut, i)
+        await read_launch_regfile(dut, i, port=port)
+        await RisingEdge(dut.clk)
+        actual = read_capture_regfile(dut, port=port)
         assert actual == val, (
             f"Boundary test failed: addr={i}, got=0x{actual:08x}, expected=0x{val:08x}"
         )
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def test_regfile_reset_behavior(dut) -> None:
     """Test that all registers are properly cleared on reset"""
     _ = setup_clock(dut)
     await reset_dut(dut)
-    init_inputs(dut)
+    await init_inputs(dut)
     await RisingEdge(dut.clk)
 
     # Fill some registers with non-zero data
@@ -253,69 +249,11 @@ async def test_regfile_reset_behavior(dut) -> None:
 
     # Check that all registers read as zero after reset
     for addr in range(32):
-        actual = await read_regfile(dut, addr)
+        await read_launch_regfile(dut, addr)
+        await RisingEdge(dut.clk)
+        actual = read_capture_regfile(dut)
         assert actual == 0, (
             f"Register {addr} not cleared after reset: got=0x{actual:08x}"
-        )
-
-
-@cocotb.test(skip=True)
-async def test_regfile_stress(dut) -> None:
-    """Stress test with rapid read/write operations"""
-    _ = setup_clock(dut)
-    await reset_dut(dut)
-    init_inputs(dut)
-    await RisingEdge(dut.clk)
-
-    # Rapid alternating read/write to same register
-    test_addr = 15
-    values = [0x11111111, 0x22222222, 0x33333333, 0x44444444]
-
-    for val in values:
-        # Write
-        await write_regfile(dut, test_addr, val)
-
-        # Immediate read while writing next value
-        dut.rd_addr1_ip.value = test_addr
-        next_val = (val + 0x10101010) & 0xFFFFFFFF
-        dut.wr_addr_ip.value = test_addr
-        dut.wr_data_ip.value = next_val
-        dut.wr_en_ip.value = 1
-        await RisingEdge(dut.clk)
-
-        # Should read previous value, not the one being written
-        assert dut.rd_data1_op.value == val, (
-            f"Stress test failed: got=0x{dut.rd_data1_op.value:08x}, expected=0x{val:08x}"
-        )
-
-        # Clean up - disable write
-        dut.wr_en_ip.value = 0
-        await RisingEdge(dut.clk)
-
-
-@cocotb.test(skip=True)
-async def test_regfile_parametrized_8bit(dut) -> None:
-    """Test regfile functionality with 8-bit width parameter"""
-    # Note: This test assumes the regfile is instantiated with XW=8
-    # In practice, you'd need separate test runners for different XW values
-
-    _ = setup_clock(dut)
-    await reset_dut(dut)
-    init_inputs(dut)
-    await RisingEdge(dut.clk)
-
-    # Test 8-bit values (if XW=8)
-    test_values_8bit = [0x00, 0xFF, 0x55, 0xAA, 0x80, 0x7F]
-
-    for i, val in enumerate(test_values_8bit, 1):
-        await write_regfile(dut, i, val)
-        actual = await read_regfile(dut, i)
-
-        # For 8-bit, only check lower 8 bits
-        expected = val & 0xFF
-        actual = actual & 0xFF
-        assert actual == expected, (
-            f"8-bit test failed: addr={i}, got=0x{actual:02x}, expected=0x{expected:02x}"
         )
 
 
