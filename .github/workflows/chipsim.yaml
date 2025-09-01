@@ -7,6 +7,7 @@ on:
 
 env:
   OSS_CAD_SUITE_VERSION: "2025-08-31"
+  OSS_CAD_SUITE_PATH: ${{ runner.temp }}/oss-cad-suite
 
 jobs:
   build:
@@ -25,7 +26,7 @@ jobs:
         uses: actions/cache@v4
         id: oss-cad-cache
         with:
-          path: ${{ runner.temp }}/oss-cad-suite
+          path: ${{ env.OSS_CAD_SUITE_PATH }}
           key: oss-cad-suite-${{ runner.os }}-${{ env.OSS_CAD_SUITE_VERSION }}
 
       - name: Cache just
@@ -35,6 +36,7 @@ jobs:
           key: just-${{ runner.os }}
 
       - name: Setup just
+        if: steps.just-cache.outputs.cache-hit != 'true'
         uses: taiki-e/install-action@just
 
       - name: Setup OSS CAD Suite
@@ -43,6 +45,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.OSS_CAD_SUITE_VERSION }}
+
+      - name: Add OSS CAD Suite to path
+        if: steps.oss-cad-cache.outputs.cache-hit != 'true'
+        run: |
+          echo ${{ env.OSS_CAD_SUITE_PATH }} >> "$GITHUB_PATH"
 
       - name: Run block tests
         run: |
