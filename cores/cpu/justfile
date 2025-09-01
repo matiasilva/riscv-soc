@@ -11,9 +11,9 @@ lint:
 
 # run all cocotb tests
 test:
-  -uv run pytest -s
+  uv run pytest -s -v
 
 # run tests, launch gtkwave
 sim: test
-  gtkwave sim/*.fst
+  ~/tools/oss-cad-suite/bin/gtkwave sim/*.fst
 
