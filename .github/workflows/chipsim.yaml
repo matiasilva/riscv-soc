@@ -29,6 +29,7 @@ jobs:
           key: oss-cad-suite-${{ runner.os }}-${{ env.OSS_CAD_SUITE_VERSION }}
 
       - name: Cache just
+        id: just-cache
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/just
@@ -46,7 +47,7 @@ jobs:
           version: ${{ env.OSS_CAD_SUITE_VERSION }}
 
       - name: Add OSS CAD Suite to path
-        if: steps.oss-cad-cache.outputs.cache-hit != 'true'
+        if: steps.oss-cad-cache.outputs.cache-hit == 'true'
         run: |
           echo "${{ runner.temp }}/oss-cad-suite/bin" >> "$GITHUB_PATH"
 
