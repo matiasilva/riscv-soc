@@ -14,30 +14,30 @@ import tempfile
 
 async def reset_dut(dut) -> None:
     """Reset the DUT"""
-    dut.rst_n.value = 1
-    await ClockCycles(dut.clk, 3)
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 3)
-    dut.rst_n.value = 1
+    dut.i_rst_n.value = 1
+    await ClockCycles(dut.i_clk, 3)
+    dut.i_rst_n.value = 0
+    await ClockCycles(dut.i_clk, 3)
+    dut.i_rst_n.value = 1
 
 
 def setup_clock(dut) -> Clock:
     """Setup clock for the DUT"""
-    clock = Clock(dut.clk, 10, unit="ns")
+    clock = Clock(dut.i_clk, 10, unit="ns")
     clock.start(start_high=False)
     return clock
 
 
 async def set_pc_and_wait(dut, pc: int) -> None:
     """Set PC and wait for next instruction to be fetched"""
-    dut.pc_ip.value = pc
-    await RisingEdge(dut.clk)
+    dut.i_pc.value = pc
+    await RisingEdge(dut.i_clk)
 
 
 async def init_inputs(dut) -> None:
     """Initialize all inputs to known state"""
-    dut.pc_ip.value = 0
-    await RisingEdge(dut.clk)
+    dut.i_pc.value = 0
+    await RisingEdge(dut.i_clk)
 
 
 async def tb_init(dut) -> Clock:
@@ -66,11 +66,11 @@ async def test_instrmem_basic_read(dut) -> None:
     """Test basic instruction memory read operations"""
     _ = await tb_init(dut)
 
-    # Test reading from address 0 - should get NOP after reset
+    # Test reading from address 0 - should get 0 since memory is not preloaded
     await set_pc_and_wait(dut, 0)
-    await RisingEdge(dut.clk)  # Allow time for instruction to propagate
-    actual = dut.instr_op.value.to_unsigned()
-    expected = 0x00000013  # NOP instruction
+    await RisingEdge(dut.i_clk)  # Allow time for instruction to propagate
+    actual = dut.o_instr.value.to_unsigned()
+    expected = 0x00000000  # Zero since memory is initialized to 0
     assert actual == expected, (
         f"Basic read failed: got=0x{actual:08x}, expected=0x{expected:08x}"
     )
@@ -82,20 +82,20 @@ async def test_instrmem_reset_behavior(dut) -> None:
     _ = await tb_init(dut)
 
     # Apply reset
-    dut.rst_n.value = 0
-    await RisingEdge(dut.clk)
+    dut.i_rst_n.value = 0
+    await RisingEdge(dut.i_clk)
 
     # Check that output is NOP during reset
-    actual = dut.instr_op.value.to_unsigned()
+    actual = dut.o_instr.value.to_unsigned()
     expected = 0x00000013  # NOP instruction
     assert actual == expected, (
         f"Reset behavior failed: got=0x{actual:08x}, expected=0x{expected:08x}"
     )
 
     # Release reset and verify NOP persists
-    dut.rst_n.value = 1
-    await RisingEdge(dut.clk)
-    actual = dut.instr_op.value.to_unsigned()
+    dut.i_rst_n.value = 1
+    await RisingEdge(dut.i_clk)
+    actual = dut.o_instr.value.to_unsigned()
     assert actual == expected, (
         f"Post-reset behavior failed: got=0x{actual:08x}, expected=0x{expected:08x}"
     )
@@ -111,9 +111,9 @@ async def test_instrmem_different_addresses(dut) -> None:
 
     for addr in test_addresses:
         await set_pc_and_wait(dut, addr)
-        await RisingEdge(dut.clk)  # Allow instruction to propagate
+        await RisingEdge(dut.i_clk)  # Allow instruction to propagate
         # Since memory is not preloaded, all should read as 0 (constructed from 0 bytes)
-        actual = dut.instr_op.value.to_unsigned()
+        actual = dut.o_instr.value.to_unsigned()
         expected = 0x00000000
         dut._log.info(f"Address {addr}: instruction = 0x{actual:08x}")
         # Note: This will be 0 since memory is initialized to 0 without preload
@@ -129,9 +129,9 @@ async def test_instrmem_unaligned_addresses(dut) -> None:
 
     for addr in test_addresses:
         await set_pc_and_wait(dut, addr)
-        await RisingEdge(dut.clk)
+        await RisingEdge(dut.i_clk)
         # Should read instruction from unaligned address (hardware supports this)
-        actual = dut.instr_op.value.to_unsigned()
+        actual = dut.o_instr.value.to_unsigned()
         dut._log.info(f"Unaligned address {addr}: instruction = 0x{actual:08x}")
 
 
@@ -151,17 +151,17 @@ async def test_instrmem_little_endian_ordering(dut) -> None:
     try:
         # Test reading the first instruction (bytes 0-3)
         await set_pc_and_wait(dut, 0)
-        await RisingEdge(dut.clk)
+        await RisingEdge(dut.i_clk)
 
         # Note: Without preload parameter in simulation, this test demonstrates the concept
         # The actual implementation would need the IMEM_PRELOAD parameter set
-        actual = dut.instr_op.value.to_unsigned()
+        actual = dut.o_instr.value.to_unsigned()
         dut._log.info(f"Little-endian test at addr 0: got=0x{actual:08x}")
 
         # Test reading the second instruction (bytes 4-7)
         await set_pc_and_wait(dut, 4)
-        await RisingEdge(dut.clk)
-        actual = dut.instr_op.value.to_unsigned()
+        await RisingEdge(dut.i_clk)
+        actual = dut.o_instr.value.to_unsigned()
         dut._log.info(f"Little-endian test at addr 4: got=0x{actual:08x}")
 
     finally:
@@ -179,8 +179,8 @@ async def test_instrmem_boundary_conditions(dut) -> None:
 
     for addr in boundary_addresses:
         await set_pc_and_wait(dut, addr)
-        await RisingEdge(dut.clk)
-        actual = dut.instr_op.value.to_unsigned()
+        await RisingEdge(dut.i_clk)
+        actual = dut.o_instr.value.to_unsigned()
 
         if addr < 509:  # Valid address range (need 4 bytes)
             dut._log.info(f"Valid boundary addr {addr}: instruction = 0x{actual:08x}")
@@ -200,8 +200,8 @@ async def test_instrmem_pc_sequence(dut) -> None:
 
     for pc in pc_sequence:
         await set_pc_and_wait(dut, pc)
-        await RisingEdge(dut.clk)
-        instruction = dut.instr_op.value.to_unsigned()
+        await RisingEdge(dut.i_clk)
+        instruction = dut.o_instr.value.to_unsigned()
         instructions.append(instruction)
         dut._log.info(f"PC={pc}: instruction=0x{instruction:08x}")
 
@@ -220,8 +220,8 @@ async def test_instrmem_rapid_pc_changes(dut) -> None:
 
     for addr in addresses:
         await set_pc_and_wait(dut, addr)
-        await RisingEdge(dut.clk)
-        instruction = dut.instr_op.value.to_unsigned()
+        await RisingEdge(dut.i_clk)
+        instruction = dut.o_instr.value.to_unsigned()
         dut._log.info(f"Rapid change to PC={addr}: instruction=0x{instruction:08x}")
 
 
@@ -236,8 +236,8 @@ async def test_instrmem_random_access_pattern(dut) -> None:
 
     for addr in random_addresses:
         await set_pc_and_wait(dut, addr)
-        await RisingEdge(dut.clk)
-        instruction = dut.instr_op.value.to_unsigned()
+        await RisingEdge(dut.i_clk)
+        instruction = dut.o_instr.value.to_unsigned()
         dut._log.info(f"Random access PC={addr}: instruction=0x{instruction:08x}")
 
 
@@ -263,8 +263,8 @@ async def test_instrmem_with_preload(dut) -> None:
     for i, expected in enumerate(expected_instructions):
         pc = i * 4  # Word-aligned addresses
         await set_pc_and_wait(dut, pc)
-        await RisingEdge(dut.clk)
-        actual = dut.instr_op.value.to_unsigned()
+        await RisingEdge(dut.i_clk)
+        actual = dut.o_instr.value.to_unsigned()
 
         dut._log.info(
             f"Preload test PC={pc}: got=0x{actual:08x}, expected=0x{expected:08x}"
@@ -297,6 +297,7 @@ def test_instrmem_runner() -> None:
         test_module="test_instrmem",
         waves=True,
         test_dir="sim_instrmem",
+        test_filter="^(?!test_instrmem_with_preload$).*$",
     )
 
     runner.test(
@@ -305,5 +306,5 @@ def test_instrmem_runner() -> None:
         test_dir="sim_instrmem_preload",
         waves=True,
         plusargs=[f"+IMEM_PRELOAD_FILE={preload_file}"],
-        testcase="test_instrmem_with_preload",
+        test_filter="test_instrmem_with_preload",
     )

@@ -46,14 +46,14 @@ async def init_dut(dut) -> UartTxDriver:
     BAUD_RATE = dut.BAUD_RATE.value.to_unsigned()
     WORD_WIDTH = dut.WORD_WIDTH.value.to_unsigned()
     parity = int(os.getenv("TB_PARITY", ""))
-    dut.parity_cfg.value = parity
+    dut.i_parity_cfg.value = parity
     # clock & reset
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 3)
-    dut.rst_n.value = 1
+    cocotb.start_soon(Clock(dut.i_clk, 10, units="ns").start())
+    dut.i_rst_n.value = 0
+    await ClockCycles(dut.i_clk, 3)
+    dut.i_rst_n.value = 1
 
-    return UartTxDriver(dut.din, BAUD_RATE, WORD_WIDTH, bool(parity))
+    return UartTxDriver(dut.i_din, BAUD_RATE, WORD_WIDTH, bool(parity))
 
 
 @cocotb.test
@@ -62,16 +62,16 @@ async def one_byte(dut):
     uart_tx = await init_dut(dut)
 
     # add some "aysnchronicity"
-    await ClockCycles(dut.clk, randint(2, dut.baud_gen0.M.value.to_unsigned()))
+    await ClockCycles(dut.i_clk, randint(2, dut.baud_gen0.M.value.to_unsigned()))
 
-    dut.rd_ready.value = 1
+    dut.i_rd_ready.value = 1
     to_send = getrandbits(WORD_WIDTH)
     await uart_tx.send_byte(to_send)
 
-    while int(dut.rd_valid.value) != 1:
-        await RisingEdge(dut.clk)
+    while int(dut.o_rd_valid.value) != 1:
+        await RisingEdge(dut.i_clk)
 
-    received = int(dut.rd_data.value)
+    received = int(dut.o_rd_data.value)
     dut._log.info(f"byte received: 0x{received:02x}")
     assert received == to_send
 
@@ -84,21 +84,21 @@ async def stress_test(dut):
 
     WORD_WIDTH = dut.WORD_WIDTH.value.to_unsigned()
     uart_tx = await init_dut(dut)
-    dut.rd_ready.value = 1
+    dut.i_rd_ready.value = 1
 
     target = 20
     for _ in range(target):
         # add some "aysnchronicity"
         tick_cycles = dut.baud_gen0.M.value.to_unsigned()
-        await ClockCycles(dut.clk, randint(0, 3 * tick_cycles))
+        await ClockCycles(dut.i_clk, randint(0, 3 * tick_cycles))
 
         to_send = getrandbits(WORD_WIDTH)
         await uart_tx.send_byte(to_send)
 
-        while int(dut.rd_valid.value) != 1:
-            await RisingEdge(dut.clk)
+        while int(dut.o_rd_valid.value) != 1:
+            await RisingEdge(dut.i_clk)
 
-        received = int(dut.rd_data.value)
+        received = int(dut.o_rd_data.value)
         dut._log.info(f"byte received: 0x{received:02x}")
         assert received == to_send
 
@@ -112,24 +112,24 @@ async def not_ready(dut):
     WORD_WIDTH = dut.WORD_WIDTH.value.to_unsigned()
     uart_tx = await init_dut(dut)
 
-    dut.rd_ready.value = 0
+    dut.i_rd_ready.value = 0
     # add some "aysnchronicity"
-    await ClockCycles(dut.clk, randint(2, dut.baud_gen0.M.value.to_unsigned()))
+    await ClockCycles(dut.i_clk, randint(2, dut.baud_gen0.M.value.to_unsigned()))
 
     to_send = getrandbits(WORD_WIDTH)
     await uart_tx.send_byte(to_send)
 
-    while int(dut.rd_valid.value) != 1:
-        await RisingEdge(dut.clk)
+    while int(dut.o_rd_valid.value) != 1:
+        await RisingEdge(dut.i_clk)
 
-    received = int(dut.rd_data.value)
+    received = int(dut.o_rd_data.value)
     dut._log.info(f"byte received: 0x{received:02x}")
     assert received == to_send
 
     # check that data is not read
     for _ in range(5):
-        await RisingEdge(dut.clk)
-        assert int(dut.rd_valid.value) == 1
+        await RisingEdge(dut.i_clk)
+        assert int(dut.o_rd_valid.value) == 1
 
     dut._log.info("not ready test finished")
 
