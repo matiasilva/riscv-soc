@@ -10,10 +10,10 @@ lint:
   slang {{FULL_SRCS}}
 
 # run all cocotb tests
-test:
-  uv run pytest -s -v
+test filter="":
+  uv run pytest -s -v {{ if filter == "" { filter } else { "-k " + filter } }}
 
 # run tests, launch gtkwave
-sim: test
+sim filter="": (test filter)
   ~/tools/oss-cad-suite/bin/gtkwave sim/*.fst
 
