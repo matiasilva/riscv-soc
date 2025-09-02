@@ -4,7 +4,7 @@ cocotb testbench for regfile.sv
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ReadOnly, RisingEdge, ClockCycles
+from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb_tools.runner import get_runner
 import os
 from pathlib import Path
@@ -81,13 +81,19 @@ async def init_inputs(dut) -> None:
     await RisingEdge(dut.clk)
 
 
+async def tb_init(dut) -> Clock:
+    """Initialize testbench: setup clock, reset, and init inputs"""
+    clock = setup_clock(dut)
+    await reset_dut(dut)
+    await init_inputs(dut)
+    return clock
+
+
 @cocotb.test()
 @cocotb.parametrize(port=[1, 2])
 async def test_regfile_rw_single(dut, port) -> None:
     """Regfile read/write test: mixed single port"""
-    _ = setup_clock(dut)
-    await reset_dut(dut)
-    await init_inputs(dut)
+    _ = await tb_init(dut)
 
     test_data = await fill_regfile_random(dut)
 
@@ -107,9 +113,7 @@ async def test_regfile_rw_single(dut, port) -> None:
 @cocotb.test()
 async def test_regfile_rw_dual(dut) -> None:
     """Regfile read/write test: mixed dual port"""
-    _ = setup_clock(dut)
-    await reset_dut(dut)
-    await init_inputs(dut)
+    _ = await tb_init(dut)
 
     test_data = await fill_regfile_random(dut)
     pattern = [(random.randint(0, 31), random.randint(0, 31)) for _ in range(10)]
@@ -134,9 +138,7 @@ async def test_regfile_rw_dual(dut) -> None:
 @cocotb.test()
 async def test_regfile_read_during_write(dut) -> None:
     """Test that a read during a write returns old write data"""
-    _ = setup_clock(dut)
-    await reset_dut(dut)
-    await init_inputs(dut)
+    _ = await tb_init(dut)
 
     addr = random.randint(1, 31)
     values = (random.getrandbits(32), random.getrandbits(32))
@@ -165,9 +167,7 @@ async def test_regfile_read_during_write(dut) -> None:
 @cocotb.test()
 async def test_regfile_write_enable(dut) -> None:
     """Test that writes don't happen when write enable is low"""
-    _ = setup_clock(dut)
-    await reset_dut(dut)
-    await init_inputs(dut)
+    _ = await tb_init(dut)
 
     # Write initial value
     await write_regfile(dut, 10, 0x12345678)
@@ -187,9 +187,7 @@ async def test_regfile_write_enable(dut) -> None:
 @cocotb.test()
 async def test_regfile_x0_hardwired(dut) -> None:
     """Test that x0 is hardwired to zero"""
-    _ = setup_clock(dut)
-    await reset_dut(dut)
-    await init_inputs(dut)
+    _ = await tb_init(dut)
 
     # Try to write to x0
     await write_regfile(dut, 0, 0xDEADBEEF)
@@ -208,9 +206,7 @@ async def test_regfile_x0_hardwired(dut) -> None:
 @cocotb.parametrize(port=[1, 2])
 async def test_regfile_boundary_values(dut, port) -> None:
     """Test boundary values for 32-bit registers"""
-    _ = setup_clock(dut)
-    await reset_dut(dut)
-    await init_inputs(dut)
+    _ = await tb_init(dut)
 
     # Test boundary values
     boundary_values = [
@@ -235,9 +231,7 @@ async def test_regfile_boundary_values(dut, port) -> None:
 @cocotb.test()
 async def test_regfile_reset_behavior(dut) -> None:
     """Test that all registers are properly cleared on reset"""
-    _ = setup_clock(dut)
-    await reset_dut(dut)
-    await init_inputs(dut)
+    _ = await tb_init(dut)
     await RisingEdge(dut.clk)
 
     # Fill some registers with non-zero data
