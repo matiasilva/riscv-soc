@@ -4,18 +4,18 @@ module uart_tx_ser #(
    parameter WORD_WIDTH = 8,
    parameter OVERSAMPLING = 16
 ) (
-   input wire clk,
-   input wire rst_n,
-   input wire tick,
+   input wire i_clk,
+   input wire i_rst_n,
+   input wire i_tick,
 
    // data
-   input wire [WORD_WIDTH-1:0] din,
-   input wire tx_start,
-   output reg dout,
+   input wire [WORD_WIDTH-1:0] i_din,
+   input wire i_tx_start,
+   output reg o_dout,
 
    // config & flags
-   input wire parity,
-   output wire active
+   input wire i_parity,
+   output wire o_active
 );
 
 localparam DATA_WIDTH = WORD_WIDTH + 1; // parity
@@ -31,11 +31,11 @@ reg [DATA_WIDTH-1:0] d, d_nxt;
 reg [$clog2(OVERSAMPLING)-1:0] tick_ctr, tick_ctr_nxt;
 reg [$clog2(DATA_WIDTH+1)-1:0] bit_ctr, bit_ctr_nxt;
 
-wire hamming = ~(^din);
-wire [$clog2(DATA_WIDTH+1)-1:0] N = parity ? DATA_WIDTH : WORD_WIDTH;
+wire hamming = ~(^i_din);
+wire [$clog2(DATA_WIDTH+1)-1:0] N = i_parity ? DATA_WIDTH : WORD_WIDTH;
 
-always @(posedge clk or negedge rst_n) begin
-   if (~rst_n) begin
+always @(posedge i_clk or negedge i_rst_n) begin
+   if (~i_rst_n) begin
       d <= 0;
       state <= IDLE;
    end else begin
@@ -52,18 +52,18 @@ always @(*) begin
    tick_ctr_nxt = tick_ctr;
    bit_ctr_nxt = bit_ctr;
 
-   dout = 1'b0;
+   o_dout = 1'b0;
    case (state)
       IDLE: begin
-         if (tx_start) begin
+         if (i_tx_start) begin
             tick_ctr_nxt = OVERSAMPLING - 1;
             state_nxt = START_BIT;
-            d_nxt = {hamming, din};
+            d_nxt = {hamming, i_din};
          end
       end
       START_BIT: begin
-         dout = 1'b0;
-         if (tick) begin
+         o_dout = 1'b0;
+         if (i_tick) begin
             if (tick_ctr == 0) begin
                state_nxt = DATA;
                tick_ctr_nxt = OVERSAMPLING -1;
@@ -73,8 +73,8 @@ always @(*) begin
          end
       end
       DATA: begin
-         dout = d[0];
-         if (tick) begin
+         o_dout = d[0];
+         if (i_tick) begin
             if (tick_ctr == 0) begin
                if (bit_ctr == 0) begin
                   state_nxt = STOP_BIT;
@@ -88,8 +88,8 @@ always @(*) begin
          end
       end
       STOP_BIT: begin
-         dout = 1'b1;
-         if (tick) begin
+         o_dout = 1'b1;
+         if (i_tick) begin
             if (tick_ctr == 0) begin
                state_nxt = IDLE;
             end else
@@ -99,6 +99,6 @@ always @(*) begin
    endcase
 end
 
-assign active = state != IDLE;
+assign o_active = state != IDLE;
 
 endmodule
