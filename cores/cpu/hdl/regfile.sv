@@ -1,7 +1,7 @@
 // register file
 
 module regfile #(
-    parameter XW = 32
+    parameter int XW = 32
 ) (
     input  logic          clk,
     input  logic          rst_n,
@@ -23,10 +23,6 @@ module regfile #(
   logic [XW-1:0] next_rd_data1;
   logic [XW-1:0] next_rd_data2;
 
-  logic [XW-1:0] x1;
-  logic [XW-1:0] x2;
-  logic [XW-1:0] x31;
-
   integer i;
 
   always_ff @(posedge clk or negedge rst_n) begin
@@ -47,12 +43,6 @@ module regfile #(
       rd_data1 <= rd_addr1_ip == 0 ? '0 : x[rd_addr1_ip-1];
       rd_data2 <= rd_addr2_ip == 0 ? '0 : x[rd_addr2_ip-1];
     end
-  end
-
-  always_comb begin
-    x1  = x[0];
-    x2  = x[1];
-    x31 = x[4];
   end
 
   // always_ff @(posedge clk) begin

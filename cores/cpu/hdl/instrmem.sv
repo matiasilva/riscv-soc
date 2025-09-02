@@ -1,53 +1,33 @@
-/*
-this can be implemented as BRAM on FPGA
-*/
+// SIZE = size of memory in bytes
 
 module instrmem #(
-    parameter PRELOAD = 0,
-    parameter PRELOAD_FILE = "",
-    parameter HARDCODED = 0
+    parameter int SIZE = 512
 ) (
-    input clk,  // Clock
-    input rst_n,  // Asynchronous reset active low
+    input clk,
+    input rst_n,
     input [31:0] pc_ip,
     output [31:0] instr_op
 );
 
-  localparam MEM_SIZE = 512;
-
-  // 512 bytes, 128 words
-  reg [31:0] mem[MEM_SIZE - 1:0];
+  reg [7:0] mem[SIZE-1];
   reg [31:0] next_instr;
-
-  wire [31:0] pc_aligned = pc_ip >> 2;
 
   integer i;
 
   initial begin
-    if (PRELOAD) begin
-      if (PRELOAD_FILE === "") begin
-        $display("no preload file provided!");
-        $finish;
-      end
-      $readmemh(PRELOAD_FILE, mem, 0, MEM_SIZE - 1);
-    end
-    if (HARDCODED) begin
-      mem[0] <= 32'h07b00093;  // addi x1, x0, 123
-      mem[1] <= 32'h00500113;  // addi x2, x0, 5
-      mem[2] <= 32'h002081b3;  // add x3, x2, x1
+    if ($value$plusargs("IMEM_PRELOAD=%s", filename)) begin
+      $readmemh(filename, mem);
+      $display("Loaded memory from %s", filename);
+    end else begin
+      foreach (mem[i]) mem[i] = '0;
     end
   end
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin : fetch_instruction
     if (~rst_n) begin
-`ifdef FPGA
-      for (i = 0; i < MEM_SIZE; i++) begin
-        mem[i] <= 0;
-      end
-`endif
       next_instr <= 32'h00000013;  //  NOP
     end else begin
-      next_instr <= mem[pc_aligned];
+      next_instr <= {mem[pc_ip+3], mem[pc_ip+2], mem[pc_ip+1], mem[pc_ip]};
     end
   end
 
