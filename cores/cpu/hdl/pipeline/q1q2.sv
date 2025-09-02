@@ -1,33 +1,33 @@
 /* instruction fetch to instruction decode/register file access */
 module q1q2 (
-    input clk,
-    input rst_n,
-    input [31:0] instr_ip,
-    input [31:0] pc_ip,
-    input [31:0] pc_incr_ip,
-    output [31:0] instr_op,
-    output [31:0] pc_op,
-    output [31:0] pc_incr_op
+    input i_clk,
+    input i_rst_n,
+    input [31:0] i_instr,
+    input [31:0] i_pc,
+    input [31:0] i_pc_incr,
+    output [31:0] o_instr,
+    output [31:0] o_pc,
+    output [31:0] o_pc_incr
 );
 
   reg [31:0] next_instr;
   reg [31:0] next_pc;
   reg [31:0] next_pc_incr;
 
-  always @(posedge clk or negedge rst_n) begin
-    if (~rst_n) begin
+  always @(posedge i_clk or negedge i_rst_n) begin
+    if (~i_rst_n) begin
       next_instr <= 32'h00000013; //NOP
       next_pc <= 0;
       next_pc_incr <= 0;
     end else begin
-      next_instr   <= instr_ip;
-      next_pc <= pc_ip;
-      next_pc_incr <= pc_incr_ip;
+      next_instr   <= i_instr;
+      next_pc <= i_pc;
+      next_pc_incr <= i_pc_incr;
     end
   end
 
-  assign instr_op   = next_instr;
-  assign pc_op = next_pc;
-  assign pc_incr_op = next_pc_incr;
+  assign o_instr   = next_instr;
+  assign o_pc = next_pc;
+  assign o_pc_incr = next_pc_incr;
 
 endmodule

@@ -3,17 +3,17 @@
 module regfile #(
     parameter int XW = 32
 ) (
-    input  logic          clk,
-    input  logic          rst_n,
+    input  logic          i_clk,
+    input  logic          i_rst_n,
     // read interface
-    input  logic [   4:0] rd_addr1_ip,  // read register 1
-    input  logic [   4:0] rd_addr2_ip,  // read register 2
-    output logic [XW-1:0] rd_data1_op,
-    output logic [XW-1:0] rd_data2_op,
+    input  logic [   4:0] i_rd_addr1,  // read register 1
+    input  logic [   4:0] i_rd_addr2,  // read register 2
+    output logic [XW-1:0] o_rd_data1,
+    output logic [XW-1:0] o_rd_data2,
     // write interface
-    input  logic [XW-1:0] wr_data_ip,
-    input  logic [   4:0] wr_addr_ip,   // write register
-    input  logic          wr_en_ip
+    input  logic [XW-1:0] i_wr_data,
+    input  logic [   4:0] i_wr_addr,   // write register
+    input  logic          i_wr_en
 );
 
   logic [XW-1:0] x[31];
@@ -25,8 +25,8 @@ module regfile #(
 
   integer i;
 
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (~rst_n) begin
+  always_ff @(posedge i_clk or negedge i_rst_n) begin
+    if (~i_rst_n) begin
       for (i = 0; i < 31; i++) begin
         x[i] <= '0;
       end
@@ -35,21 +35,21 @@ module regfile #(
       rd_data1 <= '0;
       rd_data2 <= '0;
     end else begin
-      if (wr_en_ip) begin
-        if (wr_addr_ip != 5'b0) begin  // protect against writes to x[0]
-          x[wr_addr_ip-1] <= wr_data_ip;
+      if (i_wr_en) begin
+        if (i_wr_addr != 5'b0) begin  // protect against writes to x[0]
+          x[i_wr_addr-1] <= i_wr_data;
         end
       end
-      rd_data1 <= rd_addr1_ip == 0 ? '0 : x[rd_addr1_ip-1];
-      rd_data2 <= rd_addr2_ip == 0 ? '0 : x[rd_addr2_ip-1];
+      rd_data1 <= i_rd_addr1 == 0 ? '0 : x[i_rd_addr1-1];
+      rd_data2 <= i_rd_addr2 == 0 ? '0 : x[i_rd_addr2-1];
     end
   end
 
   // always_ff @(posedge clk) begin
   //   case (rd_addr1_ip)
   //     5'b0: next_rd_data1 <= {XW{1'b0}};
-  //     wr_addr_ip:
-  //     next_rd_data1 <= wr_data_ip;  // same cycle read and write supported (hazard prevention)
+  //     i_wr_addr:
+  //     next_rd_data1 <= i_wr_data;  // same cycle read and write supported (hazard prevention)
   //     default: next_rd_data1 <= rd_data1;
   //   endcase
   // end
@@ -57,12 +57,12 @@ module regfile #(
   // always_ff @(posedge clk) begin
   //   case (rd_addr2_ip)
   //     5'b0:       next_rd_data2 <= {XW{1'b0}};
-  //     wr_addr_ip: next_rd_data2 <= wr_data_ip;
+  //     i_wr_addr: next_rd_data2 <= i_wr_data;
   //     default:    next_rd_data2 <= rd_data2;
   //   endcase
   // end
 
-  assign rd_data1_op = rd_data1;
-  assign rd_data2_op = rd_data2;
+  assign o_rd_data1 = rd_data1;
+  assign o_rd_data2 = rd_data2;
 
 endmodule

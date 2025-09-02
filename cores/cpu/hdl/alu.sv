@@ -13,10 +13,10 @@
 */
 
 module alu (
-    input  [31:0] alu_a_ip,
-    input  [31:0] alu_b_ip,
-    input  [ 3:0] aluctrl_ctrl_ip,
-    output [31:0] alu_out_op
+    input  [31:0] i_alu_a,
+    input  [31:0] i_alu_b,
+    input  [ 3:0] i_aluctrl_ctrl,
+    output [31:0] o_alu_out
 );
 
   localparam OP_ADD = 4'b0000;
@@ -30,33 +30,33 @@ module alu (
   localparam OP_SRL = 4'b0101;
   localparam OP_SRA = 4'b1101;
 
-  wire [31:0] diff = alu_a_ip - alu_b_ip;
-  wire [ 4:0] shamt = alu_b_ip[4:0];
+  wire [31:0] diff = i_alu_a - i_alu_b;
+  wire [ 4:0] shamt = i_alu_b[4:0];
 
   reg  [31:0] result;
 
   always @(*) begin
     result = 32'b0;
-    case (aluctrl_ctrl_ip)
-      OP_ADD:  result = alu_a_ip + alu_b_ip;
+    case (i_aluctrl_ctrl)
+      OP_ADD:  result = i_alu_a + i_alu_b;
       OP_SUB:  result = diff;
       OP_SLT: begin
-        if (alu_a_ip[31] ^ alu_b_ip[31]) begin
-          result = alu_a_ip[31];
+        if (i_alu_a[31] ^ i_alu_b[31]) begin
+          result = i_alu_a[31];
         end else begin
           result = diff[31];
         end
       end
-      OP_SLTU: result = alu_a_ip < alu_b_ip;
-      OP_AND:  result = alu_a_ip & alu_b_ip;
-      OP_OR:   result = alu_a_ip | alu_b_ip;
-      OP_XOR:  result = alu_a_ip ^ alu_b_ip;
-      OP_SLL:  result = alu_a_ip << shamt;
-      OP_SRL:  result = alu_a_ip >> shamt;
-      OP_SRA:  result = $signed(alu_a_ip) >>> shamt;
+      OP_SLTU: result = i_alu_a < i_alu_b;
+      OP_AND:  result = i_alu_a & i_alu_b;
+      OP_OR:   result = i_alu_a | i_alu_b;
+      OP_XOR:  result = i_alu_a ^ i_alu_b;
+      OP_SLL:  result = i_alu_a << shamt;
+      OP_SRL:  result = i_alu_a >> shamt;
+      OP_SRA:  result = $signed(i_alu_a) >>> shamt;
     endcase
   end
 
-  assign alu_out_op = result;
+  assign o_alu_out = result;
 
 endmodule
