@@ -15,7 +15,7 @@ module instrmem #(
   integer i;
 
   initial begin
-    if ($value$plusargs("IMEM_PRELOAD=%s", filename)) begin
+    if ($value$plusargs("IMEM_PRELOAD_FILE=%s", filename)) begin
       $readmemh(filename, mem);
       $display("Loaded memory from %s", filename);
     end else begin
