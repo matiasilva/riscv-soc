@@ -12,15 +12,15 @@ import pytest
 
 @cocotb.test
 async def simple_task(dut):
-    cocotb.start_soon(Clock(dut.clk, 1, units="ns").start())
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 3)
-    dut.rst_n.value = 1
+    cocotb.start_soon(Clock(dut.i_clk, 1, units="ns").start())
+    dut.i_rst_n.value = 0
+    await ClockCycles(dut.i_clk, 3)
+    dut.i_rst_n.value = 1
 
     M = dut.M.value.to_unsigned()
     for _ in range(5):
-        await ClockCycles(dut.clk, M)
-        assert dut.tick.value == 1
+        await ClockCycles(dut.i_clk, M)
+        assert dut.o_tick.value == 1
 
     dut._log.info("test finished")
 

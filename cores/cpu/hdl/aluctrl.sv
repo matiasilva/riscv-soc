@@ -16,9 +16,9 @@
 */
 
 module aluctrl (
-    input  [1:0] ctrl_aluop_ip,
-    input  [3:0] funct_ip,
-    output [3:0] aluctrl_ctrl_op
+    input  [1:0] i_ctrl_aluop,
+    input  [3:0] i_funct,
+    output [3:0] o_aluctrl_ctrl
 );
 
   localparam ALUOP_ADD   = 2'b00;
@@ -32,7 +32,7 @@ module aluctrl (
 
   always @(*) begin
     ctrl = 4'hx;
-    case (ctrl_aluop_ip)
+    case (i_ctrl_aluop)
       ALUOP_ADD: begin
         // SW/LW -> add
         ctrl = ADD;
@@ -41,11 +41,11 @@ module aluctrl (
         ctrl = SETLESSTHANUNSIGNED;
       end
       ALUOP_FUNCT: begin
-        ctrl = funct_ip;
+        ctrl = i_funct;
       end
     endcase
   end
 
-  assign aluctrl_ctrl_op = ctrl;
+  assign o_aluctrl_ctrl = ctrl;
 
 endmodule

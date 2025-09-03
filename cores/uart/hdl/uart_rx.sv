@@ -6,14 +6,14 @@ module uart_rx #(
    parameter OVERSAMPLING = 16,
    parameter BAUD_RATE = 115200
 )(
-   input wire clk,
-   input wire rst_n,
-   input wire din,
+   input wire i_clk,
+   input wire i_rst_n,
+   input wire i_din,
 
    // read interface
-   output wire rd_valid,
-   output wire [WORD_WIDTH-1:0] rd_data,
-   input wire rd_ready
+   output wire o_rd_valid,
+   output wire [WORD_WIDTH-1:0] o_rd_data,
+   input wire i_rd_ready
 );
 
 localparam DATA_WIDTH = WORD_WIDTH + 1;
@@ -23,8 +23,8 @@ wire parity_cfg = 1'b1;
 reg parity;
 
 // configuration update
-always @(posedge clk or negedge rst_n) begin
-   if (~rst_n) begin
+always @(posedge i_clk or negedge i_rst_n) begin
+   if (~i_rst_n) begin
       parity <= 1'b0;
    end else begin
       if (parity != parity_cfg && !des_active)
@@ -45,22 +45,22 @@ wire overflow_err; // level
 
 baud_gen #( .OVERSAMPLING(OVERSAMPLING), .FREQ(`SYSFREQ), .BAUD_RATE(BAUD_RATE) )
    baud_gen0 (
-   .clk  (clk),
-   .rst_n(rst_n),
-   .tick (tick)
+   .i_clk  (i_clk),
+   .i_rst_n(i_rst_n),
+   .o_tick (tick)
 );
 
 uart_rx_des #( .OVERSAMPLING(OVERSAMPLING), .WORD_WIDTH(WORD_WIDTH) )
    uart_rx_des0 (
-   .clk      (clk),
-   .rst_n    (rst_n),
-   .tick     (tick),
-   .din      (din),
-   .parity   (parity),
-   .dout     (data),
-   .frame_err(frame_err),
-   .done     (des_done),
-   .active   (des_active)
+   .i_clk      (i_clk),
+   .i_rst_n    (i_rst_n),
+   .i_tick     (tick),
+   .i_din      (i_din),
+   .i_parity   (parity),
+   .o_dout     (data),
+   .o_frame_err(frame_err),
+   .o_done     (des_done),
+   .o_active   (des_active)
 );
 
 wire [WORD_WIDTH-1:0] word = parity ? data [DATA_WIDTH-2:0] : data[DATA_WIDTH-1:1];
@@ -71,18 +71,18 @@ wire [WORD_WIDTH-1:0] flag_data;
 wire flag_set = des_done && (parity ? parity_ok : 1'b1);
 
 flag_buf #( .WORD_WIDTH(WORD_WIDTH) ) flag_buf0 (
-   .clk         (clk),
-   .rst_n       (rst_n),
-   .flag_set    (flag_set),
-   .flag_clear  (flag_clear),
-   .din         (word),
-   .flag        (flag),
-   .dout        (flag_data),
-   .overflow_err(overflow_err)
+   .i_clk         (i_clk),
+   .i_rst_n       (i_rst_n),
+   .i_flag_set    (flag_set),
+   .i_flag_clear  (flag_clear),
+   .i_din         (word),
+   .o_flag        (flag),
+   .o_dout        (flag_data),
+   .o_overflow_err(overflow_err)
 );
 
-assign rd_valid = flag;
-assign flag_clear = rd_valid && rd_ready;
-assign rd_data = flag_data;
+assign o_rd_valid = flag;
+assign flag_clear = o_rd_valid && i_rd_ready;
+assign o_rd_data = flag_data;
 
 endmodule

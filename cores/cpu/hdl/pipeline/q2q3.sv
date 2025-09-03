@@ -2,22 +2,22 @@
 module q2q3 #(
     parameter CTRL_WIDTH = 16
 ) (
-    input                   clk,
-    input                   rst_n,
-    input  [          31:0] pc_ip,
-    output [          31:0] pc_op,
-    input  [          31:0] reg_rd_data1_ip,
-    output [          31:0] reg_rd_data1_op,
-    input  [          31:0] reg_rd_data2_ip,
-    output [          31:0] reg_rd_data2_op,
-    input  [           4:0] reg_wr_port_ip,
-    output [           4:0] reg_wr_port_op,
-    input  [CTRL_WIDTH-1:0] ctrl_q2_ip,
-    output [CTRL_WIDTH-1:0] ctrl_q2_op,
-    input  [          31:0] instr_ip,
-    output [          31:0] instr_op,
-    input  [          31:0] pc_incr_ip,
-    output [          31:0] pc_incr_op
+    input                   i_clk,
+    input                   i_rst_n,
+    input  [          31:0] i_pc,
+    output [          31:0] o_pc,
+    input  [          31:0] i_reg_rd_data1,
+    output [          31:0] o_reg_rd_data1,
+    input  [          31:0] i_reg_rd_data2,
+    output [          31:0] o_reg_rd_data2,
+    input  [           4:0] i_reg_wr_port,
+    output [           4:0] o_reg_wr_port,
+    input  [CTRL_WIDTH-1:0] i_ctrl_q2,
+    output [CTRL_WIDTH-1:0] o_ctrl_q2,
+    input  [          31:0] i_instr,
+    output [          31:0] o_instr,
+    input  [          31:0] i_pc_incr,
+    output [          31:0] o_pc_incr
 
 );
 
@@ -30,8 +30,8 @@ module q2q3 #(
   reg [CTRL_WIDTH-1:0] next_ctrl_q2;
   reg [          31:0] next_instr;
 
-  always @(posedge clk or negedge rst_n) begin
-    if (~rst_n) begin
+  always @(posedge i_clk or negedge i_rst_n) begin
+    if (~i_rst_n) begin
       next_pc           <= 0;
       next_reg_rd_data1 <= 0;
       next_reg_rd_data2 <= 0;
@@ -41,23 +41,23 @@ module q2q3 #(
       next_pc_incr      <= 0;
 
     end else begin
-      next_pc           <= pc_ip;
-      next_reg_rd_data1 <= reg_rd_data1_ip;
-      next_reg_rd_data2 <= reg_rd_data2_ip;
-      next_reg_wr_port  <= reg_wr_port_ip;
-      next_ctrl_q2      <= ctrl_q2_ip;
-      next_instr        <= instr_ip;
-      next_pc_incr      <= pc_incr_ip;
+      next_pc           <= i_pc;
+      next_reg_rd_data1 <= i_reg_rd_data1;
+      next_reg_rd_data2 <= i_reg_rd_data2;
+      next_reg_wr_port  <= i_reg_wr_port;
+      next_ctrl_q2      <= i_ctrl_q2;
+      next_instr        <= i_instr;
+      next_pc_incr      <= i_pc_incr;
 
     end
   end
 
-  assign pc_op           = next_pc;
-  assign pc_incr_op      = next_pc_incr;
+  assign o_pc           = next_pc;
+  assign o_pc_incr      = next_pc_incr;
 
-  assign reg_rd_data1_op = next_reg_rd_data1;
-  assign reg_rd_data2_op = next_reg_rd_data2;
-  assign reg_wr_port_op  = next_reg_wr_port;
-  assign ctrl_q2_op      = next_ctrl_q2;
-  assign instr_op        = next_instr;
+  assign o_reg_rd_data1 = next_reg_rd_data1;
+  assign o_reg_rd_data2 = next_reg_rd_data2;
+  assign o_reg_wr_port  = next_reg_wr_port;
+  assign o_ctrl_q2      = next_ctrl_q2;
+  assign o_instr        = next_instr;
 endmodule

@@ -5,10 +5,10 @@ module baud_gen #(
    parameter BAUD_RATE = 115200,
    parameter FREQ = 50000000
 ) (
-   input wire clk,
-   input wire rst_n,
+   input wire i_clk,
+   input wire i_rst_n,
 
-   output wire tick
+   output wire o_tick
 );
 
 localparam OVERSAMLING_FREQ = OVERSAMPLING * BAUD_RATE;
@@ -18,14 +18,14 @@ localparam N = $clog2(M);
 reg [N-1:0] cnt;
 wire [N-1:0] cnt_next;
 
-always @(posedge clk or negedge rst_n)
-   if (~rst_n)
+always @(posedge i_clk or negedge i_rst_n)
+   if (~i_rst_n)
       cnt <= 0;
    else
       cnt <= cnt_next;
 
 assign cnt_next = (cnt == (M - 1)) ? 0 : cnt + 1;
 
-assign tick = cnt == (M - 1);
+assign o_tick = cnt == (M - 1);
 
 endmodule

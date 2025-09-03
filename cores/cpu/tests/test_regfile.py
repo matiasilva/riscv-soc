@@ -13,16 +13,16 @@ import random
 
 async def reset_dut(dut) -> None:
     """Reset the DUT"""
-    dut.rst_n.value = 1
-    await ClockCycles(dut.clk, 3)
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 3)
-    dut.rst_n.value = 1
+    dut.i_rst_n.value = 1
+    await ClockCycles(dut.i_clk, 3)
+    dut.i_rst_n.value = 0
+    await ClockCycles(dut.i_clk, 3)
+    dut.i_rst_n.value = 1
 
 
 def setup_clock(dut) -> Clock:
     """Setup clock for the DUT"""
-    clock = Clock(dut.clk, 10, unit="ns")
+    clock = Clock(dut.i_clk, 10, unit="ns")
     clock.start(start_high=False)
     return clock
 
@@ -43,42 +43,42 @@ async def fill_regfile_random(dut) -> dict[int, int]:
 
 async def write_regfile(dut, addr: int, data: int, enable: bool = True) -> None:
     """Write data to a register"""
-    dut.wr_addr_ip.value = addr
-    dut.wr_data_ip.value = data
-    dut.wr_en_ip.value = int(enable)
-    await RisingEdge(dut.clk)
-    dut.wr_en_ip.value = 0
+    dut.i_wr_addr.value = addr
+    dut.i_wr_data.value = data
+    dut.i_wr_en.value = int(enable)
+    await RisingEdge(dut.i_clk)
+    dut.i_wr_en.value = 0
     dut._log.debug(f"Wrote {data:0x} to x{addr}")
 
 
 async def read_launch_regfile(dut, addr: int, port=1) -> None:
     """Launch read address"""
-    port2sig = {1: dut.rd_addr1_ip, 2: dut.rd_addr2_ip}
+    port2sig = {1: dut.i_rd_addr1, 2: dut.i_rd_addr2}
     port2sig[port].value = addr
-    await RisingEdge(dut.clk)
+    await RisingEdge(dut.i_clk)
 
 
 def read_capture_regfile(dut, port=1) -> None:
     """Launch read address"""
-    port2sig = {1: dut.rd_data1_op, 2: dut.rd_data2_op}
+    port2sig = {1: dut.o_rd_data1, 2: dut.o_rd_data2}
     return port2sig[port].value.to_unsigned()
 
 
 async def read_launch_regfile_dual(dut, addr: tuple[int, int]) -> None:
     """Launch read address dual"""
-    dut.rd_addr1_ip.value = addr[0]
-    dut.rd_addr2_ip.value = addr[1]
-    await RisingEdge(dut.clk)
+    dut.i_rd_addr1.value = addr[0]
+    dut.i_rd_addr2.value = addr[1]
+    await RisingEdge(dut.i_clk)
 
 
 async def init_inputs(dut) -> None:
     """Initialize all inputs to known state"""
-    dut.rd_addr1_ip.value = 0
-    dut.rd_addr2_ip.value = 0
-    dut.wr_addr_ip.value = 0
-    dut.wr_data_ip.value = 0
-    dut.wr_en_ip.value = 0
-    await RisingEdge(dut.clk)
+    dut.i_rd_addr1.value = 0
+    dut.i_rd_addr2.value = 0
+    dut.i_wr_addr.value = 0
+    dut.i_wr_data.value = 0
+    dut.i_wr_en.value = 0
+    await RisingEdge(dut.i_clk)
 
 
 async def tb_init(dut) -> Clock:
@@ -128,8 +128,8 @@ async def test_regfile_rw_dual(dut) -> None:
 
         # read and assert previous
         actual = (
-            dut.rd_data1_op.value.to_unsigned(),
-            dut.rd_data2_op.value.to_unsigned(),
+            dut.o_rd_data1.value.to_unsigned(),
+            dut.o_rd_data2.value.to_unsigned(),
         )
         assert expected == actual
         expected = (test_data[addr1], test_data[addr2])
@@ -147,18 +147,18 @@ async def test_regfile_read_during_write(dut) -> None:
     await write_regfile(dut, addr, values[0])
 
     # write next data
-    dut.rd_addr1_ip.value = addr  # launch read
+    dut.i_rd_addr1.value = addr  # launch read
     await write_regfile(dut, addr, values[1])
-    await RisingEdge(dut.clk)  # capture first read
+    await RisingEdge(dut.i_clk)  # capture first read
 
     # should read old value
-    assert dut.rd_data1_op.value.to_unsigned() == values[0], (
-        f"Read during write failed: got={dut.rd_data1_op.value.to_unsigned():08x}, expected={values[0]}"
+    assert dut.o_rd_data1.value.to_unsigned() == values[0], (
+        f"Read during write failed: got={dut.o_rd_data1.value.to_unsigned():08x}, expected={values[0]}"
     )
 
     # capture second read
-    await RisingEdge(dut.clk)
-    actual = dut.rd_data1_op.value.to_unsigned()
+    await RisingEdge(dut.i_clk)
+    actual = dut.o_rd_data1.value.to_unsigned()
     assert actual == values[1], (
         f"Post-write read failed: got={actual:08x}, expected={values[1]}"
     )
@@ -177,8 +177,8 @@ async def test_regfile_write_enable(dut) -> None:
 
     # Read back - should still have original value
     await read_launch_regfile(dut, 10)
-    await RisingEdge(dut.clk)
-    actual = dut.rd_data1_op.value.to_unsigned()
+    await RisingEdge(dut.i_clk)
+    actual = dut.o_rd_data1.value.to_unsigned()
     assert actual == 0x12345678, (
         f"Write enable test failed: got={actual:08x}, expected=0x12345678"
     )
@@ -194,10 +194,10 @@ async def test_regfile_x0_hardwired(dut) -> None:
 
     # Read x0 - should always be 0
     await read_launch_regfile_dual(dut, (0, 0))
-    await RisingEdge(dut.clk)  # capture
+    await RisingEdge(dut.i_clk)  # capture
     for actual in (
-        dut.rd_data1_op.value.to_unsigned(),
-        dut.rd_data2_op.value.to_unsigned(),
+        dut.o_rd_data1.value.to_unsigned(),
+        dut.o_rd_data2.value.to_unsigned(),
     ):
         assert actual == 0, f"x0 not hardwired to zero: got={actual}"
 
@@ -221,7 +221,7 @@ async def test_regfile_boundary_values(dut, port) -> None:
     for i, val in enumerate(boundary_values, 1):
         await write_regfile(dut, i, val)
         await read_launch_regfile(dut, i, port=port)
-        await RisingEdge(dut.clk)
+        await RisingEdge(dut.i_clk)
         actual = read_capture_regfile(dut, port=port)
         assert actual == val, (
             f"Boundary test failed: addr={i}, got=0x{actual:08x}, expected=0x{val:08x}"
@@ -232,7 +232,7 @@ async def test_regfile_boundary_values(dut, port) -> None:
 async def test_regfile_reset_behavior(dut) -> None:
     """Test that all registers are properly cleared on reset"""
     _ = await tb_init(dut)
-    await RisingEdge(dut.clk)
+    await RisingEdge(dut.i_clk)
 
     # Fill some registers with non-zero data
     for addr in range(1, 5):
@@ -244,7 +244,7 @@ async def test_regfile_reset_behavior(dut) -> None:
     # Check that all registers read as zero after reset
     for addr in range(32):
         await read_launch_regfile(dut, addr)
-        await RisingEdge(dut.clk)
+        await RisingEdge(dut.i_clk)
         actual = read_capture_regfile(dut)
         assert actual == 0, (
             f"Register {addr} not cleared after reset: got=0x{actual:08x}"

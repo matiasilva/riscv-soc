@@ -3,19 +3,19 @@ module uart_tx #(
    parameter OVERSAMPLING = 16,
    parameter BAUD_RATE = 115200
 ) (
-   input wire clk,
-   input wire rst_n,
-   input wire tick,
+   input wire i_clk,
+   input wire i_rst_n,
+   input wire i_tick,
 
    // write interface
-   input wire [WORD_WIDTH-1:0] wr_data,
-   input wire wr_valid,
-   output wire wr_ready,
+   input wire [WORD_WIDTH-1:0] i_wr_data,
+   input wire i_wr_valid,
+   output wire o_wr_ready,
 
    // config
-   wire parity_cfg,
+   wire i_parity_cfg,
 
-   output wire dout
+   output wire o_dout
 );
 
 wire [WORD_WIDTH-1:0] word;
@@ -28,38 +28,38 @@ wire flag_clear;
 wire overflow_err;
 
 // configuration update
-always @(posedge clk or negedge rst_n) begin
-   if (~rst_n) begin
+always @(posedge i_clk or negedge i_rst_n) begin
+   if (~i_rst_n) begin
       parity <= 1'b0;
    end else begin
-      if (parity != parity_cfg && !ser_active)
-         parity <= parity_cfg;
+      if (parity != i_parity_cfg && !ser_active)
+         parity <= i_parity_cfg;
    end
 end
 
 uart_tx_ser #( .WORD_WIDTH(WORD_WIDTH), .OVERSAMPLING(OVERSAMPLING) ) uart_tx_ser0 (
-   .clk     (clk),
-   .rst_n   (rst_n),
-   .tick    (tick),
-   .din     (word),
-   .tx_start(flag),
-   .parity  (parity),
-   .dout    (dout),
-   .active  (ser_active)
+   .i_clk     (i_clk),
+   .i_rst_n   (i_rst_n),
+   .i_tick    (i_tick),
+   .i_din     (word),
+   .i_tx_start(flag),
+   .i_parity  (parity),
+   .o_dout    (o_dout),
+   .o_active  (ser_active)
 );
 
 
 flag_buf #( .WORD_WIDTH(WORD_WIDTH) ) flag_buf0 (
-   .clk         (clk),
-   .rst_n       (rst_n),
-   .flag_set    (flag_set),
-   .flag_clear  (flag_clear),
-   .din         (wr_data),
-   .flag        (flag),
-   .dout        (word),
-   .overflow_err(overflow_err)
+   .i_clk         (i_clk),
+   .i_rst_n       (i_rst_n),
+   .i_flag_set    (flag_set),
+   .i_flag_clear  (flag_clear),
+   .i_din         (i_wr_data),
+   .o_flag        (flag),
+   .o_dout        (word),
+   .o_overflow_err(overflow_err)
 );
 
-assign wr_ready = !flag;
+assign o_wr_ready = !flag;
 
 endmodule
