@@ -6,3 +6,4 @@ else
 fi
 export CORES_ROOT=$ROOT/cores
 export CPU_ROOT=$CORES_ROOT/cpu
+export TOOLS_ROOT=$ROOT/tools

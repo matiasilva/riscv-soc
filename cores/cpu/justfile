@@ -15,5 +15,8 @@ test filter="":
 
 # run tests, launch gtkwave
 sim filter="": (test filter)
-  ~/tools/oss-cad-suite/bin/gtkwave sim/*.fst
+  surfer sim/*.fst
+
+fixtures:
+  $TOOLS_ROOT/gen_hex_data.py 128 -o $CPU_ROOT/tests/test_instrmem_preload.hex
 
