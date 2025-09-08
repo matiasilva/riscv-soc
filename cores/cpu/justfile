@@ -10,10 +10,13 @@ lint:
   slang {{FULL_SRCS}}
 
 # run all cocotb tests
-test:
-  uv run pytest -s -v
+test filter="":
+  uv run pytest -s -v {{ if filter == "" { filter } else { "-k " + filter } }}
 
 # run tests, launch gtkwave
-sim: test
-  ~/tools/oss-cad-suite/bin/gtkwave sim/*.fst
+sim filter="": (test filter)
+  surfer sim/*.fst
+
+fixtures:
+  $TOOLS_ROOT/gen_hex_data.py 128 -o $CPU_ROOT/tests/test_instrmem_preload.hex
 

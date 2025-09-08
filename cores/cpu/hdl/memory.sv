@@ -6,13 +6,13 @@ module memory #(
     parameter PRELOAD = 0,
     parameter PRELOAD_FILE = ""
 ) (
-    input rst_n,
-    input clk,
-    input ctrl_mem_ren_ip,
-    input ctrl_mem_wren_ip,
-    input [31:0] mem_addr_ip,
-    input [31:0] mem_wdata_ip,
-    output [31:0] mem_rdata_op
+    input i_rst_n,
+    input i_clk,
+    input i_ctrl_mem_ren,
+    input i_ctrl_mem_wren,
+    input [31:0] i_mem_addr,
+    input [31:0] i_mem_wdata,
+    output [31:0] o_mem_rdata
 );
 
   localparam MEM_SIZE = 512;
@@ -33,8 +33,8 @@ module memory #(
     end
   end
 
-  always @(posedge clk or negedge rst_n) begin
-    if (~rst_n) begin
+  always @(posedge i_clk or negedge i_rst_n) begin
+    if (~i_rst_n) begin
 `ifdef FPGA
       for (i = 0; i < MEM_SIZE; i++) begin
         mem[i] <= 0;
@@ -42,16 +42,16 @@ module memory #(
 `endif
       next_rdata <= 0;
     end else begin
-      if (ctrl_mem_ren_ip) begin
-        next_rdata <= {mem[mem_addr_ip+3], mem[mem_addr_ip+2], mem[mem_addr_ip+1], mem[mem_addr_ip]};
-      end else if (ctrl_mem_wren_ip) begin
+      if (i_ctrl_mem_ren) begin
+        next_rdata <= {mem[i_mem_addr+3], mem[i_mem_addr+2], mem[i_mem_addr+1], mem[i_mem_addr]};
+      end else if (i_ctrl_mem_wren) begin
         for (i = 0; i < 4; i++) begin
-          mem[mem_addr_ip+i] <= mem_wdata_ip[i*8+:8];
+          mem[i_mem_addr+i] <= i_mem_wdata[i*8+:8];
         end
       end
     end
   end
 
-  assign mem_rdata_op = next_rdata;
+  assign o_mem_rdata = next_rdata;
 
 endmodule

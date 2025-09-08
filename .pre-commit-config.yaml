@@ -1,0 +1,19 @@
+repos:
+  # Baseline precommit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: no-commit-to-branch
+        args: ["--branch", "main"]
+      - id: check-yaml
+        args: ["--unsafe"]
+  # Python linting and formatting through ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format

@@ -2,18 +2,18 @@
 module q4q5 #(
     parameter CTRL_WIDTH = 16
 ) (
-    input                   clk,
-    input                   rst_n,
-    input  [          31:0] alu_out_ip,
-    output [          31:0] alu_out_op,
-    input  [          31:0] mem_rdata_ip,
-    output [          31:0] mem_rdata_op,
-    input  [           4:0] reg_wr_port_ip,
-    output [           4:0] reg_wr_port_op,
-    input  [CTRL_WIDTH-1:0] ctrl_q4_ip,
-    output [CTRL_WIDTH-1:0] ctrl_q4_op,
-    input  [          31:0] instr_ip,
-    output [          31:0] instr_op
+    input                   i_clk,
+    input                   i_rst_n,
+    input  [          31:0] i_alu_out,
+    output [          31:0] o_alu_out,
+    input  [          31:0] i_mem_rdata,
+    output [          31:0] o_mem_rdata,
+    input  [           4:0] i_reg_wr_port,
+    output [           4:0] o_reg_wr_port,
+    input  [CTRL_WIDTH-1:0] i_ctrl_q4,
+    output [CTRL_WIDTH-1:0] o_ctrl_q4,
+    input  [          31:0] i_instr,
+    output [          31:0] o_instr
 );
 
   reg [          31:0] next_reg_wr_port;
@@ -22,26 +22,26 @@ module q4q5 #(
   reg [CTRL_WIDTH-1:0] next_ctrl_q4;
   reg [          31:0] next_instr;
 
-  always @(posedge clk or negedge rst_n) begin
-    if (~rst_n) begin
+  always @(posedge i_clk or negedge i_rst_n) begin
+    if (~i_rst_n) begin
       next_alu_out     <= 0;
       next_mem_rdata   <= 0;
       next_reg_wr_port <= 0;
       next_ctrl_q4     <= 0;
       next_instr       <= 32'h00000013;  //  NOP;
     end else begin
-      next_alu_out     <= alu_out_ip;
-      next_mem_rdata   <= mem_rdata_ip;
-      next_reg_wr_port <= reg_wr_port_ip;
-      next_ctrl_q4     <= ctrl_q4_ip;
-      next_instr       <= instr_ip;
+      next_alu_out     <= i_alu_out;
+      next_mem_rdata   <= i_mem_rdata;
+      next_reg_wr_port <= i_reg_wr_port;
+      next_ctrl_q4     <= i_ctrl_q4;
+      next_instr       <= i_instr;
     end
   end
 
-  assign alu_out_op     = next_alu_out;
-  assign mem_rdata_op   = next_mem_rdata;
-  assign reg_wr_port_op = next_reg_wr_port;
-  assign ctrl_q4_op     = next_ctrl_q4;
-  assign instr_op       = next_instr;
+  assign o_alu_out     = next_alu_out;
+  assign o_mem_rdata   = next_mem_rdata;
+  assign o_reg_wr_port = next_reg_wr_port;
+  assign o_ctrl_q4     = next_ctrl_q4;
+  assign o_instr       = next_instr;
 
 endmodule
