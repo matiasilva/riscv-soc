@@ -14,9 +14,13 @@ test filter="":
   uv run pytest -s -v {{ if filter == "" { filter } else { "-k " + filter } }}
 
 # run tests, launch gtkwave
-sim filter="": (test filter)
-  surfer sim/*.fst
+sim filter="": (test filter) waves
+
+waves:
+  surfer sim_build/*.fst
 
 fixtures:
-  $TOOLS_ROOT/gen_hex_data.py 128 -o $CPU_ROOT/tests/test_insnmem_preload.hex
+  $TOOLS_ROOT/gen_hex_data.py 128 -o $CPU_ROOT/tests/test_insnmem_preload_512.hex
+  $TOOLS_ROOT/gen_hex_data.py 256 -o $CPU_ROOT/tests/test_insnmem_preload_1024.hex
+  $TOOLS_ROOT/gen_hex_data.py 512 -o $CPU_ROOT/tests/test_insnmem_preload_2048.hex
 
