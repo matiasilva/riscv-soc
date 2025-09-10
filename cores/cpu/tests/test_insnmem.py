@@ -147,8 +147,8 @@ async def test_instrmem_pc_sequence(dut) -> None:
     """Test sequential PC increments (typical fetch pattern)"""
     _ = await tb_init(dut)
 
-    # Simulate typical PC sequence: 0, 4, 8, 12, 16...
-    pc_sequence = [i * 4 for i in range(10)]
+    # test 10 items with one dummy item to fully read out all data
+    pc_sequence = [i * 4 for i in range(11)]
     expected = PRELOAD_INSTRUCTIONS[:10]
     instructions = []
 
@@ -159,11 +159,7 @@ async def test_instrmem_pc_sequence(dut) -> None:
         await set_pc_and_wait(dut, pc)
         instruction = dut.o_insn.value.to_unsigned()
         instructions.append(instruction)
-        dut._log.debug(f"PC={pc}: instruction=0x{instruction:08x}")
-
-    await RisingEdge(dut.i_clk)
-    instruction = dut.o_insn.value.to_unsigned()
-    instructions.append(instruction)
+        dut._log.debug(f"PC={pc} next, last instruction=0x{instruction:08x}")
 
     assert instructions == expected, "Instruction fetch sequence failed"
 
