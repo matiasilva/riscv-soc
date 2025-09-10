@@ -19,15 +19,16 @@ def get_env_dir_safe(var: str) -> Path:
 
 
 CPU_ROOT = get_env_dir_safe("CPU_ROOT")
-PRELOAD_PATH = CPU_ROOT / "tests" / "test_insnmem_preload.hex"
+
+PRELOAD_PATH = str(CPU_ROOT) + "/tests/test_insnmem_preload_{size}.hex"
 
 
-def get_hex_instructions():
+def get_hex_instructions(hex_path: str):
     """Reads the hex file and returns expected instructions"""
 
     instructions = []
 
-    with open(PRELOAD_PATH, "r") as f:
+    with open(hex_path, "r") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -44,7 +45,7 @@ def get_hex_instructions():
     return instructions
 
 
-PRELOAD_INSTRUCTIONS = get_hex_instructions()
+PRELOAD_INSTRUCTIONS = []
 
 
 async def reset_dut(dut) -> None:
@@ -77,6 +78,12 @@ async def init_inputs(dut) -> None:
 
 async def tb_init(dut) -> Clock:
     """Initialize testbench: setup clock, reset, and init inputs"""
+
+    global PRELOAD_INSTRUCTIONS
+    PRELOAD_INSTRUCTIONS = get_hex_instructions(
+        PRELOAD_PATH.format(size=dut.SIZE.value.to_unsigned())
+    )
+
     clock = setup_clock(dut)
     await reset_dut(dut)
     await init_inputs(dut)
@@ -135,123 +142,33 @@ async def test_insnmem_read_varied(dut) -> None:
         dut._log.debug(f"Address {word_addr}: instruction = 0x{actual:08x}")
 
 
-#
+@cocotb.test()
+async def test_instrmem_pc_sequence(dut) -> None:
+    """Test sequential PC increments (typical fetch pattern)"""
+    _ = await tb_init(dut)
 
-# @cocotb.test()
-# async def test_instrmem_boundary_conditions(dut) -> None:
-#     """Test memory boundary conditions"""
-#     _ = await tb_init(dut)
-#
-#     # Test addresses near the memory size limit
-#     # Default SIZE is 512 bytes, so valid addresses are 0-511
-#     boundary_addresses = [0, 4, 508, 512, 1000]  # Some valid, some invalid
-#
-#     for addr in boundary_addresses:
-#         await set_pc_and_wait(dut, addr)
-#         await RisingEdge(dut.i_clk)
-#         actual = dut.o_instr.value.to_unsigned()
-#
-#         if addr < 509:  # Valid address range (need 4 bytes)
-#             dut._log.info(f"Valid boundary addr {addr}: instruction = 0x{actual:08x}")
-#         else:
-#             dut._log.info(f"Invalid boundary addr {addr}: instruction = 0x{actual:08x}")
-#             # For out-of-bounds access, behavior may be undefined but should not crash
-#
-#
-# @cocotb.test()
-# async def test_instrmem_pc_sequence(dut) -> None:
-#     """Test sequential PC increments (typical fetch pattern)"""
-#     _ = await tb_init(dut)
-#
-#     # Simulate typical PC sequence: 0, 4, 8, 12, 16...
-#     pc_sequence = [i * 4 for i in range(10)]
-#     instructions = []
-#
-#     for pc in pc_sequence:
-#         await set_pc_and_wait(dut, pc)
-#         await RisingEdge(dut.i_clk)
-#         instruction = dut.o_instr.value.to_unsigned()
-#         instructions.append(instruction)
-#         dut._log.info(f"PC={pc}: instruction=0x{instruction:08x}")
-#
-#     # Verify that we got different instructions for different addresses
-#     # (or at least that the interface is working)
-#     assert len(instructions) == len(pc_sequence), "Instruction fetch sequence failed"
-#
-#
-# @cocotb.test()
-# async def test_instrmem_rapid_pc_changes(dut) -> None:
-#     """Test rapid PC changes to verify timing"""
-#     _ = await tb_init(dut)
-#
-#     # Rapidly change PC and verify instruction updates
-#     addresses = [0, 4, 8, 12, 16, 4, 0, 8]  # Include some repeats
-#
-#     for addr in addresses:
-#         await set_pc_and_wait(dut, addr)
-#         await RisingEdge(dut.i_clk)
-#         instruction = dut.o_instr.value.to_unsigned()
-#         dut._log.info(f"Rapid change to PC={addr}: instruction=0x{instruction:08x}")
-#
-#
-# @cocotb.test()
-# async def test_instrmem_random_access_pattern(dut) -> None:
-#     """Test random access pattern to instruction memory"""
-#     _ = await tb_init(dut)
-#
-#     # Generate random word-aligned addresses within valid range
-#     random.seed(42)  # For reproducible tests
-#     random_addresses = [random.randrange(0, 500, 4) for _ in range(20)]
-#
-#     for addr in random_addresses:
-#         await set_pc_and_wait(dut, addr)
-#         await RisingEdge(dut.i_clk)
-#         instruction = dut.o_instr.value.to_unsigned()
-#         dut._log.info(f"Random access PC={addr}: instruction=0x{instruction:08x}")
-#
-#
-# def test_instrmem_with_preload_fixture(hex_instructions):
-#     """Test that hex_instructions fixture works correctly"""
-#     assert len(hex_instructions) > 0, "Hex instructions should not be empty"
-#
-#     # Verify the first few expected instructions match the hex file format
-#     expected_first_instructions = [
-#         0x00100013,  # addi x0, x0, 1
-#         0x00200093,  # addi x1, x0, 2
-#         0x00300113,  # addi x2, x0, 3
-#         0x00400193,  # addi x3, x0, 4
-#     ]
-#
-#     for i, expected in enumerate(expected_first_instructions):
-#         if i < len(hex_instructions):
-#             assert hex_instructions[i] == expected, (
-#                 f"Instruction {i}: got=0x{hex_instructions[i]:08x}, expected=0x{expected:08x}"
-#             )
-#
-#
-# @cocotb.test()
-# async def test_instrmem_with_preload(dut) -> None:
-#     """Test instruction memory with actual preloaded data"""
-#     _ = await tb_init(dut)
-#
-#     # Test reading each preloaded instruction
-#     for i, expected in enumerate(PRELOAD_INSTRUCTIONS):
-#         pc = i * 4  # Word-aligned addresses
-#         await set_pc_and_wait(dut, pc)
-#         await RisingEdge(dut.i_clk)
-#         actual = dut.o_instr.value.to_unsigned()
-#
-#         dut._log.info(
-#             f"Preload test PC={pc}: got=0x{actual:08x}, expected=0x{expected:08x}"
-#         )
-#
-#         assert actual == expected, (
-#             f"Preload mismatch at PC={pc}: got=0x{actual:08x}, expected=0x{expected:08x}"
-#         )
+    # Simulate typical PC sequence: 0, 4, 8, 12, 16...
+    pc_sequence = [i * 4 for i in range(10)]
+    expected = PRELOAD_INSTRUCTIONS[:10]
+    instructions = []
+
+    pc = pc_sequence.pop(0)
+    await set_pc_and_wait(dut, pc)
+
+    for pc in pc_sequence:
+        await set_pc_and_wait(dut, pc)
+        instruction = dut.o_insn.value.to_unsigned()
+        instructions.append(instruction)
+        dut._log.debug(f"PC={pc}: instruction=0x{instruction:08x}")
+
+    await RisingEdge(dut.i_clk)
+    instruction = dut.o_insn.value.to_unsigned()
+    instructions.append(instruction)
+
+    assert instructions == expected, "Instruction fetch sequence failed"
 
 
-# @pytest.mark.parametrize("size", [512, 1024, 2048])
-@pytest.mark.parametrize("size", [512])
+@pytest.mark.parametrize("size", [512, 1024, 2048])
 def test_insnmem_runner(size: int) -> None:
     """Test runner for instruction memory"""
     hdl_root = CPU_ROOT / "hdl"
@@ -270,5 +187,5 @@ def test_insnmem_runner(size: int) -> None:
         hdl_toplevel="insnmem",
         test_module="test_insnmem",
         waves=True,
-        plusargs=[f"+IMEM_PRELOAD_FILE={PRELOAD_PATH}"],
+        plusargs=[f"+IMEM_PRELOAD_FILE={PRELOAD_PATH.format(size=size)}"],
     )
