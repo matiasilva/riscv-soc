@@ -40,7 +40,7 @@ module cpu_core (
   localparam FORWARD_Q5 = 2'b10;  // use value from prev prev alu_out or mem_rdata
 
   /* instruction fetch q1 */
-  wire [31:0] instr_q1;  // from instrmem (q1)
+  wire [31:0] instr_q1;  // from insnmem (q1)
   wire [4:0] rs1_q1 = instr_q1[19:15];
   wire [4:0] rs2_q1 = instr_q1[24:20];
 
@@ -143,10 +143,10 @@ module cpu_core (
   reg [31:0] alu_in1_forwarded;
   reg [31:0] alu_in2_forwarded;
 
-  instrmem #(
+  insnmem #(
       .PRELOAD(1),
       .PRELOAD_FILE("build/core.hex")
-  ) instrmem_u (
+  ) insnmem_u (
       .clk     (clk),
       .rst_n   (rst_n),
       .pc_ip   (pc),
@@ -281,15 +281,17 @@ which is what we actually care about
   wire pc_jal_q2;
   reg [31:0] pc;  // need PC immediately in fetch
   reg [31:0] pc_incr_last;
-  always @(*) begin
+  always_comb @(*) begin
     pc = pc_incr_last;
-    // if (ctrl_q2[CTRL_IS_JAL]) // TODO: Fix this logic
-      if (ctrl_q4[CTRL_IS_BRANCH]) begin
-        pc = pc_next_q4;
-      end
+    // Handle JAL and branch instructions
+    if (ctrl_q2[CTRL_IS_JAL]) begin
+      pc = pc_next_q2;
+    end else if (ctrl_q4[CTRL_IS_BRANCH]) begin
+      pc = pc_next_q4;
+    end
   end
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
       pc_incr_last <= 0;
     end else begin
@@ -301,7 +303,7 @@ which is what we actually care about
   // hazards a and b occur in the execution stage
   reg hazard_a_in1, hazard_b_in1, hazard_a_in2, hazard_b_in2;
   reg hazard_c, hazard_d;
-  always @(*) begin
+  always_comb @(*) begin
     forward_alu_in1 = FORWARD_Q2;
     forward_alu_in2 = FORWARD_Q2;
     forward_mem_wdata = FORWARD_Q2;
@@ -338,7 +340,7 @@ which is what we actually care about
     if (hazard_d) forward_mem_wdata = FORWARD_Q5;
   end
 
-  always @(*) begin
+  always_comb @(*) begin
     case (forward_alu_in1)
       FORWARD_Q2: alu_in1_forwarded = alu_in1_pre;
       FORWARD_Q4: alu_in1_forwarded = alu_out_q4;
@@ -346,7 +348,7 @@ which is what we actually care about
     endcase
   end
 
-  always @(*) begin
+  always_comb @(*) begin
     case (forward_alu_in2)
       FORWARD_Q2: alu_in2_forwarded = alu_in2_pre;
       FORWARD_Q4: alu_in2_forwarded = alu_out_q4;
@@ -354,7 +356,7 @@ which is what we actually care about
     endcase
   end
 
-  always @(*) begin
+  always_comb @(*) begin
     // MEM is clocked so we must make the forwarded data immediately available (before clock edge)
     case (forward_mem_wdata)
       FORWARD_Q2: mem_wdata_forwarded = reg_rd_data2_q3;

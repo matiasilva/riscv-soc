@@ -1,6 +1,6 @@
 HDL_DIR := "hdl/"
 SRCS := "cpu_core.sv \
-				instrmem.sv aluctrl.sv control.sv regfile.sv \
+				insnmem.sv aluctrl.sv control.sv regfile.sv \
 				alu.sv memory.sv \
 				pipeline/q1q2.sv pipeline/q2q3.sv pipeline/q3q4.sv pipeline/q4q5.sv"
 FULL_SRCS := prepend(HDL_DIR, SRCS)
@@ -18,5 +18,5 @@ sim filter="": (test filter)
   surfer sim/*.fst
 
 fixtures:
-  $TOOLS_ROOT/gen_hex_data.py 128 -o $CPU_ROOT/tests/test_instrmem_preload.hex
+  $TOOLS_ROOT/gen_hex_data.py 128 -o $CPU_ROOT/tests/test_insnmem_preload.hex
 

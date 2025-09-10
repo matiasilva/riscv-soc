@@ -1,5 +1,5 @@
 """
-cocotb testbench for instrmem.sv
+cocotb testbench for insnmem.sv
 """
 
 import cocotb
@@ -19,7 +19,7 @@ def get_env_dir_safe(var: str) -> Path:
 
 
 CPU_ROOT = get_env_dir_safe("CPU_ROOT")
-PRELOAD_PATH = CPU_ROOT / "tests" / "test_instrmem_preload.hex"
+PRELOAD_PATH = CPU_ROOT / "tests" / "test_insnmem_preload.hex"
 
 
 def get_hex_instructions():
@@ -50,9 +50,9 @@ PRELOAD_INSTRUCTIONS = get_hex_instructions()
 async def reset_dut(dut) -> None:
     """Reset the DUT"""
     dut.i_rst_n.value = 1
-    await ClockCycles(dut.i_clk, 3)
+    await ClockCycles(dut.i_clk, 1)
     dut.i_rst_n.value = 0
-    await ClockCycles(dut.i_clk, 3)
+    await ClockCycles(dut.i_clk, 2)
     dut.i_rst_n.value = 1
 
 
@@ -84,34 +84,57 @@ async def tb_init(dut) -> Clock:
 
 
 @cocotb.test()
-async def test_instrmem_basic_read(dut) -> None:
+async def test_insnmem_basic_read(dut) -> None:
     """Test basic instruction memory read operations"""
     _ = await tb_init(dut)
 
     await set_pc_and_wait(dut, 0)
     await RisingEdge(dut.i_clk)
-    actual = dut.o_instr.value.to_unsigned()
+    actual = dut.o_insn.value.to_unsigned()
     expected = PRELOAD_INSTRUCTIONS[0]
     assert actual == expected, (
         f"Basic read failed: got=0x{actual:08x}, expected=0x{expected:08x}"
     )
 
 
-# @cocotb.test()
-# @cocotb.parametrize(
-#     addresses=[[0, 4, 8, 12, 16, 20, 100, 200, 400], [1, 2, 3, 5, 6, 7, 9, 10, 11]]
-# )
-# async def test_instrmem_read_varied(dut, addresses) -> None:
-#     """Test reading from different memory addresses, aligned then non-aligned"""
-#     _ = await tb_init(dut)
-#
-#     for addr in addresses:
-#         await set_pc_and_wait(dut, addr)
-#         await RisingEdge(dut.i_clk)
-#         actual = dut.o_instr.value.to_unsigned()
-#         expected = 0x00000000
-#         assert actual == expected
-#         dut._log.debug(f"Address {addr}: instruction = 0x{actual:08x}")
+@cocotb.test()
+async def test_insnmem_nonaligned_exception(dut) -> None:
+    """Test exception when reading from non-aligned address"""
+    _ = await tb_init(dut)
+
+    def aligned(x):
+        return int(x % 4 != 0)
+
+    targets = [i for i in range(100)]
+    for addr in targets:
+        expected = aligned(addr)
+        await set_pc_and_wait(dut, addr)
+        assert expected == dut.o_imem_exception.value
+
+
+@cocotb.test()
+async def test_insnmem_read_varied(dut) -> None:
+    """Test reading from different memory addresses, aligned then non-aligned"""
+    _ = await tb_init(dut)
+
+    def get_rand_word():
+        mem_word_max = dut.SIZE.value.to_unsigned() // 4
+        return random.randint(0, mem_word_max - 1)
+
+    addresses = [get_rand_word() for _ in range(100)]
+    # launch first data
+    word_addr = addresses.pop(0)
+    expected = PRELOAD_INSTRUCTIONS[word_addr]
+    await set_pc_and_wait(dut, word_addr << 2)
+
+    for word_addr in addresses:
+        await set_pc_and_wait(dut, word_addr << 2)
+        actual = dut.o_insn.value.to_unsigned()
+        assert actual == expected
+        expected = PRELOAD_INSTRUCTIONS[word_addr]
+        dut._log.debug(f"Address {word_addr}: instruction = 0x{actual:08x}")
+
+
 #
 
 # @cocotb.test()
@@ -229,14 +252,14 @@ async def test_instrmem_basic_read(dut) -> None:
 
 # @pytest.mark.parametrize("size", [512, 1024, 2048])
 @pytest.mark.parametrize("size", [512])
-def test_instrmem_runner(size: int) -> None:
+def test_insnmem_runner(size: int) -> None:
     """Test runner for instruction memory"""
     hdl_root = CPU_ROOT / "hdl"
 
     runner = get_runner("icarus")
     runner.build(
-        sources=[hdl_root / "instrmem.sv"],
-        hdl_toplevel="instrmem",
+        sources=[hdl_root / "insnmem.sv"],
+        hdl_toplevel="insnmem",
         always=True,
         waves=True,
         parameters={"SIZE": size},
@@ -244,8 +267,8 @@ def test_instrmem_runner(size: int) -> None:
     )
 
     runner.test(
-        hdl_toplevel="instrmem",
-        test_module="test_instrmem",
+        hdl_toplevel="insnmem",
+        test_module="test_insnmem",
         waves=True,
         plusargs=[f"+IMEM_PRELOAD_FILE={PRELOAD_PATH}"],
     )
