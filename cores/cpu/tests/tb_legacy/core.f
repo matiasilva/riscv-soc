@@ -3,7 +3,7 @@ src/core.sv
 src/alu.sv
 src/aluctrl.sv
 src/control.sv
-src/instrmem.sv
+src/insnmem.sv
 src/memory.sv
 src/regfile.sv
 src/pipeline_regs/q1q2.sv
