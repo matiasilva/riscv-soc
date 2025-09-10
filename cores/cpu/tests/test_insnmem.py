@@ -19,15 +19,16 @@ def get_env_dir_safe(var: str) -> Path:
 
 
 CPU_ROOT = get_env_dir_safe("CPU_ROOT")
-PRELOAD_PATH = CPU_ROOT / "tests" / "test_insnmem_preload.hex"
+
+PRELOAD_PATH = str(CPU_ROOT) + "/tests/test_insnmem_preload_{size}.hex"
 
 
-def get_hex_instructions():
+def get_hex_instructions(hex_path: str):
     """Reads the hex file and returns expected instructions"""
 
     instructions = []
 
-    with open(PRELOAD_PATH, "r") as f:
+    with open(hex_path, "r") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -44,7 +45,7 @@ def get_hex_instructions():
     return instructions
 
 
-PRELOAD_INSTRUCTIONS = get_hex_instructions()
+PRELOAD_INSTRUCTIONS = []
 
 
 async def reset_dut(dut) -> None:
@@ -77,6 +78,12 @@ async def init_inputs(dut) -> None:
 
 async def tb_init(dut) -> Clock:
     """Initialize testbench: setup clock, reset, and init inputs"""
+
+    global PRELOAD_INSTRUCTIONS
+    PRELOAD_INSTRUCTIONS = get_hex_instructions(
+        PRELOAD_PATH.format(size=dut.SIZE.value.to_unsigned())
+    )
+
     clock = setup_clock(dut)
     await reset_dut(dut)
     await init_inputs(dut)
@@ -158,12 +165,10 @@ async def test_instrmem_pc_sequence(dut) -> None:
     instruction = dut.o_insn.value.to_unsigned()
     instructions.append(instruction)
 
-    print(expected)
     assert instructions == expected, "Instruction fetch sequence failed"
 
 
 @pytest.mark.parametrize("size", [512, 1024, 2048])
-@pytest.mark.parametrize("size", [512])
 def test_insnmem_runner(size: int) -> None:
     """Test runner for instruction memory"""
     hdl_root = CPU_ROOT / "hdl"
@@ -182,5 +187,5 @@ def test_insnmem_runner(size: int) -> None:
         hdl_toplevel="insnmem",
         test_module="test_insnmem",
         waves=True,
-        plusargs=[f"+IMEM_PRELOAD_FILE={PRELOAD_PATH}"],
+        plusargs=[f"+IMEM_PRELOAD_FILE={PRELOAD_PATH.format(size=size)}"],
     )
