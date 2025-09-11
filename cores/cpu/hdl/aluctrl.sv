@@ -1,19 +1,42 @@
-/*
-	this module produces the required ctrl signal for the ALU
+// MIT License
+//
+// Copyright (c) 2025 Matias Wang Silva
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
-	[aluop] is a 2-bit signal coming from the main ctrl unit
-
-	00 -> ADD (for lw, sw)
-	10 -> hand over ctrl to funct (essentially passthrough)
-	11 -> not implemented
-	01 -> SLTU (for beq)
-
-	
-	[funct] combines bit 5 of the funct7 field with all 3 bits of funct3
-	TODO: can this be improved? we're wasting 6 out of 16 options
-
-	[aluctrl_out] needs to be 4 bits wide to fit 10 operations
-*/
+// Module  : aluctrl
+// Author  : Matias Wang Silva
+// Date    : 11/9/2025
+//
+// Description:
+//   ALU control unit that translates high-level control signals to ALU operation codes
+//   Receives aluop from main control unit and funct fields from instruction
+//
+// Control Mapping:
+//   aluop[1:0]:
+//     00 -> ADD (for lw, sw operations)
+//     01 -> SLTU (for beq operations) 
+//     10 -> Use funct field (passthrough for R-type/I-type)
+//     11 -> Not implemented
+//
+// Parameters:
+//   None
 
 module aluctrl (
     input  [1:0] i_ctrl_aluop,
