@@ -4,64 +4,16 @@ cocotb testbench for insnmem.sv
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.triggers import RisingEdge
 from cocotb_tools.runner import get_runner
-import os
-from pathlib import Path
 import random
 import pytest
-
-
-def get_env_dir_safe(var: str) -> Path:
-    envdir = Path(v) if (v := os.getenv(var)) else v
-    assert envdir, f"env var {var} was not defined!"
-    return envdir
+from tb_utils import get_env_dir_safe, get_hdl_root, tb_init_base, get_hex_instructions
 
 
 CPU_ROOT = get_env_dir_safe("CPU_ROOT")
-
 PRELOAD_PATH = str(CPU_ROOT) + "/tests/test_insnmem_preload_{size}.hex"
-
-
-def get_hex_instructions(hex_path: str):
-    """Reads the hex file and returns expected instructions"""
-
-    instructions = []
-
-    with open(hex_path, "r") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                hex_bytes = line.split()
-                if len(hex_bytes) == 4:
-                    instruction = (
-                        (int(hex_bytes[3], 16) << 24)
-                        | (int(hex_bytes[2], 16) << 16)
-                        | (int(hex_bytes[1], 16) << 8)
-                        | int(hex_bytes[0], 16)
-                    )
-                    instructions.append(instruction)
-
-    return instructions
-
-
 PRELOAD_INSTRUCTIONS = []
-
-
-async def reset_dut(dut) -> None:
-    """Reset the DUT"""
-    dut.i_rst_n.value = 1
-    await ClockCycles(dut.i_clk, 1)
-    dut.i_rst_n.value = 0
-    await ClockCycles(dut.i_clk, 2)
-    dut.i_rst_n.value = 1
-
-
-def setup_clock(dut) -> Clock:
-    """Setup clock for the DUT"""
-    clock = Clock(dut.i_clk, 10, unit="ns")
-    clock.start(start_high=False)
-    return clock
 
 
 async def set_pc_and_wait(dut, pc: int) -> None:
@@ -78,16 +30,12 @@ async def init_inputs(dut) -> None:
 
 async def tb_init(dut) -> Clock:
     """Initialize testbench: setup clock, reset, and init inputs"""
-
     global PRELOAD_INSTRUCTIONS
     PRELOAD_INSTRUCTIONS = get_hex_instructions(
         PRELOAD_PATH.format(size=dut.SIZE.value.to_unsigned())
     )
 
-    clock = setup_clock(dut)
-    await reset_dut(dut)
-    await init_inputs(dut)
-    return clock
+    return await tb_init_base(dut, init_inputs)
 
 
 @cocotb.test()
@@ -167,7 +115,7 @@ async def test_instrmem_pc_sequence(dut) -> None:
 @pytest.mark.parametrize("size", [512, 1024, 2048])
 def test_insnmem_runner(size: int) -> None:
     """Test runner for instruction memory"""
-    hdl_root = CPU_ROOT / "hdl"
+    hdl_root = get_hdl_root()
 
     runner = get_runner("icarus")
     runner.build(
