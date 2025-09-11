@@ -4,27 +4,10 @@ cocotb testbench for regfile.sv
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.triggers import RisingEdge
 from cocotb_tools.runner import get_runner
-import os
-from pathlib import Path
 import random
-
-
-async def reset_dut(dut) -> None:
-    """Reset the DUT"""
-    dut.i_rst_n.value = 1
-    await ClockCycles(dut.i_clk, 3)
-    dut.i_rst_n.value = 0
-    await ClockCycles(dut.i_clk, 3)
-    dut.i_rst_n.value = 1
-
-
-def setup_clock(dut) -> Clock:
-    """Setup clock for the DUT"""
-    clock = Clock(dut.i_clk, 10, unit="ns")
-    clock.start(start_high=False)
-    return clock
+from tb_utils import get_hdl_root, reset_dut, tb_init_base
 
 
 async def fill_regfile_random(dut) -> dict[int, int]:
@@ -82,11 +65,8 @@ async def init_inputs(dut) -> None:
 
 
 async def tb_init(dut) -> Clock:
-    """Initialize testbench: setup clock, reset, and init inputs"""
-    clock = setup_clock(dut)
-    await reset_dut(dut)
-    await init_inputs(dut)
-    return clock
+    """Initialize testbench with regfile-specific reset timing"""
+    return await tb_init_base(dut, init_inputs)
 
 
 @cocotb.test()
@@ -252,9 +232,8 @@ async def test_regfile_reset_behavior(dut) -> None:
 
 
 def test_regfile_runner() -> None:
-    hdl_root = os.getenv("CPU_ROOT")
-    assert hdl_root is not None
-    hdl_root = Path(hdl_root) / "hdl"
+    """Test runner for register file"""
+    hdl_root = get_hdl_root()
     runner = get_runner("icarus")
     runner.build(
         sources=[hdl_root / "regfile.sv"],
