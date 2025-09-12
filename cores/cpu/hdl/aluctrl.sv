@@ -31,31 +31,35 @@
 // Control Mapping:
 //   aluop[1:0]:
 //     00 -> ADD (for lw, sw operations)
-//     01 -> SLTU (for beq operations) 
+//     01 -> SLTU (for beq operations)
 //     10 -> Use funct field (passthrough for R-type/I-type)
+//      ADDI/ADD: funct3 = 000
+//      SLTI/SLT: funct3 = 010
+//      ANDI/AND: funct3 = 111
+//      ORI/OR:   funct3 = 110
 //     11 -> Not implemented
 //
 // Parameters:
 //   None
 
+`include "cpu_types.vh"
+
 module aluctrl (
-    input  [1:0] i_ctrl_aluop,
-    input  [3:0] i_funct,
-    output [3:0] o_aluctrl_ctrl
+    input aluctrl_t i_aluop,
+    input logic [3:0] i_funct,
+    output logic [3:0] o_aluctrl
 );
 
-  localparam ALUOP_ADD   = 2'b00;
-  localparam ALUOP_FUNCT = 2'b10;
-  localparam ALUOP_SLTU  = 2'b01;
+  typedef enum logic [3:0] {
+    ADD = 4'b0000,
+    SETLESSTHANUNSIGNED = 4'b0011
+  } aluctrl_t;
 
-  localparam ADD = 4'b0000;
-  localparam SETLESSTHANUNSIGNED = 4'b0011;
+  logic [3:0] ctrl;
 
-  reg [3:0] ctrl;
-
-  always @(*) begin
+  always_comb begin
     ctrl = 4'hx;
-    case (i_ctrl_aluop)
+    unique case (i_aluop)
       ALUOP_ADD: begin
         // SW/LW -> add
         ctrl = ADD;
@@ -64,11 +68,14 @@ module aluctrl (
         ctrl = SETLESSTHANUNSIGNED;
       end
       ALUOP_FUNCT: begin
-        ctrl = i_funct;
+        ctrl = i_funct;  // funct3 only
+      end
+      default: begin
+        ctrl = 4'hx;
       end
     endcase
   end
 
-  assign o_aluctrl_ctrl = ctrl;
+  assign o_aluctrl = ctrl;
 
 endmodule

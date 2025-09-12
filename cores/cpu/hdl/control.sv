@@ -41,37 +41,16 @@
 //  is_jal
 //  is_jalr
 //  alusrc        - select sign-extended immediate OR rs2 field of instruction
+`include "cpu_types.vh"
 
 module control #(
     parameter int CTRL_WIDTH = 16
 ) (
-    input [6:0] i_opcode,
-    output [CTRL_WIDTH - 1:0] o_ctrl
+    input  opcode_t   i_opcode,
+    output cpu_ctrl_t o_ctrl
 );
 
-  typedef enum logic [6:0] {
-    OP_RTYPE  = 7'b0110011,
-    OP_ITYPE  = 7'b0010011,
-    OP_LOAD   = 7'b0000011,
-    OP_STORE  = 7'b0100011,
-    OP_JAL    = 7'b1101111,
-    OP_JALR   = 7'b1100111,
-    OP_BRANCH = 7'b1100011
-  } opcode_t;
-
-  typedef enum logic [1:0] {
-    ALUOP_ADD   = 2'b00,
-    ALUOP_SLTU  = 2'b01,
-    ALUOP_FUNCT = 2'b10
-  } aluop_t;
-
-  typedef enum logic {
-    ALUSRC_IMM = 1'b0,
-    ALUSRC_REG = 1'b1
-  } alusrc_t;
-
-
-  logic [1:0] aluop;
+  aluctrl_t aluop;
   logic mem_re;
   logic mem_we;
   logic reg_wr_en;
@@ -79,47 +58,58 @@ module control #(
   logic is_branch;
   logic is_jal;  // q2
   logic is_jalr;  // q3
-  logic alusrc;
+  alusrc_t alusrc;
 
   always_comb begin
-    mem_re        = 1'b0;
-    mem_we        = 1'b0;
-    reg_wr_en     = 1'b0;
-    is_mem_to_reg = 1'b0;
-    is_branch     = 1'b0;
-    is_jal        = 1'b0;
+    mem_re        = '0;
+    mem_we        = '0;
+    reg_wr_en     = '0;
+    is_mem_to_reg = '0;
+    is_branch     = '0;
+    is_jal        = '0;
+    is_jalr       = '0;
     alusrc        = ALUSRC_IMM;
     aluop         = ALUOP_ADD;
-    case (i_opcode)
+
+    unique case (i_opcode)
       OP_RTYPE: begin
-        reg_wr_en = 1'b1;
+        reg_wr_en = '1;
         alusrc    = ALUSRC_REG;
         aluop     = ALUOP_FUNCT;
       end
       OP_ITYPE: begin
-        reg_wr_en = 1'b1;
+        reg_wr_en = '1;
         aluop     = ALUOP_FUNCT;
       end
       OP_LOAD: begin
-        mem_re        = 1'b1;
-        reg_wr_en     = 1'b1;
-        is_mem_to_reg = 1'b1;
+        mem_re        = '1;
+        reg_wr_en     = '1;
+        is_mem_to_reg = '1;
       end
       OP_STORE: begin
-        mem_we = 1'b1;
+        mem_we = '1;
+      end
+      OP_BRANCH: begin
+        is_branch = '1;
       end
       OP_JAL: begin
-        is_jal = 1'b1;
-        reg_wr_en = 1'b1;
+        is_jal    = '1;
+        reg_wr_en = '1;
+      end
+      OP_JALR: begin
+        is_jalr   = '1;
+        reg_wr_en = '1;
+      end
+      default: begin
       end
     endcase
+
+    o_ctrl = '{
+        q2_bits: is_jal,
+        q3_bits: {aluop, alusrc},
+        q4_bits: {is_branch, mem_re, mem_we},
+        q5_bits: {reg_wr_en, is_mem_to_reg}
+    };
   end
-
-  wire q2_bits = is_jal;
-  wire [2:0] q3_bits = {aluop, alusrc};
-  wire [2:0] q4_bits = {is_branch, mem_re, mem_we};
-  wire [1:0] q5_bits = {reg_wr_en, is_mem_to_reg};
-
-  assign o_ctrl = {7'b0, q2_bits, q3_bits, q4_bits, q5_bits};
 
 endmodule
