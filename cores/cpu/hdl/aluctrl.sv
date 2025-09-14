@@ -25,14 +25,13 @@
 // Date    : 11/9/2025
 //
 // Description:
-//   ALU control unit that translates high-level control signals to ALU operation codes
-//   Receives aluop from main control unit and funct fields from instruction
+//   ALU control unit: remaps all instruction execute operations to valid alu_ops
 //
 // Control Mapping:
 //   aluop[1:0]:
 //     00 -> ADD (for lw, sw operations)
 //     01 -> SLTU (for beq operations)
-//     10 -> Use funct field (passthrough for R-type/I-type)
+//     10 -> Use {funct7[5], funct3} field (passthrough for R-type/I-type)
 //      ADDI/ADD: funct3 = 000
 //      SLTI/SLT: funct3 = 010
 //      ANDI/AND: funct3 = 111
@@ -45,37 +44,31 @@
 `include "cpu_types.vh"
 
 module aluctrl (
-    input aluctrl_t i_aluop,
-    input logic [3:0] i_funct,
-    output logic [3:0] o_aluctrl
+    input alu_ctrl_t i_aluop,
+    input logic [2:0] i_funct3,
+    input logic i_funct7_5,
+    output alu_op_t o_alu_ctrl
 );
 
-  typedef enum logic [3:0] {
-    ADD = 4'b0000,
-    SETLESSTHANUNSIGNED = 4'b0011
-  } aluctrl_t;
-
-  logic [3:0] ctrl;
+  alu_op_t ctrl;
 
   always_comb begin
-    ctrl = 4'hx;
     unique case (i_aluop)
       ALUOP_ADD: begin
-        // SW/LW -> add
-        ctrl = ADD;
+        ctrl = OP_ADD;
       end
       ALUOP_SLTU: begin
-        ctrl = SETLESSTHANUNSIGNED;
+        ctrl = OP_SLTU;
       end
       ALUOP_FUNCT: begin
-        ctrl = i_funct;  // funct3 only
+        ctrl = alu_op_t'({i_funct7_5, i_funct3});
       end
-      default: begin
-        ctrl = 4'hx;
+      ALUOP_INVALID: begin
+        ctrl = OP_INVALID;
       end
     endcase
   end
 
-  assign o_aluctrl = ctrl;
+  assign o_alu_ctrl = ctrl;
 
 endmodule

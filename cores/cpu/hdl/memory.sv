@@ -48,8 +48,8 @@ module memory #(
   localparam MEM_SIZE = 512;
 
   // 512 bytes, 128 words
-  reg [7:0] mem[MEM_SIZE - 1:0];
-  reg [31:0] next_rdata;
+  logic [7:0] mem[MEM_SIZE - 1:0];
+  logic [31:0] next_rdata;
 
   integer i;
 

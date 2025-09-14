@@ -41,7 +41,7 @@ module insnmem #(
     output logic o_imem_exception
 );
 
-  reg [7:0] mem[SIZE];
+  logic [7:0] mem[SIZE];
   logic [31:0] next_insn;
   logic [31:0] addr;
 

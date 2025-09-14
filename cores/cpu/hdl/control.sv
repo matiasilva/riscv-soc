@@ -28,9 +28,6 @@
 //   Emits control signals for the downstream CPU pipelines based on
 //   instruction decode rules
 //
-// Parameters:
-//   CTRL_WIDTH - The width of the output control signal
-//
 // Signals:
 //  aluop
 //  mem_re
@@ -40,17 +37,15 @@
 //  is_branch
 //  is_jal
 //  is_jalr
-//  alusrc        - select sign-extended immediate OR rs2 field of instruction
+//  alu_src       - select sign-extended immediate OR rs2 field of instruction
 `include "cpu_types.vh"
 
-module control #(
-    parameter int CTRL_WIDTH = 16
-) (
+module control (
     input  opcode_t   i_opcode,
     output cpu_ctrl_t o_ctrl
 );
 
-  aluctrl_t aluop;
+  alu_ctrl_t aluop;
   logic mem_re;
   logic mem_we;
   logic reg_wr_en;
@@ -58,7 +53,7 @@ module control #(
   logic is_branch;
   logic is_jal;  // q2
   logic is_jalr;  // q3
-  alusrc_t alusrc;
+  alu_src_t alu_src;
 
   always_comb begin
     mem_re        = '0;
@@ -68,13 +63,13 @@ module control #(
     is_branch     = '0;
     is_jal        = '0;
     is_jalr       = '0;
-    alusrc        = ALUSRC_IMM;
+    alu_src       = ALUSRC_IMM;
     aluop         = ALUOP_ADD;
 
     unique case (i_opcode)
       OP_RTYPE: begin
         reg_wr_en = '1;
-        alusrc    = ALUSRC_REG;
+        alu_src   = ALUSRC_REG;
         aluop     = ALUOP_FUNCT;
       end
       OP_ITYPE: begin
@@ -105,10 +100,10 @@ module control #(
     endcase
 
     o_ctrl = '{
-        q2_bits: is_jal,
-        q3_bits: {aluop, alusrc},
-        q4_bits: {is_branch, mem_re, mem_we},
-        q5_bits: {reg_wr_en, is_mem_to_reg}
+        q2: '{is_jal: is_jal},
+        q3: '{alu_ctrl: aluop, alu_src: alu_src},
+        q4: '{is_branch: is_branch, mem_re: mem_re, mem_we: mem_we},
+        q5: '{reg_wr_en: reg_wr_en, is_mem_to_reg: is_mem_to_reg}
     };
   end
 
