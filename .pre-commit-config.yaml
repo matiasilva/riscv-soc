@@ -1,13 +1,13 @@
 repos:
   # Baseline precommit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-added-large-files
       - id: no-commit-to-branch
-        args: ["--branch", "main"]
+        args: ["--branch", "master"]
       - id: check-yaml
         args: ["--unsafe"]
   # Python linting and formatting through ruff
@@ -17,3 +17,11 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+  - repo: local
+    hooks:
+      - id: verible-format
+        name: Verible verilog format
+        entry: verible-verilog-format
+        language: system
+        types_or: [verilog, system-verilog]
+        args: [--flagfile, .rules.verible-format]
