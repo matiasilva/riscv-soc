@@ -52,37 +52,33 @@ module cpu_core #(
   logic [31:0] insn_raw_q1;  // from insnmem (q1)
   insn_t insn_q1;
   assign insn_q1.raw = insn_raw_q1;
-  logic [4:0] rs1_q1 = insn_q1.common.opcode == OP_JAL ?
-      '0 : (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ?
-      insn_q1.s_type.rs1 : insn_q1.r_type.rs1;  // most formats use same rs1 position
-  logic [4:0] rs2_q1 = insn_q1.common.opcode == OP_JAL ?
-      '0 : (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ?
-      insn_q1.s_type.rs2 : insn_q1.r_type.rs2;  // most formats use same rs2 position
+  logic [4:0] rs1_q1;  // most formats use same rs1 position
+  logic [4:0] rs2_q1;  // most formats use same rs2 position
 
   /* instruction decode, register file q1 out, q2 in */
   logic [31:0] insn_raw_q2;
   insn_t insn_q2;
   assign insn_q2.raw = insn_raw_q2;
 
-  logic  [ 4:0] rd_q2 = insn_q2.r_type.rd;  // rd position is same for R, I, U, J types
-  logic  [ 4:0] rs1_q2 = insn_q2.r_type.rs1;  // rs1 position is same for R, I, S, B types
-  logic  [ 4:0] rs2_q2 = insn_q2.r_type.rs2;  // rs2 position is same for R, S, B types
-  logic  [ 6:0] opcode_q2 = insn_q2.common.opcode;
+  logic  [ 4:0] rd_q2;  // rd position is same for R, I, U, J types
+  logic  [ 4:0] rs1_q2;  // rs1 position is same for R, I, S, B types
+  logic  [ 4:0] rs2_q2;  // rs2 position is same for R, S, B types
+  logic  [ 6:0] opcode_q2;
 
   logic  [31:0] pc_q2;
   logic  [31:0] pc_incr_q2;
-  logic  [31:0] pc_next_q2 = pc_q2 + get_j_imm(insn_q2);  // JAL target address
+  logic  [31:0] pc_next_q2;  // JAL target address
 
   /* q2 out, q3 in */
   logic  [31:0] insn_raw_q3;
   insn_t        insn_q3;
   assign insn_q3.raw = insn_raw_q3;
-  logic  [ 6:0] opcode_q3 = insn_q3.common.opcode;
-  logic  [ 4:0] rd_q3 = insn_q3.r_type.rd;
-  logic  [ 4:0] rs1_q3 = insn_q3.r_type.rs1;
-  logic  [ 4:0] rs2_q3 = insn_q3.r_type.rs2;
-  logic  [ 2:0] funct3_q3 = insn_q3.r_type.funct3;
-  logic  [ 6:0] funct7_q3 = insn_q3.r_type.funct7;
+  logic  [ 6:0] opcode_q3;
+  logic  [ 4:0] rd_q3;
+  logic  [ 4:0] rs1_q3;
+  logic  [ 4:0] rs2_q3;
+  logic  [ 2:0] funct3_q3;
+  logic  [ 6:0] funct7_q3;
 
   logic  [31:0] imm_se_q3;
   logic  [31:0] alu_out_q3;
@@ -94,11 +90,11 @@ module cpu_core #(
   logic  [31:0] insn_raw_q4;
   insn_t        insn_q4;
   assign insn_q4.raw = insn_raw_q4;
-  logic  [ 6:0] opcode_q4 = insn_q4.common.opcode;
-  logic  [ 4:0] rd_q4 = insn_q4.r_type.rd;
-  logic  [ 4:0] rs1_q4 = insn_q4.r_type.rs1;
-  logic  [ 4:0] rs2_q4 = insn_q4.r_type.rs2;
-  logic  [31:0] pc_next_q3 = pc_q3 + imm_se_q3;  // branch target address
+  logic  [ 6:0] opcode_q4;
+  logic  [ 4:0] rd_q4;
+  logic  [ 4:0] rs1_q4;
+  logic  [ 4:0] rs2_q4;
+  logic  [31:0] pc_next_q3;  // branch target address
   logic  [31:0] pc_next_q4;
   logic  [31:0] alu_out_q4;
 
@@ -107,26 +103,26 @@ module cpu_core #(
   logic  [31:0] insn_raw_q5;
   insn_t        insn_q5;
   assign insn_q5.raw = insn_raw_q5;
-  logic [6:0] opcode_q5 = insn_q5.common.opcode;
-  logic [4:0] rd_q5 = insn_q5.r_type.rd;
-  logic [4:0] rs1_q5    = insn_q5.r_type.rs1;
-  logic [4:0] rs2_q5 = insn_q5.r_type.rs2;
+  logic [6:0] opcode_q5;
+  logic [4:0] rd_q5;
+  logic [4:0] rs1_q5;
+  logic [4:0] rs2_q5;
   logic [31:0] mem_rdata_q5;
 
   /* register file  */
-  logic [4:0] reg_rd_port1 = rs1_q1;  // decode from q1, pipeline register "absorbed"
-  logic [4:0] reg_rd_port2 = rs2_q1;
+  logic [4:0] reg_rd_port1;  // decode from q1, pipeline register "absorbed"
+  logic [4:0] reg_rd_port2;
   logic [31:0] reg_rd_data1;
   logic [31:0] reg_rd_data2;
   logic [4:0] reg_wr_port;
   logic [31:0] reg_wr_data;
 
-  logic [31:0] reg_rd_data1_q2 = reg_rd_data1;  // alu ops
-  logic [31:0] reg_rd_data2_q2 = reg_rd_data2;  // alu ops or memory address
+  logic [31:0] reg_rd_data1_q2;  // alu ops
+  logic [31:0] reg_rd_data2_q2;  // alu ops or memory address
   logic [31:0] reg_rd_data1_q3;
   logic [31:0] reg_rd_data2_q3;
   logic [31:0] reg_rd_data2_q4;
-  logic [4:0] reg_wr_port_q2 = rd_q2;  // pipelined to q5
+  logic [4:0] reg_wr_port_q2;  // pipelined to q5
   logic [4:0] reg_wr_port_q3;
   logic [4:0] reg_wr_port_q4;
   logic [4:0] reg_wr_port_q5;
@@ -157,7 +153,7 @@ module cpu_core #(
   /* PC declaration */
   logic [31:0] pc;  // need PC immediately in fetch
   logic [31:0] pc_incr_last;
-  logic [31:0] pc_incr = pc + 4;
+  logic [31:0] pc_incr;
 
   /* pipeline register structs */
   q1q2_t q1q2_data;
@@ -310,20 +306,54 @@ module cpu_core #(
   );
 
   // Wire assignments after all signals are declared
-  assign alu_out_q3     = alu_out;
-  assign mem_rdata_q4   = mem_rdata;
-  assign reg_wr_port    = reg_wr_port_q4;
-  assign reg_wr_data    = reg_wr_data_q4;
+  assign alu_out_q3 = alu_out;
+  assign mem_rdata_q4 = mem_rdata;
+  assign reg_wr_port = reg_wr_port_q4;
+  assign reg_wr_data = reg_wr_data_q4;
   assign reg_wr_data_q4 = ctrl_q4.q5.is_mem_to_reg ? mem_rdata : alu_out_q4;
-  assign alu_in1        = enable_forwarding ? alu_in1_forwarded : alu_in1_pre;
-  assign alu_in2        = enable_forwarding ? alu_in2_forwarded : alu_in2_pre;
-  assign alu_in1_pre    = reg_rd_data1_q3;
-  assign alu_in2_pre    = ctrl_q3.q3.alu_src == ALUSRC_REG ? reg_rd_data2_q3 : imm_se_q3;
-  assign ctrl_aluop     = ctrl_q3.q3.alu_ctrl;
-  assign ctrl_mem_ren   = ctrl_q4.q4.mem_re;
-  assign ctrl_mem_wren  = ctrl_q4.q4.mem_we;
-  assign mem_addr       = alu_out_q3;
-  assign mem_wdata      = mem_wdata_forwarded;
+  assign alu_in1 = enable_forwarding ? alu_in1_forwarded : alu_in1_pre;
+  assign alu_in2 = enable_forwarding ? alu_in2_forwarded : alu_in2_pre;
+  assign alu_in1_pre = reg_rd_data1_q3;
+  assign alu_in2_pre = ctrl_q3.q3.alu_src == ALUSRC_REG ? reg_rd_data2_q3 : imm_se_q3;
+  assign ctrl_aluop = ctrl_q3.q3.alu_ctrl;
+  assign ctrl_mem_ren = ctrl_q4.q4.mem_re;
+  assign ctrl_mem_wren = ctrl_q4.q4.mem_we;
+  assign mem_addr = alu_out_q3;
+  assign mem_wdata = mem_wdata_forwarded;
+
+  // Combinational signal assignments
+  assign rs1_q1 = insn_q1.common.opcode == OP_JAL ?
+      '0 : (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ?
+      insn_q1.s_type.rs1 : insn_q1.r_type.rs1;
+  assign rs2_q1 = insn_q1.common.opcode == OP_JAL ?
+      '0 : (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ?
+      insn_q1.s_type.rs2 : insn_q1.r_type.rs2;
+  assign rd_q2 = insn_q2.r_type.rd;
+  assign rs1_q2 = insn_q2.r_type.rs1;
+  assign rs2_q2 = insn_q2.r_type.rs2;
+  assign opcode_q2 = insn_q2.common.opcode;
+  assign pc_next_q2 = pc_q2 + get_j_imm(insn_q2);
+  assign opcode_q3 = insn_q3.common.opcode;
+  assign rd_q3 = insn_q3.r_type.rd;
+  assign rs1_q3 = insn_q3.r_type.rs1;
+  assign rs2_q3 = insn_q3.r_type.rs2;
+  assign funct3_q3 = insn_q3.r_type.funct3;
+  assign funct7_q3 = insn_q3.r_type.funct7;
+  assign opcode_q4 = insn_q4.common.opcode;
+  assign rd_q4 = insn_q4.r_type.rd;
+  assign rs1_q4 = insn_q4.r_type.rs1;
+  assign rs2_q4 = insn_q4.r_type.rs2;
+  assign pc_next_q3 = pc_q3 + imm_se_q3;
+  assign opcode_q5 = insn_q5.common.opcode;
+  assign rd_q5 = insn_q5.r_type.rd;
+  assign rs1_q5 = insn_q5.r_type.rs1;
+  assign rs2_q5 = insn_q5.r_type.rs2;
+  assign reg_rd_port1 = rs1_q1;
+  assign reg_rd_port2 = rs2_q1;
+  assign reg_rd_data1_q2 = reg_rd_data1;
+  assign reg_rd_data2_q2 = reg_rd_data2;
+  assign reg_wr_port_q2 = rd_q2;
+  assign pc_incr = pc + 4;
 
   /* pipeline registers */
 
