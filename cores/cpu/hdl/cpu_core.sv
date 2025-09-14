@@ -69,7 +69,6 @@ module cpu_core #(
   insn_t       insn_q2;
   assign insn_q2 = q1q2_out.insn;
 
-  logic  [ 4:0] rd_q2;  // rd position is same for R, I, U, J types
 
   logic  [31:0] pc_next_q2;  // JAL target address
 
@@ -169,7 +168,7 @@ module cpu_core #(
   );
 
   control control_u (
-      .i_opcode(opcode_t'(q1q2_out.insn.common.opcode)),
+      .i_opcode(q1q2_out.insn.common.opcode),
       .o_ctrl  (ctrl_q2)
   );
 
@@ -204,8 +203,8 @@ module cpu_core #(
       // ID stage
       .i_id_rs1   (q1q2_out.insn.r_type.rs1),
       .i_id_rs2   (q1q2_out.insn.r_type.rs2),
-      .i_id_valid (1'b1),                                   // TODO: Add proper valid signal
-      .i_id_opcode(opcode_t'(q1q2_out.insn.common.opcode)),
+      .i_id_valid (1'b1),                        // TODO: Add proper valid signal
+      .i_id_opcode(q1q2_out.insn.common.opcode),
 
       // EX stage
       .i_ex_rs1      (q2q3_out.insn.r_type.rs1),
@@ -290,14 +289,13 @@ module cpu_core #(
   assign rs2_q1 = insn_q1.common.opcode == OP_JAL ?
       '0 : (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ?
       insn_q1.s_type.rs2 : insn_q1.r_type.rs2;
-  assign rd_q2 = q1q2_out.insn.r_type.rd;
   assign pc_next_q2 = q1q2_out.pc + get_j_imm(insn_q2);
   assign pc_next_q3 = q2q3_out.pc + imm_se_q3;
   assign reg_rd_port1 = rs1_q1;
   assign reg_rd_port2 = rs2_q1;
   assign reg_rd_data1_q2 = reg_rd_data1;
   assign reg_rd_data2_q2 = reg_rd_data2;
-  assign reg_wr_port_q2 = rd_q2;
+  assign reg_wr_port_q2 = q1q2_out.insn.r_type.rd;
   assign pc_incr = pc + 4;
 
   /* pipeline registers */
@@ -323,8 +321,8 @@ module cpu_core #(
         pc_incr: q1q2_out.pc_incr,
         reg_rd_data1: reg_rd_data1_q2,
         reg_rd_data2: reg_rd_data2_q2,
-        reg_wr_port: rd_q2,
-        ctrl: cpu_ctrl_t'(ctrl_q2),
+        reg_wr_port: q1q2_out.insn.r_type.rd,
+        ctrl: ctrl_q2,
         insn: q1q2_out.insn
     };
   end
