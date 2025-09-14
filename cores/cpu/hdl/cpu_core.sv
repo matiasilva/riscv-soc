@@ -100,60 +100,64 @@ module cpu_core (
   wire [31:0] pc_incr_q3;
 
   /* q3 out, q4 in */
-  wire [31:0] mem_rdata_q4 = mem_rdata;
-  wire [31:0] instr_q4;
-  wire [6:0] opcode_q4 = instr_q4[6:0];
-  wire [4:0] rd_q4 = instr_q4[11:7];
-  wire [4:0] rs1_q4 = instr_q4[19:15];
-  wire [4:0] rs2_q4 = instr_q4[24:20];
-  wire [31:0] pc_next_q3 = (imm_se_q3 << 2) | pc_q3;  // this looks dodgy
-  wire [31:0] pc_next_q4;
-  wire [31:0] alu_out_q4;
+  logic [31:0] mem_rdata_q4;
+  logic [31:0] insn_raw_q4;
+  insn_t insn_q4;
+  assign insn_q4.raw = insn_raw_q4;
+  logic [6:0] opcode_q4 = insn_q4.common.opcode;
+  logic [4:0] rd_q4 = insn_q4.r_type.rd;
+  logic [4:0] rs1_q4 = insn_q4.r_type.rs1;
+  logic [4:0] rs2_q4 = insn_q4.r_type.rs2;
+  logic [31:0] pc_next_q3 = pc_q3 + imm_se_q3;  // branch target address
+  logic [31:0] pc_next_q4;
+  logic [31:0] alu_out_q4;
 
   /* q4 out, q5 in */
-  wire [31:0] alu_out_q5;
-  wire [31:0] instr_q5;
-  wire [6:0] opcode_q5 = instr_q5[6:0];
-  wire [4:0] rd_q5 = instr_q5[11:7];
-  wire [4:0] rs1_q5 = instr_q5[19:15];
-  wire [4:0] rs2_q5 = instr_q5[24:20];
-  wire [31:0] mem_rdata_q5;
+  logic [31:0] alu_out_q5;
+  logic [31:0] insn_raw_q5;
+  insn_t insn_q5;
+  assign insn_q5.raw = insn_raw_q5;
+  logic [6:0] opcode_q5 = insn_q5.common.opcode;
+  logic [4:0] rd_q5 = insn_q5.r_type.rd;
+  logic [4:0] rs1_q5 = insn_q5.r_type.rs1;
+  logic [4:0] rs2_q5 = insn_q5.r_type.rs2;
+  logic [31:0] mem_rdata_q5;
 
   /* register file  */
-  wire [4:0] reg_rd_port1 = rs1_q1;  // decode from q1, pipeline register "absorbed"
-  wire [4:0] reg_rd_port2 = rs2_q1;
-  wire [31:0] reg_rd_data1;
-  wire [31:0] reg_rd_data2;
-  wire [4:0] reg_wr_port = reg_wr_port_q4;
-  wire [31:0] reg_wr_data = reg_wr_data_q4;
+  logic [4:0] reg_rd_port1 = rs1_q1;  // decode from q1, pipeline register "absorbed"
+  logic [4:0] reg_rd_port2 = rs2_q1;
+  logic [31:0] reg_rd_data1;
+  logic [31:0] reg_rd_data2;
+  logic [4:0] reg_wr_port;
+  logic [31:0] reg_wr_data;
 
-  wire [31:0] reg_rd_data1_q2 = reg_rd_data1;  // alu ops
-  wire [31:0] reg_rd_data2_q2 = reg_rd_data2;  // alu ops or memory address
-  wire [31:0] reg_rd_data1_q3;
-  wire [31:0] reg_rd_data2_q3;
-  wire [31:0] reg_rd_data2_q4;
-  wire [4:0] reg_wr_port_q2 = rd_q2;  // pipelined to q5
-  wire [4:0] reg_wr_port_q3;
-  wire [4:0] reg_wr_port_q4;
-  wire [4:0] reg_wr_port_q5;
-  wire [31:0] reg_wr_data_q4 = ctrl_q4[CTRL_IS_MEM_TO_REG] ? mem_rdata : alu_out_q4;
+  logic [31:0] reg_rd_data1_q2 = reg_rd_data1;  // alu ops
+  logic [31:0] reg_rd_data2_q2 = reg_rd_data2;  // alu ops or memory address
+  logic [31:0] reg_rd_data1_q3;
+  logic [31:0] reg_rd_data2_q3;
+  logic [31:0] reg_rd_data2_q4;
+  logic [4:0] reg_wr_port_q2 = rd_q2;  // pipelined to q5
+  logic [4:0] reg_wr_port_q3;
+  logic [4:0] reg_wr_port_q4;
+  logic [4:0] reg_wr_port_q5;
+  logic [31:0] reg_wr_data_q4;
 
   /* alu & ctrl */
-  wire [31:0] alu_in1 = alu_in1_forwarded;
-  wire [31:0] alu_in2 = alu_in2_forwarded;
-  wire [3:0] aluctrl_ctrl;
-  wire [31:0] alu_out;
-  wire [31:0] alu_in1_pre = reg_rd_data1_q3;
-  wire [31:0] alu_in2_pre = ctrl_q3[CTRL_ALUSRC] ? reg_rd_data2_q3 : imm_se_q3;
-  wire [1:0] ctrl_aluop = {ctrl_q3[CTRL_ALUOP1], ctrl_q3[CTRL_ALUOP0]};
+  logic [31:0] alu_in1;
+  logic [31:0] alu_in2;
+  alu_op_t alu_ctrl_ctrl;
+  logic [31:0] alu_out;
+  logic [31:0] alu_in1_pre;
+  logic [31:0] alu_in2_pre;
+  alu_ctrl_t ctrl_aluop;
 
   /* data memory */
-  wire ctrl_mem_ren = ctrl_q3[CTRL_MEM_REN];
-  wire ctrl_mem_wren = ctrl_q3[CTRL_MEM_WREN];
-  wire [31:0] mem_addr = alu_out_q3;
-  wire [31:0] mem_wdata = mem_wdata_forwarded;
-  wire [31:0] mem_rdata;
-  reg [31:0] mem_wdata_forwarded;
+  logic ctrl_mem_ren;  // memory operations happen in Q4
+  logic ctrl_mem_wren;
+  logic [31:0] mem_addr;
+  logic [31:0] mem_wdata;
+  logic [31:0] mem_rdata;
+  logic [31:0] mem_wdata_forwarded;
 
   /* main control unit */
   wire [CTRL_WIDTH-1:0] ctrl_q2;
