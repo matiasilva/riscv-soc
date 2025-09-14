@@ -49,15 +49,15 @@ module cpu_core #(
 
 
   /* instruction fetch q1 */
-  logic [31:0] insn_raw_q1;  // from insnmem (q1)
-  insn_t insn_q1;
+  logic  [31:0] insn_raw_q1;  // from insnmem (q1)
+  insn_t        insn_q1;
   assign insn_q1.raw = insn_raw_q1;
-  logic [4:0] rs1_q1;  // most formats use same rs1 position
-  logic [4:0] rs2_q1;  // most formats use same rs2 position
+  logic  [ 4:0] rs1_q1;  // most formats use same rs1 position
+  logic  [ 4:0] rs2_q1;  // most formats use same rs2 position
 
   /* instruction decode, register file q1 out, q2 in */
-  logic [31:0] insn_raw_q2;
-  insn_t insn_q2;
+  logic  [31:0] insn_raw_q2;
+  insn_t        insn_q2;
   assign insn_q2.raw = insn_raw_q2;
 
   logic  [ 4:0] rd_q2;  // rd position is same for R, I, U, J types
@@ -103,78 +103,78 @@ module cpu_core #(
   logic  [31:0] insn_raw_q5;
   insn_t        insn_q5;
   assign insn_q5.raw = insn_raw_q5;
-  logic [6:0] opcode_q5;
-  logic [4:0] rd_q5;
-  logic [4:0] rs1_q5;
-  logic [4:0] rs2_q5;
-  logic [31:0] mem_rdata_q5;
+  logic      [ 6:0] opcode_q5;
+  logic      [ 4:0] rd_q5;
+  logic      [ 4:0] rs1_q5;
+  logic      [ 4:0] rs2_q5;
+  logic      [31:0] mem_rdata_q5;
 
   /* register file  */
-  logic [4:0] reg_rd_port1;  // decode from q1, pipeline register "absorbed"
-  logic [4:0] reg_rd_port2;
-  logic [31:0] reg_rd_data1;
-  logic [31:0] reg_rd_data2;
-  logic [4:0] reg_wr_port;
-  logic [31:0] reg_wr_data;
+  logic      [ 4:0] reg_rd_port1;  // decode from q1, pipeline register "absorbed"
+  logic      [ 4:0] reg_rd_port2;
+  logic      [31:0] reg_rd_data1;
+  logic      [31:0] reg_rd_data2;
+  logic      [ 4:0] reg_wr_port;
+  logic      [31:0] reg_wr_data;
 
-  logic [31:0] reg_rd_data1_q2;  // alu ops
-  logic [31:0] reg_rd_data2_q2;  // alu ops or memory address
-  logic [31:0] reg_rd_data1_q3;
-  logic [31:0] reg_rd_data2_q3;
-  logic [31:0] reg_rd_data2_q4;
-  logic [4:0] reg_wr_port_q2;  // pipelined to q5
-  logic [4:0] reg_wr_port_q3;
-  logic [4:0] reg_wr_port_q4;
-  logic [4:0] reg_wr_port_q5;
-  logic [31:0] reg_wr_data_q4;
+  logic      [31:0] reg_rd_data1_q2;  // alu ops
+  logic      [31:0] reg_rd_data2_q2;  // alu ops or memory address
+  logic      [31:0] reg_rd_data1_q3;
+  logic      [31:0] reg_rd_data2_q3;
+  logic      [31:0] reg_rd_data2_q4;
+  logic      [ 4:0] reg_wr_port_q2;  // pipelined to q5
+  logic      [ 4:0] reg_wr_port_q3;
+  logic      [ 4:0] reg_wr_port_q4;
+  logic      [ 4:0] reg_wr_port_q5;
+  logic      [31:0] reg_wr_data_q4;
 
   /* alu & ctrl */
-  logic [31:0] alu_in1;
-  logic [31:0] alu_in2;
-  alu_op_t alu_ctrl_ctrl;
-  logic [31:0] alu_out;
-  logic [31:0] alu_in1_pre;
-  logic [31:0] alu_in2_pre;
-  alu_ctrl_t ctrl_aluop;
+  logic      [31:0] alu_in1;
+  logic      [31:0] alu_in2;
+  alu_op_t          alu_ctrl_ctrl;
+  logic      [31:0] alu_out;
+  logic      [31:0] alu_in1_pre;
+  logic      [31:0] alu_in2_pre;
+  alu_ctrl_t        ctrl_aluop;
 
   /* data memory */
-  logic ctrl_mem_ren;  // memory operations happen in Q4
-  logic ctrl_mem_wren;
-  logic [31:0] mem_addr;
-  logic [31:0] mem_wdata;
-  logic [31:0] mem_rdata;
-  logic [31:0] mem_wdata_forwarded;
+  logic             ctrl_mem_ren;  // memory operations happen in Q4
+  logic             ctrl_mem_wren;
+  logic      [31:0] mem_addr;
+  logic      [31:0] mem_wdata;
+  logic      [31:0] mem_rdata;
+  logic      [31:0] mem_wdata_forwarded;
 
   /* pipeline control signals */
   logic stall_if, stall_id, stall_ex;
   logic flush_id, flush_ex;
-  logic enable_forwarding;
+  logic             enable_forwarding;
 
   /* PC declaration */
-  logic [31:0] pc;  // need PC immediately in fetch
-  logic [31:0] pc_incr_last;
-  logic [31:0] pc_incr;
+  logic      [31:0] pc;  // need PC immediately in fetch
+  logic      [31:0] pc_incr_last;
+  logic      [31:0] pc_incr;
 
   /* pipeline register structs */
-  q1q2_t q1q2_data;
-  q2q3_t q2q3_data;
-  q3q4_t q3q4_data;
-  q4q5_t q4q5_data;
+  q1q2_t            q1q2_data;
+  q2q3_t            q2q3_data;
+  q3q4_t            q3q4_data;
+  q4q5_t            q4q5_data;
 
-  q1q2_t q1q2_out;
-  q2q3_t q2q3_out;
-  q3q4_t q3q4_out;
-  q4q5_t q4q5_out;
+  q1q2_t            q1q2_out;
+  q2q3_t            q2q3_out;
+  q3q4_t            q3q4_out;
+  q4q5_t            q4q5_out;
 
   /* main control unit */
-  cpu_ctrl_t ctrl_q2;
-  cpu_ctrl_t ctrl_q3;
-  cpu_ctrl_t ctrl_q4;
-  cpu_ctrl_t ctrl_q5;
+  cpu_ctrl_t        ctrl_q2;
+  cpu_ctrl_t        ctrl_q3;
+  cpu_ctrl_t        ctrl_q4;
+  cpu_ctrl_t        ctrl_q5;
 
   /* forwarding unit */
-  logic [31:0] alu_in1_forwarded;
-  logic [31:0] alu_in2_forwarded;
+  logic      [31:0] alu_in1_forwarded;
+  logic      [31:0] alu_in2_forwarded;
 
   insnmem #(
       .SIZE(4096)

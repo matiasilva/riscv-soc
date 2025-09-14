@@ -9,17 +9,17 @@
 
 module insnmem_tb ();
 
-  reg clk;
-  reg rst_n;
+  reg              clk;
+  reg              rst_n;
 
-  reg [31:0] pc;
-  wire [31:0] instr;
-  reg [31:0] loaded_instr;
-  reg [7:0] check_mem[MEM_SIZE - 1:0];
+  reg     [  31:0] pc;
+  wire    [  31:0] instr;
+  reg     [  31:0] loaded_instr;
+  reg     [   7:0] check_mem    [MEM_SIZE - 1:0];
 
-  reg [1023:0] wavetext;
-  integer scratch1;
-  reg [31:0] scratch2;
+  reg     [1023:0] wavetext;
+  integer          scratch1;
+  reg     [  31:0] scratch2;
 
   localparam CLK = 1;
   localparam HCLK = CLK * 0.5;

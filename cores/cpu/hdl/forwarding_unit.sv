@@ -70,12 +70,12 @@ module forwarding_unit (
     FWD_MEM_WB  = 2'b10   // Forward from MEM/WB pipeline register
   } forward_src_t;
 
-  forward_src_t forward_rs1_src;
-  forward_src_t forward_rs2_src;
-  forward_src_t forward_store_src;
+  forward_src_t        forward_rs1_src;
+  forward_src_t        forward_rs2_src;
+  forward_src_t        forward_store_src;
 
   // WB stage data selection (ALU result or memory data)
-  logic [31:0] wb_result_data;
+  logic         [31:0] wb_result_data;
   assign wb_result_data = i_wb_mem_to_reg ? i_wb_mem_data : i_wb_alu_result;
 
   // Hazard detection for RS1 (ALU input 1)

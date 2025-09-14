@@ -41,14 +41,14 @@ module insnmem #(
     output logic        o_imem_exception
 );
 
-  logic [7:0] mem[SIZE];
+  logic [ 7:0] mem        [SIZE];
   logic [31:0] next_insn;
   logic [31:0] addr;
 
-  logic [1:0] align_bits;
+  logic [ 1:0] align_bits;
   assign align_bits = i_pc[1:0];
 
-  int i;
+  int    i;
   string filename;
 
   initial begin

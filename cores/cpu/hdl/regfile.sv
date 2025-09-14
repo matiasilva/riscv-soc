@@ -48,14 +48,14 @@ module regfile #(
     input  logic          i_wr_en
 );
 
-  logic [XW-1:0] x[31];
-  logic [XW-1:0] rd_data1;
-  logic [XW-1:0] rd_data2;
+  logic   [XW-1:0] x             [31];
+  logic   [XW-1:0] rd_data1;
+  logic   [XW-1:0] rd_data2;
 
-  logic [XW-1:0] next_rd_data1;
-  logic [XW-1:0] next_rd_data2;
+  logic   [XW-1:0] next_rd_data1;
+  logic   [XW-1:0] next_rd_data2;
 
-  integer i;
+  integer          i;
 
   always_ff @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin

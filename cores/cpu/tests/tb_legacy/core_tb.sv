@@ -2,11 +2,11 @@
 
 module core_tb;
 
-  reg clk;
-  reg rst_n;
+  reg              clk;
+  reg              rst_n;
 
-  reg [1023:0] wavetext;
-  integer scratch1;
+  reg     [1023:0] wavetext;
+  integer          scratch1;
 
   localparam CLK = 1;
   localparam QCLK = CLK * 0.25;

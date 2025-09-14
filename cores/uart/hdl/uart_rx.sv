@@ -68,15 +68,15 @@ module uart_rx #(
   end
 
 
-  wire tick;
-  wire des_done;  // tick
-  wire des_active;
+  wire                  tick;
+  wire                  des_done;  // tick
+  wire                  des_active;
   wire [DATA_WIDTH-1:0] data;
 
   // errors TODO: deal with errors better
-  wire frame_err;  // edge
-  wire parity_err = parity && !parity_ok;  // edge
-  wire overflow_err;  // level
+  wire                  frame_err;  // edge
+  wire                  parity_err = parity && !parity_ok;  // edge
+  wire                  overflow_err;  // level
 
   baud_gen #(
       .OVERSAMPLING(OVERSAMPLING),
@@ -104,11 +104,11 @@ module uart_rx #(
   );
 
   wire [WORD_WIDTH-1:0] word = parity ? data[DATA_WIDTH-2:0] : data[DATA_WIDTH-1:1];
-  wire parity_ok = data[DATA_WIDTH-1] == ~(^word);
-  wire flag_clear;
-  wire flag;
+  wire                  parity_ok = data[DATA_WIDTH-1] == ~(^word);
+  wire                  flag_clear;
+  wire                  flag;
   wire [WORD_WIDTH-1:0] flag_data;
-  wire flag_set = des_done && (parity ? parity_ok : 1'b1);
+  wire                  flag_set = des_done && (parity ? parity_ok : 1'b1);
 
   flag_buf #(
       .WORD_WIDTH(WORD_WIDTH)

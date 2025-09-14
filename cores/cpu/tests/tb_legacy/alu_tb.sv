@@ -14,18 +14,18 @@ module alu_tb;
   localparam OP_SRL = 4'b0101;
   localparam OP_SRA = 4'b1101;
 
-  reg clk;
-  reg rst_n;
-  reg [31:0] a;
-  reg [31:0] b;
-  reg [ALUCTRL_WIDTH-1:0] aluctrl;
+  reg                         clk;
+  reg                         rst_n;
+  reg     [             31:0] a;
+  reg     [             31:0] b;
+  reg     [ALUCTRL_WIDTH-1:0] aluctrl;
 
-  wire [31:0] out;
+  wire    [             31:0] out;
 
-  reg [255:0] wavetext;
-  reg cond;
-  integer scratch1;
-  integer op_id;
+  reg     [            255:0] wavetext;
+  reg                         cond;
+  integer                     scratch1;
+  integer                     op_id;
 
   localparam CLK = 10;
   localparam HCLK = CLK * 0.5;

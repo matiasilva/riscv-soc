@@ -12,14 +12,14 @@ endtask
 
 module demo_tb ();
 
-  reg clk;
-  reg rst_n;
+  reg              clk;
+  reg              rst_n;
 
   // module specific inputs and outputs here
 
 
-  reg [1023:0] wavetext;
-  integer scratch1;
+  reg     [1023:0] wavetext;
+  integer          scratch1;
 
   localparam CLK = 1;
   localparam HCLK = CLK * 0.5;

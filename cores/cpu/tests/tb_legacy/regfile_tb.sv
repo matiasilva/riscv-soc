@@ -9,23 +9,23 @@
 
 module regfile_tb ();
 
-  reg clk;
-  reg rst_n;
+  reg              clk;
+  reg              rst_n;
 
   // module specific inputs and outputs here
-  reg [4:0] rr1;  // read register 1
-  reg [4:0] rr2;  // read register 2
-  reg [4:0] wrr;  // write register
-  reg [31:0] wrdata;
-  reg wr_en;
-  wire [31:0] rdata1;
-  wire [31:0] rdata2;
-  reg [31:0] rdata1_result;
-  reg [31:0] rdata2_result;
+  reg     [   4:0] rr1;  // read register 1
+  reg     [   4:0] rr2;  // read register 2
+  reg     [   4:0] wrr;  // write register
+  reg     [  31:0] wrdata;
+  reg              wr_en;
+  wire    [  31:0] rdata1;
+  wire    [  31:0] rdata2;
+  reg     [  31:0] rdata1_result;
+  reg     [  31:0] rdata2_result;
 
-  reg [1023:0] wavetext;
-  integer scratch1;
-  integer i;
+  reg     [1023:0] wavetext;
+  integer          scratch1;
+  integer          i;
 
   localparam CLK = 1;
   localparam HCLK = CLK * 0.5;

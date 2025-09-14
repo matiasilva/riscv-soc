@@ -54,13 +54,13 @@ module uart_tx #(
 );
 
   wire [WORD_WIDTH-1:0] word;
-  wire ser_tx_start;
-  wire ser_active;
-  wire flag;
-  wire flag_set;
-  wire flag_clear;
+  wire                  ser_tx_start;
+  wire                  ser_active;
+  wire                  flag;
+  wire                  flag_set;
+  wire                  flag_clear;
 
-  wire overflow_err;
+  wire                  overflow_err;
 
   // configuration update
   always @(posedge i_clk or negedge i_rst_n) begin

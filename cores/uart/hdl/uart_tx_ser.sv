@@ -61,7 +61,7 @@ module uart_tx_ser #(
   reg [$clog2(OVERSAMPLING)-1:0] tick_ctr, tick_ctr_nxt;
   reg [$clog2(DATA_WIDTH+1)-1:0] bit_ctr, bit_ctr_nxt;
 
-  wire hamming = ~(^i_din);
+  wire                            hamming = ~(^i_din);
   wire [$clog2(DATA_WIDTH+1)-1:0] N = i_parity ? DATA_WIDTH : WORD_WIDTH;
 
   always @(posedge i_clk or negedge i_rst_n) begin
