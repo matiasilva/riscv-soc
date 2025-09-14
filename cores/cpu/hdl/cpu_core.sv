@@ -27,77 +27,66 @@
 // Description:
 //   Top-level wrapper for a 5-stage RISC-V pipeline processor
 //   Pipeline stages:
-//     Q1: Instruction fetch (assumed)
+//     Q1: Instruction fetch
 //     Q2: Instruction decode / register file read
 //     Q3: Execute / ALU operations
 //     Q4: Memory access
 //     Q5: Write back
 //
 // Parameters:
-//   None
+//   HAZARD_TECHNIQUE - Hazard handling method (0=STALL, 1=FORWARD, 2=HYBRID, 3=AGGRESSIVE)
+//   ENABLE_LOAD_USE_FORWARDING - Enable forwarding for load-use hazards
 
-`timescale 1ns / 10ps
+`include "cpu_types.vh"
 
-module cpu_core (
-    input clk,
-    input rst_n
+module cpu_core #(
+    parameter int HAZARD_TECHNIQUE           = 1,  // Default to forwarding
+    parameter int ENABLE_LOAD_USE_FORWARDING = 1   // Enable load-use forwarding
+) (
+    input i_clk,
+    input i_rst_n
 );
 
-  localparam CTRL_WIDTH = 16;
-  localparam CTRL_ALUOP1 = 7;
-  localparam CTRL_ALUOP0 = 6;
-  localparam CTRL_ALUSRC = 5;
-  localparam CTRL_IS_BRANCH = 4;
-  localparam CTRL_MEM_REN = 3;
-  localparam CTRL_MEM_WREN = 2;
-  localparam CTRL_REG_WR_EN = 1;
-  localparam CTRL_IS_MEM_TO_REG = 0;
-
-  localparam OP_RTYPE = 7'b0110011;
-  localparam OP_ITYPE = 7'b0010011;
-  localparam OP_LOAD = 7'b0000011;
-  localparam OP_STORE = 7'b0100011;
-  localparam OP_JAL = 7'b1101111;
-  localparam OP_JALR = 7'b1100111;
-  localparam OP_BRANCH = 7'b1100011;
-
-  localparam FORWARD_Q2 = 2'b00;  // use value read from regfile
-  localparam FORWARD_Q4 = 2'b01;  // use value from prev alu_out
-  localparam FORWARD_Q5 = 2'b10;  // use value from prev prev alu_out or mem_rdata
 
   /* instruction fetch q1 */
-  wire [31:0] instr_q1;  // from insnmem (q1)
-  wire [4:0] rs1_q1 = instr_q1[19:15];
-  wire [4:0] rs2_q1 = instr_q1[24:20];
+  logic [31:0] insn_raw_q1;  // from insnmem (q1)
+  insn_t insn_q1;
+  assign insn_q1.raw = insn_raw_q1;
+  logic [4:0] rs1_q1 = insn_q1.common.opcode == OP_JAL ? '0 :
+                      (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ? insn_q1.s_type.rs1 :
+                      insn_q1.r_type.rs1;  // most formats use same rs1 position
+  logic [4:0] rs2_q1 = insn_q1.common.opcode == OP_JAL ? '0 :
+                      (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ? insn_q1.s_type.rs2 :
+                      insn_q1.r_type.rs2;  // most formats use same rs2 position
 
   /* instruction decode, register file q1 out, q2 in */
-  wire [31:0] instr_q2;
-  wire [4:0] rd_q2 = instr_q2[11:7];
-  wire [4:0] rs1_q2 = instr_q2[19:15];
-  wire [4:0] rs2_q2 = instr_q2[24:20];
-  wire [6:0] opcode_q2 = instr_q2[6:0];
-  wire [19:0] imm_jal_q2 = instr_q2[31:12];
+  logic [31:0] insn_raw_q2;
+  insn_t insn_q2;
+  assign insn_q2.raw = insn_raw_q2;
+  logic [4:0] rd_q2 = insn_q2.r_type.rd;  // rd position is same for R, I, U, J types
+  logic [4:0] rs1_q2 = insn_q2.r_type.rs1;  // rs1 position is same for R, I, S, B types
+  logic [4:0] rs2_q2 = insn_q2.r_type.rs2;  // rs2 position is same for R, S, B types
+  logic [6:0] opcode_q2 = insn_q2.common.opcode;
 
-  wire [31:0] pc_q2;
-  wire [31:0] pc_incr_q2;
+  logic [31:0] pc_q2;
+  logic [31:0] pc_incr_q2;
+  logic [31:0] pc_next_q2 = pc_q2 + get_j_imm(insn_q2);  // JAL target address
 
   /* q2 out, q3 in */
-  wire [31:0] instr_q3;
-  wire [6:0] opcode_q3 = instr_q3[6:0];
-  wire [4:0] rd_q3 = instr_q3[11:7];
-  wire [4:0] rs1_q3 = instr_q3[19:15];
-  wire [4:0] rs2_q3 = instr_q3[24:20];
-  wire [2:0] funct3_q3 = instr_q3[14:12];
-  wire [6:0] funct7_q3 = instr_q3[31:25];
-  wire [3:0] funct_q3 = {funct7_q3[5], funct3_q3};  // this can be cleaned up
-  wire [11:0] imm_q3 = ctrl_q3[CTRL_MEM_WREN] ? {imm_upper_q3, imm_lower_q3} : instr_q3[31:20];
-  wire [6:0] imm_upper_q3 = instr_q3[31:25];
-  wire [4:0] imm_lower_q3 = instr_q3[11:7];
+  logic [31:0] insn_raw_q3;
+  insn_t insn_q3;
+  assign insn_q3.raw = insn_raw_q3;
+  logic [6:0] opcode_q3 = insn_q3.common.opcode;
+  logic [4:0] rd_q3 = insn_q3.r_type.rd;
+  logic [4:0] rs1_q3 = insn_q3.r_type.rs1;
+  logic [4:0] rs2_q3 = insn_q3.r_type.rs2;
+  logic [2:0] funct3_q3 = insn_q3.r_type.funct3;
+  logic [6:0] funct7_q3 = insn_q3.r_type.funct7;
 
-  wire [31:0] imm_se_q3;
-  wire [31:0] alu_out_q3 = alu_out;
-  wire [31:0] pc_q3;
-  wire [31:0] pc_incr_q3;
+  logic [31:0] imm_se_q3;
+  logic [31:0] alu_out_q3;
+  logic [31:0] pc_q3;
+  logic [31:0] pc_incr_q3;
 
   /* q3 out, q4 in */
   logic [31:0] mem_rdata_q4;
@@ -159,241 +148,309 @@ module cpu_core (
   logic [31:0] mem_rdata;
   logic [31:0] mem_wdata_forwarded;
 
+  /* pipeline control signals */
+  logic stall_if, stall_id, stall_ex;
+  logic flush_id, flush_ex;
+  logic enable_forwarding;
+
+  /* PC declaration */
+  logic [31:0] pc;  // need PC immediately in fetch
+  logic [31:0] pc_incr_last;
+  logic [31:0] pc_incr = pc + 4;
+
+  /* pipeline register structs */
+  q1q2_t q1q2_data;
+  q2q3_t q2q3_data;
+  q3q4_t q3q4_data;
+  q4q5_t q4q5_data;
+
+  q1q2_t q1q2_out;
+  q2q3_t q2q3_out;
+  q3q4_t q3q4_out;
+  q4q5_t q4q5_out;
+
   /* main control unit */
-  wire [CTRL_WIDTH-1:0] ctrl_q2;
-  wire [CTRL_WIDTH-1:0] ctrl_q3;
-  wire [CTRL_WIDTH-1:0] ctrl_q4;
-  wire [CTRL_WIDTH-1:0] ctrl_q5;
+  cpu_ctrl_t ctrl_q2;
+  cpu_ctrl_t ctrl_q3;
+  cpu_ctrl_t ctrl_q4;
+  cpu_ctrl_t ctrl_q5;
 
   /* forwarding unit */
-  reg [1:0] forward_alu_in1;
-  reg [1:0] forward_alu_in2;
-  reg [1:0] forward_mem_wdata;
-
-  reg [31:0] alu_in1_forwarded;
-  reg [31:0] alu_in2_forwarded;
+  logic [31:0] alu_in1_forwarded;
+  logic [31:0] alu_in2_forwarded;
 
   insnmem #(
-      .PRELOAD(1),
-      .PRELOAD_FILE("build/core.hex")
+      .SIZE(4096)
   ) insnmem_u (
-      .clk     (clk),
-      .rst_n   (rst_n),
-      .pc_ip   (pc),
-      .instr_op(instr_q1)
+      .i_clk(i_clk),
+      .i_rst_n(i_rst_n),
+      .i_pc(pc),
+      .o_insn(insn_raw_q1),
+      .o_imem_exception(  /* unused */)
   );
 
   alu alu_u (
-      .alu_a_ip       (alu_in1),
-      .alu_b_ip       (alu_in2),
-      .aluctrl_ctrl_ip(aluctrl_ctrl),
-      .alu_out_op     (alu_out)
+      .i_alu_a(alu_in1),
+      .i_alu_b(alu_in2),
+      .i_alu_ctrl(alu_ctrl_ctrl),
+      .o_alu_out(alu_out),
+      .o_alu_exception(  /* unused */)
   );
 
   regfile regfile_u (
-      .clk              (clk),
-      .rst_n            (rst_n),
-      .rd_port1_ip      (reg_rd_port1),
-      .rd_port2_ip      (reg_rd_port2),
-      .rd_data1_op      (reg_rd_data1),
-      .rd_data2_op      (reg_rd_data2),
-      .wr_port_ip       (reg_wr_port),
-      .wr_data_ip       (reg_wr_data),
-      .ctrl_reg_wr_en_ip(ctrl_q5[CTRL_REG_WR_EN])
+      .i_clk(i_clk),
+      .i_rst_n(i_rst_n),
+      .i_rd_addr1(reg_rd_port1),
+      .i_rd_addr2(reg_rd_port2),
+      .o_rd_data1(reg_rd_data1),
+      .o_rd_data2(reg_rd_data2),
+      .i_wr_addr(reg_wr_port),
+      .i_wr_data(reg_wr_data),
+      .i_wr_en(ctrl_q5.q5.reg_wr_en)
   );
 
-  control #(
-      .CTRL_WIDTH(CTRL_WIDTH)
-  ) control_u (
-      .opcode_ip(opcode_q2),
-      .ctrl_op  (ctrl_q2)
+  control control_u (
+      .i_opcode(opcode_t'(opcode_q2)),
+      .o_ctrl  (ctrl_q2)
   );
 
   aluctrl alucontrol_u (
-      .ctrl_aluop_ip  (ctrl_aluop),
-      .funct_ip       (funct_q3),
-      .aluctrl_ctrl_op(aluctrl_ctrl)
+      .i_aluop(ctrl_aluop),
+      .i_funct3(funct3_q3),
+      .i_funct7_5(funct7_q3[5]),
+      .o_alu_ctrl(alu_ctrl_ctrl)
   );
 
   memory #(
-      .PRELOAD     (1),
+      .PRELOAD(1),
       .PRELOAD_FILE("sim/dmem.hex")
   ) memory_u (
-      .rst_n           (rst_n),
-      .clk             (clk),
-      .ctrl_mem_ren_ip (ctrl_mem_ren),
-      .ctrl_mem_wren_ip(ctrl_mem_wren),
-      .mem_addr_ip     (mem_addr),
-      .mem_wdata_ip    (mem_wdata),
-      .mem_rdata_op    (mem_rdata)
+      .i_rst_n(i_rst_n),
+      .i_clk(i_clk),
+      .i_ctrl_mem_ren(ctrl_mem_ren),
+      .i_ctrl_mem_wren(ctrl_mem_wren),
+      .i_mem_addr(mem_addr),
+      .i_mem_wdata(mem_wdata),
+      .o_mem_rdata(mem_rdata)
   );
 
+  // Hazard detection and pipeline control
+  hazard_unit #(
+      .HAZARD_TECHNIQUE(HAZARD_TECHNIQUE),
+      .ENABLE_LOAD_USE_FORWARDING(ENABLE_LOAD_USE_FORWARDING)
+  ) hazard_u (
+      .i_clk  (i_clk),
+      .i_rst_n(i_rst_n),
+
+      // ID stage
+      .i_id_rs1(rs1_q2),
+      .i_id_rs2(rs2_q2),
+      .i_id_valid(1'b1),  // TODO: Add proper valid signal
+      .i_id_opcode(opcode_t'(opcode_q2)),
+
+      // EX stage
+      .i_ex_rs1(rs1_q3),
+      .i_ex_rs2(rs2_q3),
+      .i_ex_valid(1'b1),  // TODO: Add proper valid signal
+      .i_ex_is_store(opcode_q3 == OP_STORE),
+      .i_ex_is_branch(opcode_q3 == OP_BRANCH),
+
+      // MEM stage
+      .i_mem_rd(rd_q4),
+      .i_mem_reg_write(ctrl_q4.q5.reg_wr_en),
+      .i_mem_is_load(opcode_q4 == OP_LOAD),
+      .i_mem_valid(1'b1),  // TODO: Add proper valid signal
+
+      // WB stage
+      .i_wb_rd(rd_q5),
+      .i_wb_reg_write(ctrl_q5.q5.reg_wr_en),
+      .i_wb_valid(1'b1),  // TODO: Add proper valid signal
+
+      // Branch prediction (for future enhancement)
+      .i_branch_taken     (1'b0),  // TODO: Add branch prediction
+      .i_branch_mispredict(1'b0),  // TODO: Add branch prediction
+
+      // Pipeline control outputs
+      .o_stall_if(stall_if),
+      .o_stall_id(stall_id),
+      .o_stall_ex(stall_ex),
+      .o_flush_id(flush_id),
+      .o_flush_ex(flush_ex),
+      .o_enable_forwarding(enable_forwarding)
+  );
+
+  // Data forwarding unit
+  forwarding_unit forwarding_u (
+      // EX stage (current instruction)
+      .i_ex_rs1(rs1_q3),
+      .i_ex_rs2(rs2_q3),
+      .i_ex_is_store(opcode_q3 == OP_STORE),
+
+      // MEM stage (previous instruction)
+      .i_mem_rd(rd_q4),
+      .i_mem_reg_write(ctrl_q4.q5.reg_wr_en),
+      .i_mem_alu_result(alu_out_q4),
+
+      // WB stage (older instruction)
+      .i_wb_rd(rd_q5),
+      .i_wb_reg_write(ctrl_q5.q5.reg_wr_en),
+      .i_wb_alu_result(alu_out_q5),
+      .i_wb_mem_data(mem_rdata_q5),
+      .i_wb_mem_to_reg(ctrl_q5.q5.is_mem_to_reg),
+
+      // Register file data
+      .i_regfile_data1(reg_rd_data1_q3),
+      .i_regfile_data2(reg_rd_data2_q3),
+
+      // Forwarded outputs
+      .o_forwarded_data1(alu_in1_forwarded),
+      .o_forwarded_data2(alu_in2_forwarded),
+      .o_forwarded_store_data(mem_wdata_forwarded)
+  );
+
+  // Wire assignments after all signals are declared
+  assign alu_out_q3 = alu_out;
+  assign mem_rdata_q4 = mem_rdata;
+  assign reg_wr_port = reg_wr_port_q4;
+  assign reg_wr_data = reg_wr_data_q4;
+  assign reg_wr_data_q4 = ctrl_q4.q5.is_mem_to_reg ? mem_rdata : alu_out_q4;
+  assign alu_in1 = enable_forwarding ? alu_in1_forwarded : alu_in1_pre;
+  assign alu_in2 = enable_forwarding ? alu_in2_forwarded : alu_in2_pre;
+  assign alu_in1_pre = reg_rd_data1_q3;
+  assign alu_in2_pre = ctrl_q3.q3.alu_src == ALUSRC_REG ? reg_rd_data2_q3 : imm_se_q3;
+  assign ctrl_aluop = ctrl_q3.q3.alu_ctrl;
+  assign ctrl_mem_ren = ctrl_q4.q4.mem_re;
+  assign ctrl_mem_wren = ctrl_q4.q4.mem_we;
+  assign mem_addr = alu_out_q3;
+  assign mem_wdata = mem_wdata_forwarded;
 
   /* pipeline registers */
 
+  // Q1->Q2 pipeline struct population
+  always_comb begin
+    q1q2_data = '{insn: insn_raw_q1, pc: pc, pc_incr: pc_incr};
+  end
+
   q1q2 q1q2_u (
-      .clk       (clk),
-      .rst_n     (rst_n),
-      .pc_ip     (pc),
-      .pc_op     (pc_q2),
-      .pc_incr_ip(pc_incr),
-      .pc_incr_op(pc_incr_q2),
-      .instr_ip  (instr_q1),
-      .instr_op  (instr_q2)
+      .i_clk  (i_clk),
+      .i_rst_n(i_rst_n),
+      .i_q1q2 (q1q2_data),
+      .o_q1q2 (q1q2_out)
   );
 
-  q2q3 #(
-      .CTRL_WIDTH(CTRL_WIDTH)
-  ) q2q3_u (
-      .clk            (clk),
-      .rst_n          (rst_n),
-      .pc_ip          (pc_q2),
-      .pc_op          (pc_q3),
-      .pc_incr_ip     (pc_incr_q2),
-      .pc_incr_op     (pc_incr_q3),
-      .reg_rd_data1_ip(reg_rd_data1_q2),
-      .reg_rd_data1_op(reg_rd_data1_q3),
-      .reg_rd_data2_ip(reg_rd_data2_q2),
-      .reg_rd_data2_op(reg_rd_data2_q3),
-      .reg_wr_port_ip (reg_wr_port_q2),
-      .reg_wr_port_op (reg_wr_port_q3),
-      .ctrl_q2_ip     (ctrl_q2),
-      .ctrl_q2_op     (ctrl_q3),
-      .instr_ip       (instr_q2),
-      .instr_op       (instr_q3)
+  // Extract Q1->Q2 outputs
+  assign insn_raw_q2 = q1q2_out.insn;
+  assign pc_q2 = q1q2_out.pc;
+  assign pc_incr_q2 = q1q2_out.pc_incr;
+
+  // Q2->Q3 pipeline struct population
+  always_comb begin
+    q2q3_data = '{
+        pc: pc_q2,
+        pc_incr: pc_incr_q2,
+        reg_rd_data1: reg_rd_data1_q2,
+        reg_rd_data2: reg_rd_data2_q2,
+        reg_wr_port: reg_wr_port_q2,
+        ctrl: cpu_ctrl_t'(ctrl_q2),
+        insn: insn_raw_q2
+    };
+  end
+
+  q2q3 q2q3_u (
+      .i_clk  (i_clk),
+      .i_rst_n(i_rst_n),
+      .i_q2q3 (q2q3_data),
+      .o_q2q3 (q2q3_out)
   );
 
-  q3q4 #(
-      .CTRL_WIDTH(CTRL_WIDTH)
-  ) q3q4_u (
-      .clk            (clk),
-      .rst_n          (rst_n),
-      .pc_next_ip     (pc_next_q3),
-      .pc_next_op     (pc_next_q4),
-      .reg_wr_port_ip (reg_wr_port_q3),
-      .reg_wr_port_op (reg_wr_port_q4),
-      .reg_rd_data2_ip(reg_rd_data2_q3),
-      .reg_rd_data2_op(reg_rd_data2_q4),
-      .alu_out_ip     (alu_out_q3),
-      .alu_out_op     (alu_out_q4),
-      .ctrl_q3_ip     (ctrl_q3),
-      .ctrl_q3_op     (ctrl_q4),
-      .instr_ip       (instr_q3),
-      .instr_op       (instr_q4)
+  // Extract Q2->Q3 outputs
+  assign pc_q3 = q2q3_out.pc;
+  assign pc_incr_q3 = q2q3_out.pc_incr;
+  assign reg_rd_data1_q3 = q2q3_out.reg_rd_data1;
+  assign reg_rd_data2_q3 = q2q3_out.reg_rd_data2;
+  assign reg_wr_port_q3 = q2q3_out.reg_wr_port;
+  assign ctrl_q3 = q2q3_out.ctrl;
+  assign insn_raw_q3 = q2q3_out.insn;
+
+  // Q3->Q4 pipeline struct population
+  always_comb begin
+    q3q4_data = '{
+        pc_next: pc_next_q3,
+        alu_out: alu_out_q3,
+        reg_rd_data2: reg_rd_data2_q3,
+        reg_wr_port: reg_wr_port_q3,
+        ctrl: cpu_ctrl_t'(ctrl_q3),
+        insn: insn_raw_q3
+    };
+  end
+
+  q3q4 q3q4_u (
+      .i_clk  (i_clk),
+      .i_rst_n(i_rst_n),
+      .i_q3q4 (q3q4_data),
+      .o_q3q4 (q3q4_out)
   );
 
-  q4q5 #(
-      .CTRL_WIDTH(CTRL_WIDTH)
-  ) q4q5_u (
-      .clk           (clk),
-      .rst_n         (rst_n),
-      .alu_out_ip    (alu_out_q4),
-      .alu_out_op    (alu_out_q5),
-      .reg_wr_port_ip(reg_wr_port_q4),
-      .reg_wr_port_op(reg_wr_port_q5),
-      .mem_rdata_ip  (mem_rdata_q4),
-      .mem_rdata_op  (mem_rdata_q5),
-      .ctrl_q4_ip    (ctrl_q4),
-      .ctrl_q4_op    (ctrl_q5),
-      .instr_ip      (instr_q4),
-      .instr_op      (instr_q5)
+  // Extract Q3->Q4 outputs
+  assign pc_next_q4 = q3q4_out.pc_next;
+  assign alu_out_q4 = q3q4_out.alu_out;
+  assign reg_rd_data2_q4 = q3q4_out.reg_rd_data2;
+  assign reg_wr_port_q4 = q3q4_out.reg_wr_port;
+  assign ctrl_q4 = q3q4_out.ctrl;
+  assign insn_raw_q4 = q3q4_out.insn;
+
+  // Q4->Q5 pipeline struct population
+  always_comb begin
+    q4q5_data = '{
+        alu_out: alu_out_q4,
+        mem_rdata: mem_rdata_q4,
+        reg_wr_port: reg_wr_port_q4,
+        ctrl: cpu_ctrl_t'(ctrl_q4),
+        insn: insn_raw_q4
+    };
+  end
+
+  q4q5 q4q5_u (
+      .i_clk  (i_clk),
+      .i_rst_n(i_rst_n),
+      .i_q4q5 (q4q5_data),
+      .o_q4q5 (q4q5_out)
   );
 
-  /*
-sign extension
-note to self: SRLI, SLLI, SRAI use a specialization of the I-format
-but this does not affect our logic as a sign extension
-does not affect the lower 5 bits of the immediate
-which is what we actually care about
-*/
-  assign imm_se_q3 = {{20{imm_q3[11]}}, imm_q3};
-  wire [31:0] pc_incr = pc + 4;
-  wire pc_jal_q2;
-  reg [31:0] pc;  // need PC immediately in fetch
-  reg [31:0] pc_incr_last;
-  always_comb @(*) begin
+  // Extract Q4->Q5 outputs
+  assign alu_out_q5 = q4q5_out.alu_out;
+  assign mem_rdata_q5 = q4q5_out.mem_rdata;
+  assign reg_wr_port_q5 = q4q5_out.reg_wr_port;
+  assign ctrl_q5 = q4q5_out.ctrl;
+  assign insn_raw_q5 = q4q5_out.insn;
+
+  // Immediate extraction based on instruction type
+  always_comb begin
+    case (opcode_q3)
+      OP_ITYPE, OP_LOAD, OP_JALR: imm_se_q3 = get_i_imm(insn_q3);
+      OP_STORE:                   imm_se_q3 = get_s_imm(insn_q3);
+      OP_BRANCH:                  imm_se_q3 = get_b_imm(insn_q3);
+      OP_JAL:                     imm_se_q3 = get_j_imm(insn_q3);
+      default:                    imm_se_q3 = get_i_imm(insn_q3);  // default to I-type
+    endcase
+  end
+  logic pc_jal_q2;
+  always_comb begin
     pc = pc_incr_last;
     // Handle JAL and branch instructions
-    if (ctrl_q2[CTRL_IS_JAL]) begin
+    if (ctrl_q2.q2.is_jal) begin
       pc = pc_next_q2;
-    end else if (ctrl_q4[CTRL_IS_BRANCH]) begin
+    end else if (ctrl_q4.q4.is_branch) begin
       pc = pc_next_q4;
     end
   end
 
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (~rst_n) begin
+  always_ff @(posedge i_clk or negedge i_rst_n) begin
+    if (~i_rst_n) begin
       pc_incr_last <= 0;
     end else begin
       pc_incr_last <= pc_incr;
     end
   end
 
-  // simple forwarding logic (forwarding unit)
-  // hazards a and b occur in the execution stage
-  reg hazard_a_in1, hazard_b_in1, hazard_a_in2, hazard_b_in2;
-  reg hazard_c, hazard_d;
-  always_comb @(*) begin
-    forward_alu_in1 = FORWARD_Q2;
-    forward_alu_in2 = FORWARD_Q2;
-    forward_mem_wdata = FORWARD_Q2;
-    /*
-  		add x1, x2, x3
-  		add x4, x1, x5 // hazard a)
-  		add x6, x7, x1 // hazard b)
-
-  		add x1, x1, x2
-  		add x1, x1, x3 // hazard a)
-  		add x1, x1, x4 // hazard b.2) requires values of x1 from 2nd instr
-  	
-		add x1, x2, x3
-		sw x1, x3 // x3: hazard a, x1: hazard c, result required for MEM but not available until WB
-		sw x1, x4 // x1: hazard d, result required for MEM but only available after WB
-
-		lw x1, x2
-		sw x1, x3 // hazard c: x1 forwarded from MEM/WB(q5) regs
-
-    hazard b: do not forward ALU for sw op, hazard_b_in2 will go high without last condition
-  	*/
-    hazard_a_in1 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs1_q3 && rd_q4 !== 5'b0;  // EX/MEM hazard
-    hazard_b_in1 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs1_q3 && rd_q5 !== 5'b0;  // MEM/WB hazard
-    hazard_a_in2 = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2_q3 && rd_q4 !== 5'b0;
-    hazard_b_in2 = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs2_q3 && rd_q5 !== 5'b0 && !ctrl_q3[CTRL_MEM_WREN];
-    hazard_c = ctrl_q4[CTRL_REG_WR_EN] && rd_q4 === rs2_q3 && rd_q4 !== 5'b0;
-    hazard_d = ctrl_q5[CTRL_REG_WR_EN] && rd_q5 === rs2_q3 && rd_q5 !== 5'b0;
-    if (hazard_a_in1) forward_alu_in1 = FORWARD_Q4;
-    if (hazard_b_in1 && !hazard_a_in1)
-      forward_alu_in1 = FORWARD_Q5;  // always forward most recent value
-    if (hazard_a_in2) forward_alu_in2 = FORWARD_Q4;
-    if (hazard_b_in2 && !hazard_a_in2) forward_alu_in2 = FORWARD_Q5;
-    if (hazard_c) forward_mem_wdata = FORWARD_Q4;
-    if (hazard_d) forward_mem_wdata = FORWARD_Q5;
-  end
-
-  always_comb @(*) begin
-    case (forward_alu_in1)
-      FORWARD_Q2: alu_in1_forwarded = alu_in1_pre;
-      FORWARD_Q4: alu_in1_forwarded = alu_out_q4;
-      FORWARD_Q5: alu_in1_forwarded = alu_out_q5;
-    endcase
-  end
-
-  always_comb @(*) begin
-    case (forward_alu_in2)
-      FORWARD_Q2: alu_in2_forwarded = alu_in2_pre;
-      FORWARD_Q4: alu_in2_forwarded = alu_out_q4;
-      FORWARD_Q5: alu_in2_forwarded = alu_out_q5;
-    endcase
-  end
-
-  always_comb @(*) begin
-    // MEM is clocked so we must make the forwarded data immediately available (before clock edge)
-    case (forward_mem_wdata)
-      FORWARD_Q2: mem_wdata_forwarded = reg_rd_data2_q3;
-      FORWARD_Q4: mem_wdata_forwarded = alu_out_q4;
-      FORWARD_Q5: mem_wdata_forwarded = alu_out_q5;
-    endcase
-  end
-
-  // hazard detection unit
 endmodule
