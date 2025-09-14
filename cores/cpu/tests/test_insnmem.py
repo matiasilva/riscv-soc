@@ -69,9 +69,9 @@ async def test_insnmem_basic_read(dut) -> None:
     await RisingEdge(dut.i_clk)
     actual = dut.o_insn.value.to_unsigned()
     expected = PRELOAD_INSTRUCTIONS[0]
-    assert actual == expected, (
-        f"Basic read failed: got=0x{actual:08x}, expected=0x{expected:08x}"
-    )
+    assert (
+        actual == expected
+    ), f"Basic read failed: got=0x{actual:08x}, expected=0x{expected:08x}"
 
 
 @cocotb.test()

@@ -24,9 +24,8 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles
 
-import os
 from pathlib import Path
 from cocotb_tools import runner
 import pytest

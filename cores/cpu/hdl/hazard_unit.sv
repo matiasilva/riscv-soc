@@ -93,28 +93,24 @@ module hazard_unit #(
   // RAW hazard detection
   always_comb begin
     // EX/MEM hazards
-    raw_hazard_rs1_mem = i_mem_reg_write && i_mem_valid &&
-                            (i_mem_rd != 5'b0) && (i_mem_rd == i_ex_rs1) && i_ex_valid;
-    raw_hazard_rs2_mem = i_mem_reg_write && i_mem_valid &&
-                            (i_mem_rd != 5'b0) && (i_mem_rd == i_ex_rs2) && i_ex_valid;
+    raw_hazard_rs1_mem = i_mem_reg_write && i_mem_valid && (i_mem_rd != 5'b0) &&
+        (i_mem_rd == i_ex_rs1) && i_ex_valid;
+    raw_hazard_rs2_mem = i_mem_reg_write && i_mem_valid && (i_mem_rd != 5'b0) &&
+        (i_mem_rd == i_ex_rs2) && i_ex_valid;
 
     // MEM/WB hazards
-    raw_hazard_rs1_wb = i_wb_reg_write && i_wb_valid &&
-                           (i_wb_rd != 5'b0) && (i_wb_rd == i_ex_rs1) && i_ex_valid &&
-                           !(raw_hazard_rs1_mem); // EX/MEM has priority
-    raw_hazard_rs2_wb = i_wb_reg_write && i_wb_valid &&
-                           (i_wb_rd != 5'b0) && (i_wb_rd == i_ex_rs2) && i_ex_valid &&
-                           !(raw_hazard_rs2_mem); // EX/MEM has priority
+    raw_hazard_rs1_wb = i_wb_reg_write && i_wb_valid && (i_wb_rd != 5'b0) &&
+        (i_wb_rd == i_ex_rs1) && i_ex_valid && !(raw_hazard_rs1_mem);  // EX/MEM has priority
+    raw_hazard_rs2_wb = i_wb_reg_write && i_wb_valid && (i_wb_rd != 5'b0) &&
+        (i_wb_rd == i_ex_rs2) && i_ex_valid && !(raw_hazard_rs2_mem);  // EX/MEM has priority
 
     // Load-use hazard (ID/EX with EX/MEM)
-    load_use_hazard_detected = i_mem_is_load && i_mem_valid && i_id_valid &&
-                                   (i_mem_rd != 5'b0) &&
-                                   ((i_mem_rd == i_id_rs1) || (i_mem_rd == i_id_rs2));
+    load_use_hazard_detected = i_mem_is_load && i_mem_valid && i_id_valid && (i_mem_rd != 5'b0) &&
+        ((i_mem_rd == i_id_rs1) || (i_mem_rd == i_id_rs2));
 
     // Overall data hazard detection
-    data_hazard_detected = raw_hazard_rs1_mem || raw_hazard_rs2_mem ||
-                              raw_hazard_rs1_wb || raw_hazard_rs2_wb ||
-                              load_use_hazard_detected;
+    data_hazard_detected = raw_hazard_rs1_mem || raw_hazard_rs2_mem || raw_hazard_rs1_wb ||
+        raw_hazard_rs2_wb || load_use_hazard_detected;
 
     // Control hazards (branches, jumps)
     control_hazard_detected = i_ex_is_branch || i_branch_mispredict;
@@ -123,11 +119,11 @@ module hazard_unit #(
   // Hazard handling based on selected technique
   always_comb begin
     // Default values
-    o_stall_if = 1'b0;
-    o_stall_id = 1'b0;
-    o_stall_ex = 1'b0;
-    o_flush_id = 1'b0;
-    o_flush_ex = 1'b0;
+    o_stall_if          = 1'b0;
+    o_stall_id          = 1'b0;
+    o_stall_ex          = 1'b0;
+    o_flush_id          = 1'b0;
+    o_flush_ex          = 1'b0;
     o_enable_forwarding = 1'b0;
 
     case (HAZARD_TECHNIQUE)
@@ -208,4 +204,3 @@ module hazard_unit #(
 
 
 endmodule
-

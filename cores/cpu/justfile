@@ -25,4 +25,3 @@ fixtures:
   $TOOLS_ROOT/gen_hex_data.py 128 -o $CPU_ROOT/tests/test_insnmem_preload_512.hex
   $TOOLS_ROOT/gen_hex_data.py 256 -o $CPU_ROOT/tests/test_insnmem_preload_1024.hex
   $TOOLS_ROOT/gen_hex_data.py 512 -o $CPU_ROOT/tests/test_insnmem_preload_2048.hex
-

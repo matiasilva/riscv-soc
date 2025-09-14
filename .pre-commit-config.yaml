@@ -17,6 +17,7 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+  # SystemVerilog linting with Verible
   - repo: local
     hooks:
       - id: verible-format
@@ -24,4 +25,4 @@ repos:
         entry: verible-verilog-format
         language: system
         types_or: [verilog, system-verilog]
-        args: [--flagfile, .rules.verible-format]
+        args: [--flagfile, .rules.verible-format, --inplace]

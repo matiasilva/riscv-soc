@@ -154,16 +154,16 @@ async def test_regfile_read_during_write(dut) -> None:
     await RisingEdge(dut.i_clk)  # capture first read
 
     # should read old value
-    assert dut.o_rd_data1.value.to_unsigned() == values[0], (
-        f"Read during write failed: got={dut.o_rd_data1.value.to_unsigned():08x}, expected={values[0]}"
-    )
+    assert (
+        dut.o_rd_data1.value.to_unsigned() == values[0]
+    ), f"Read during write failed: got={dut.o_rd_data1.value.to_unsigned():08x}, expected={values[0]}"
 
     # capture second read
     await RisingEdge(dut.i_clk)
     actual = dut.o_rd_data1.value.to_unsigned()
-    assert actual == values[1], (
-        f"Post-write read failed: got={actual:08x}, expected={values[1]}"
-    )
+    assert (
+        actual == values[1]
+    ), f"Post-write read failed: got={actual:08x}, expected={values[1]}"
 
 
 @cocotb.test()
@@ -181,9 +181,9 @@ async def test_regfile_write_enable(dut) -> None:
     await read_launch_regfile(dut, 10)
     await RisingEdge(dut.i_clk)
     actual = dut.o_rd_data1.value.to_unsigned()
-    assert actual == 0x12345678, (
-        f"Write enable test failed: got={actual:08x}, expected=0x12345678"
-    )
+    assert (
+        actual == 0x12345678
+    ), f"Write enable test failed: got={actual:08x}, expected=0x12345678"
 
 
 @cocotb.test()
@@ -225,9 +225,9 @@ async def test_regfile_boundary_values(dut, port) -> None:
         await read_launch_regfile(dut, i, port=port)
         await RisingEdge(dut.i_clk)
         actual = read_capture_regfile(dut, port=port)
-        assert actual == val, (
-            f"Boundary test failed: addr={i}, got=0x{actual:08x}, expected=0x{val:08x}"
-        )
+        assert (
+            actual == val
+        ), f"Boundary test failed: addr={i}, got=0x{actual:08x}, expected=0x{val:08x}"
 
 
 @cocotb.test()
@@ -248,9 +248,9 @@ async def test_regfile_reset_behavior(dut) -> None:
         await read_launch_regfile(dut, addr)
         await RisingEdge(dut.i_clk)
         actual = read_capture_regfile(dut)
-        assert actual == 0, (
-            f"Register {addr} not cleared after reset: got=0x{actual:08x}"
-        )
+        assert (
+            actual == 0
+        ), f"Register {addr} not cleared after reset: got=0x{actual:08x}"
 
 
 def test_regfile_runner() -> None:
