@@ -1,5 +1,9 @@
 # Configuration file for the Sphinx documentation builder.
 
+import os
+import sys
+from pathlib import Path
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -41,9 +45,6 @@ myst_enable_extensions = ["tasklist"]
 # LaTeX output
 latex_engine = "lualatex"
 
-import os
-import sys
-from pathlib import Path
 
 root = Path(os.getenv("ROOT", "../sim/tb"))
 sys.path.insert(0, str(root / "sim" / "tb"))

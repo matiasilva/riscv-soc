@@ -34,28 +34,29 @@
 module insnmem #(
     parameter int SIZE = 512
 ) (
-    input logic i_clk,
-    input logic i_rst_n,
-    input logic [31:0] i_pc,
+    input  logic        i_clk,
+    input  logic        i_rst_n,
+    input  logic [31:0] i_pc,
     output logic [31:0] o_insn,
-    output logic o_imem_exception
+    output logic        o_imem_exception
 );
 
-  logic [7:0] mem[SIZE];
+  logic [ 7:0] mem        [SIZE];
   logic [31:0] next_insn;
   logic [31:0] addr;
 
-  logic [1:0] align_bits;
+  logic [ 1:0] align_bits;
   assign align_bits = i_pc[1:0];
 
-  int i;
+  int    i;
   string filename;
 
   initial begin
     if ($value$plusargs("IMEM_PRELOAD_FILE=%s", filename)) begin
       $readmemh(filename, mem);
       $display("Loaded memory from %s", filename);
-    end else begin
+    end
+    else begin
       foreach (mem[i]) mem[i] = '0;
     end
   end
@@ -63,17 +64,19 @@ module insnmem #(
   always_comb begin : imem_controller
     if (align_bits == 2'b0) begin
       o_imem_exception = 1'b0;
-      addr = i_pc;
-    end else begin
+      addr             = i_pc;
+    end
+    else begin
       o_imem_exception = 1'b1;
-      addr = '0;
+      addr             = '0;
     end
   end
 
   always_ff @(posedge i_clk or negedge i_rst_n) begin : fetch_insn
     if (~i_rst_n) begin
       next_insn <= 32'h00000013;  //  NOP
-    end else begin
+    end
+    else begin
       next_insn <= {mem[addr+3], mem[addr+2], mem[addr+1], mem[addr]};
     end
   end

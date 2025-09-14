@@ -33,9 +33,9 @@
 `include "cpu_types.vh"
 
 module q1q2 (
-    input i_clk,
-    input i_rst_n,
-    input q1q2_t i_q1q2,
+    input         i_clk,
+    input         i_rst_n,
+    input  q1q2_t i_q1q2,
     output q1q2_t o_q1q2
 );
 
@@ -44,11 +44,12 @@ module q1q2 (
   always @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
       next_q1q2 <= '{
-        insn: 32'h00000013, // NOP
-        pc: '0,
-        pc_incr: '0
+          insn: 32'h00000013,  // NOP
+          pc: '0,
+          pc_incr: '0
       };
-    end else begin
+    end
+    else begin
       next_q1q2 <= i_q1q2;
     end
   end

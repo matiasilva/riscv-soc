@@ -33,9 +33,9 @@
 `include "cpu_types.vh"
 
 module q2q3 (
-    input i_clk,
-    input i_rst_n,
-    input q2q3_t i_q2q3,
+    input         i_clk,
+    input         i_rst_n,
+    input  q2q3_t i_q2q3,
     output q2q3_t o_q2q3
 );
 
@@ -44,15 +44,16 @@ module q2q3 (
   always @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
       next_q2q3 <= '{
-        pc: '0,
-        pc_incr: '0,
-        reg_rd_data1: '0,
-        reg_rd_data2: '0,
-        reg_wr_port: '0,
-        ctrl: '0,
-        insn: 32'h00000013  // NOP
+          pc: '0,
+          pc_incr: '0,
+          reg_rd_data1: '0,
+          reg_rd_data2: '0,
+          reg_wr_port: '0,
+          ctrl: '0,
+          insn: 32'h00000013  // NOP
       };
-    end else begin
+    end
+    else begin
       next_q2q3 <= i_q2q3;
     end
   end

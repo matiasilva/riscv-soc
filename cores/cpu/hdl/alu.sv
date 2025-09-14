@@ -43,11 +43,11 @@
 `include "cpu_types.vh"
 
 module alu (
-    input logic [31:0] i_alu_a,
-    input logic [31:0] i_alu_b,
-    input alu_op_t i_alu_ctrl,
-    output logic [31:0] o_alu_out,
-    output logic o_alu_exception
+    input  logic    [31:0] i_alu_a,
+    input  logic    [31:0] i_alu_b,
+    input  alu_op_t        i_alu_ctrl,
+    output logic    [31:0] o_alu_out,
+    output logic           o_alu_exception
 );
 
   logic [31:0] diff;
@@ -64,7 +64,8 @@ module alu (
       OP_SLT: begin
         if (i_alu_a[31] ^ i_alu_b[31]) begin
           result = {31'b0, i_alu_a[31]};
-        end else begin
+        end
+        else begin
           result = {31'b0, diff[31]};
         end
       end
@@ -82,7 +83,8 @@ module alu (
   always_comb begin : alu_controller
     if (i_alu_ctrl == OP_INVALID) begin
       o_alu_exception = '1;
-    end else begin
+    end
+    else begin
       o_alu_exception = '0;
     end
   end

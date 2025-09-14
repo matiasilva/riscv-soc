@@ -44,10 +44,10 @@
 `include "cpu_types.vh"
 
 module aluctrl (
-    input alu_ctrl_t i_aluop,
-    input logic [2:0] i_funct3,
-    input logic i_funct7_5,
-    output alu_op_t o_alu_ctrl
+    input  alu_ctrl_t       i_aluop,
+    input  logic      [2:0] i_funct3,
+    input  logic            i_funct7_5,
+    output alu_op_t         o_alu_ctrl
 );
 
   alu_op_t ctrl;

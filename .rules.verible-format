@@ -1,0 +1,6 @@
+--try_wrap_long_lines=true
+--wrap_end_else_clauses=true
+--port_declarations_alignment=align
+--assignment_statement_alignment=align
+--named_port_alignment=align
+--module_net_variable_alignment=align

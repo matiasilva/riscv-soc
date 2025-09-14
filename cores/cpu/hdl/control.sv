@@ -46,14 +46,14 @@ module control (
 );
 
   alu_ctrl_t aluop;
-  logic mem_re;
-  logic mem_we;
-  logic reg_wr_en;
-  logic is_mem_to_reg;
-  logic is_branch;
-  logic is_jal;  // q2
-  logic is_jalr;  // q3
-  alu_src_t alu_src;
+  logic      mem_re;
+  logic      mem_we;
+  logic      reg_wr_en;
+  logic      is_mem_to_reg;
+  logic      is_branch;
+  logic      is_jal;  // q2
+  logic      is_jalr;  // q3
+  alu_src_t  alu_src;
 
   always_comb begin
     mem_re        = '0;
