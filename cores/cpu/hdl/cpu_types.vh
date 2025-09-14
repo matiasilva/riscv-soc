@@ -191,7 +191,7 @@ typedef struct packed {
 // Pipeline registers
 //------------------------------------------------------------------------------
 typedef struct packed {
-  logic [31:0] insn;
+  insn_t insn;
   logic [31:0] pc;
   logic [31:0] pc_incr;
 } q1q2_t;
@@ -201,26 +201,26 @@ typedef struct packed {
   logic [31:0] pc_incr;
   logic [31:0] reg_rd_data1;
   logic [31:0] reg_rd_data2;
-  logic [4:0]  reg_wr_port;
-  cpu_ctrl_t   ctrl;
-  logic [31:0] insn;
+  logic [4:0] reg_wr_port;
+  cpu_ctrl_t ctrl;
+  insn_t insn;
 } q2q3_t;
 
 typedef struct packed {
   logic [31:0] pc_next;
   logic [31:0] alu_out;
   logic [31:0] reg_rd_data2;
-  logic [4:0]  reg_wr_port;
-  cpu_ctrl_t   ctrl;
-  logic [31:0] insn;
+  logic [4:0] reg_wr_port;
+  cpu_ctrl_t ctrl;
+  insn_t insn;
 } q3q4_t;
 
 typedef struct packed {
   logic [31:0] alu_out;
   logic [31:0] mem_rdata;
-  logic [4:0]  reg_wr_port;
-  cpu_ctrl_t   ctrl;
-  logic [31:0] insn;
+  logic [4:0] reg_wr_port;
+  cpu_ctrl_t ctrl;
+  insn_t insn;
 } q4q5_t;
 
 `endif  // CPU_TYPES_VH

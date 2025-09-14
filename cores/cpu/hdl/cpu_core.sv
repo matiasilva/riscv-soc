@@ -67,7 +67,7 @@ module cpu_core #(
 
   /* instruction decode, register file q1 out, q2 in */
   insn_t       insn_q2;
-  assign insn_q2.raw = q1q2_out.insn;
+  assign insn_q2 = q1q2_out.insn;
 
   logic  [ 4:0] rd_q2;  // rd position is same for R, I, U, J types
 
@@ -75,7 +75,7 @@ module cpu_core #(
 
   /* q2 out, q3 in */
   insn_t        insn_q3;
-  assign insn_q3.raw = q2q3_out.insn;
+  assign insn_q3 = q2q3_out.insn;
 
   logic  [31:0] imm_se_q3;
   logic  [31:0] alu_out_q3;
@@ -83,12 +83,12 @@ module cpu_core #(
   /* q3 out, q4 in */
   logic  [31:0] mem_rdata_q4;
   insn_t        insn_q4;
-  assign insn_q4.raw = q3q4_out.insn;
+  assign insn_q4 = q3q4_out.insn;
   logic  [31:0] pc_next_q3;  // branch target address
 
   /* q4 out, q5 in */
   insn_t        insn_q5;
-  assign insn_q5.raw = q4q5_out.insn;
+  assign insn_q5 = q4q5_out.insn;
 
   /* register file  */
   logic      [ 4:0] reg_rd_port1;  // decode from q1, pipeline register "absorbed"
@@ -169,14 +169,14 @@ module cpu_core #(
   );
 
   control control_u (
-      .i_opcode(opcode_t'(q1q2_out.insn[6:0])),
+      .i_opcode(opcode_t'(q1q2_out.insn.common.opcode)),
       .o_ctrl  (ctrl_q2)
   );
 
   aluctrl alucontrol_u (
       .i_aluop   (ctrl_aluop),
-      .i_funct3  (q2q3_out.insn[14:12]),
-      .i_funct7_5(q2q3_out.insn[30]),
+      .i_funct3  (q2q3_out.insn.r_type.funct3),
+      .i_funct7_5(q2q3_out.insn.r_type.funct7[5]),
       .o_alu_ctrl(alu_ctrl_ctrl)
   );
 
@@ -202,26 +202,26 @@ module cpu_core #(
       .i_rst_n(i_rst_n),
 
       // ID stage
-      .i_id_rs1   (q1q2_out.insn[19:15]),
-      .i_id_rs2   (q1q2_out.insn[24:20]),
-      .i_id_valid (1'b1),                          // TODO: Add proper valid signal
-      .i_id_opcode(opcode_t'(q1q2_out.insn[6:0])),
+      .i_id_rs1   (q1q2_out.insn.r_type.rs1),
+      .i_id_rs2   (q1q2_out.insn.r_type.rs2),
+      .i_id_valid (1'b1),                                   // TODO: Add proper valid signal
+      .i_id_opcode(opcode_t'(q1q2_out.insn.common.opcode)),
 
       // EX stage
-      .i_ex_rs1      (q2q3_out.insn[19:15]),
-      .i_ex_rs2      (q2q3_out.insn[24:20]),
-      .i_ex_valid    (1'b1),                                       // TODO: Add proper valid signal
-      .i_ex_is_store (opcode_t'(q2q3_out.insn[6:0]) == OP_STORE),
-      .i_ex_is_branch(opcode_t'(q2q3_out.insn[6:0]) == OP_BRANCH),
+      .i_ex_rs1      (q2q3_out.insn.r_type.rs1),
+      .i_ex_rs2      (q2q3_out.insn.r_type.rs2),
+      .i_ex_valid    (1'b1),                                     // TODO: Add proper valid signal
+      .i_ex_is_store (q2q3_out.insn.common.opcode == OP_STORE),
+      .i_ex_is_branch(q2q3_out.insn.common.opcode == OP_BRANCH),
 
       // MEM stage
-      .i_mem_rd       (q3q4_out.insn[11:7]),
+      .i_mem_rd       (q3q4_out.insn.r_type.rd),
       .i_mem_reg_write(q3q4_out.ctrl.q5.reg_wr_en),
-      .i_mem_is_load  (opcode_t'(q3q4_out.insn[6:0]) == OP_LOAD),
-      .i_mem_valid    (1'b1),                                      // TODO: Add proper valid signal
+      .i_mem_is_load  (q3q4_out.insn.common.opcode == OP_LOAD),
+      .i_mem_valid    (1'b1),                                    // TODO: Add proper valid signal
 
       // WB stage
-      .i_wb_rd       (q4q5_out.insn[11:7]),
+      .i_wb_rd       (q4q5_out.insn.r_type.rd),
       .i_wb_reg_write(q4q5_out.ctrl.q5.reg_wr_en),
       .i_wb_valid    (1'b1),                        // TODO: Add proper valid signal
 
@@ -241,17 +241,17 @@ module cpu_core #(
   // Data forwarding unit
   forwarding_unit forwarding_u (
       // EX stage (current instruction)
-      .i_ex_rs1     (q2q3_out.insn[19:15]),
-      .i_ex_rs2     (q2q3_out.insn[24:20]),
-      .i_ex_is_store(opcode_t'(q2q3_out.insn[6:0]) == OP_STORE),
+      .i_ex_rs1     (q2q3_out.insn.r_type.rs1),
+      .i_ex_rs2     (q2q3_out.insn.r_type.rs2),
+      .i_ex_is_store(q2q3_out.insn.common.opcode == OP_STORE),
 
       // MEM stage (previous instruction)
-      .i_mem_rd        (q3q4_out.insn[11:7]),
+      .i_mem_rd        (q3q4_out.insn.r_type.rd),
       .i_mem_reg_write (q3q4_out.ctrl.q5.reg_wr_en),
       .i_mem_alu_result(q3q4_out.alu_out),
 
       // WB stage (older instruction)
-      .i_wb_rd        (q4q5_out.insn[11:7]),
+      .i_wb_rd        (q4q5_out.insn.r_type.rd),
       .i_wb_reg_write (q4q5_out.ctrl.q5.reg_wr_en),
       .i_wb_alu_result(q4q5_out.alu_out),
       .i_wb_mem_data  (q4q5_out.mem_rdata),
@@ -290,7 +290,7 @@ module cpu_core #(
   assign rs2_q1 = insn_q1.common.opcode == OP_JAL ?
       '0 : (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ?
       insn_q1.s_type.rs2 : insn_q1.r_type.rs2;
-  assign rd_q2 = q1q2_out.insn[11:7];
+  assign rd_q2 = q1q2_out.insn.r_type.rd;
   assign pc_next_q2 = q1q2_out.pc + get_j_imm(insn_q2);
   assign pc_next_q3 = q2q3_out.pc + imm_se_q3;
   assign reg_rd_port1 = rs1_q1;
@@ -304,7 +304,7 @@ module cpu_core #(
 
   // Q1->Q2 pipeline struct population
   always_comb begin
-    q1q2_data = '{insn: insn_raw_q1, pc: pc, pc_incr: pc_incr};
+    q1q2_data = '{insn: insn_q1, pc: pc, pc_incr: pc_incr};
   end
 
   q1q2 q1q2_u (
@@ -381,7 +381,7 @@ module cpu_core #(
 
   // Immediate extraction based on instruction type
   always_comb begin
-    case (opcode_t'(q2q3_out.insn[6:0]))
+    case (q2q3_out.insn.common.opcode)
       OP_ITYPE, OP_LOAD, OP_JALR: imm_se_q3 = get_i_imm(insn_q3);
       OP_STORE:                   imm_se_q3 = get_s_imm(insn_q3);
       OP_BRANCH:                  imm_se_q3 = get_b_imm(insn_q3);
