@@ -66,7 +66,8 @@ module regfile #(
       // next_rd_data2 <= {XW{1'b0}};
       rd_data1 <= '0;
       rd_data2 <= '0;
-    end else begin
+    end
+    else begin
       if (i_wr_en) begin
         if (i_wr_addr != 5'b0) begin  // protect against writes to x[0]
           x[i_wr_addr-1] <= i_wr_data;

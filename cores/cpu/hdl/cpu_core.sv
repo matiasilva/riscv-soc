@@ -246,53 +246,53 @@ module cpu_core #(
       .i_id_opcode(opcode_t'(opcode_q2)),
 
       // EX stage
-      .i_ex_rs1(rs1_q3),
-      .i_ex_rs2(rs2_q3),
-      .i_ex_valid(1'b1),  // TODO: Add proper valid signal
-      .i_ex_is_store(opcode_q3 == OP_STORE),
+      .i_ex_rs1      (rs1_q3),
+      .i_ex_rs2      (rs2_q3),
+      .i_ex_valid    (1'b1),                   // TODO: Add proper valid signal
+      .i_ex_is_store (opcode_q3 == OP_STORE),
       .i_ex_is_branch(opcode_q3 == OP_BRANCH),
 
       // MEM stage
-      .i_mem_rd(rd_q4),
+      .i_mem_rd       (rd_q4),
       .i_mem_reg_write(ctrl_q4.q5.reg_wr_en),
-      .i_mem_is_load(opcode_q4 == OP_LOAD),
-      .i_mem_valid(1'b1),  // TODO: Add proper valid signal
+      .i_mem_is_load  (opcode_q4 == OP_LOAD),
+      .i_mem_valid    (1'b1),                  // TODO: Add proper valid signal
 
       // WB stage
-      .i_wb_rd(rd_q5),
+      .i_wb_rd       (rd_q5),
       .i_wb_reg_write(ctrl_q5.q5.reg_wr_en),
-      .i_wb_valid(1'b1),  // TODO: Add proper valid signal
+      .i_wb_valid    (1'b1),                  // TODO: Add proper valid signal
 
       // Branch prediction (for future enhancement)
       .i_branch_taken     (1'b0),  // TODO: Add branch prediction
       .i_branch_mispredict(1'b0),  // TODO: Add branch prediction
 
       // Pipeline control outputs
-      .o_stall_if(stall_if),
-      .o_stall_id(stall_id),
-      .o_stall_ex(stall_ex),
-      .o_flush_id(flush_id),
-      .o_flush_ex(flush_ex),
+      .o_stall_if         (stall_if),
+      .o_stall_id         (stall_id),
+      .o_stall_ex         (stall_ex),
+      .o_flush_id         (flush_id),
+      .o_flush_ex         (flush_ex),
       .o_enable_forwarding(enable_forwarding)
   );
 
   // Data forwarding unit
   forwarding_unit forwarding_u (
       // EX stage (current instruction)
-      .i_ex_rs1(rs1_q3),
-      .i_ex_rs2(rs2_q3),
+      .i_ex_rs1     (rs1_q3),
+      .i_ex_rs2     (rs2_q3),
       .i_ex_is_store(opcode_q3 == OP_STORE),
 
       // MEM stage (previous instruction)
-      .i_mem_rd(rd_q4),
-      .i_mem_reg_write(ctrl_q4.q5.reg_wr_en),
+      .i_mem_rd        (rd_q4),
+      .i_mem_reg_write (ctrl_q4.q5.reg_wr_en),
       .i_mem_alu_result(alu_out_q4),
 
       // WB stage (older instruction)
-      .i_wb_rd(rd_q5),
-      .i_wb_reg_write(ctrl_q5.q5.reg_wr_en),
+      .i_wb_rd        (rd_q5),
+      .i_wb_reg_write (ctrl_q5.q5.reg_wr_en),
       .i_wb_alu_result(alu_out_q5),
-      .i_wb_mem_data(mem_rdata_q5),
+      .i_wb_mem_data  (mem_rdata_q5),
       .i_wb_mem_to_reg(ctrl_q5.q5.is_mem_to_reg),
 
       // Register file data
@@ -300,8 +300,8 @@ module cpu_core #(
       .i_regfile_data2(reg_rd_data2_q3),
 
       // Forwarded outputs
-      .o_forwarded_data1(alu_in1_forwarded),
-      .o_forwarded_data2(alu_in2_forwarded),
+      .o_forwarded_data1     (alu_in1_forwarded),
+      .o_forwarded_data2     (alu_in2_forwarded),
       .o_forwarded_store_data(mem_wdata_forwarded)
   );
 

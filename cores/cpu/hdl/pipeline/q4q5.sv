@@ -33,9 +33,9 @@
 `include "cpu_types.vh"
 
 module q4q5 (
-    input i_clk,
-    input i_rst_n,
-    input q4q5_t i_q4q5,
+    input         i_clk,
+    input         i_rst_n,
+    input  q4q5_t i_q4q5,
     output q4q5_t o_q4q5
 );
 
@@ -44,13 +44,14 @@ module q4q5 (
   always @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
       next_q4q5 <= '{
-        alu_out: '0,
-        mem_rdata: '0,
-        reg_wr_port: '0,
-        ctrl: '0,
-        insn: 32'h00000013  // NOP
+          alu_out: '0,
+          mem_rdata: '0,
+          reg_wr_port: '0,
+          ctrl: '0,
+          insn: 32'h00000013  // NOP
       };
-    end else begin
+    end
+    else begin
       next_q4q5 <= i_q4q5;
     end
   end
