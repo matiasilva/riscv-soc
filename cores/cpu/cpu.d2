@@ -1,0 +1,92 @@
+direction: right
+
+classes: {
+  pipeline register: {
+    height: 500
+    shape: rectangle
+  }
+}
+
+# Pipeline registers
+
+ifid_q1: "IF/ID Q1" {
+  class: pipeline register
+}
+
+idex_q2: "ID/EX Q2" {
+  class: pipeline register
+}
+
+exmem_q3: "EX/MEM Q3" {
+  class: pipeline register
+}
+
+memwb_q4: "MEM/WB Q4" {
+  class: pipeline register
+}
+
+insnmem: insnmem {
+  shape: rectangle
+}
+
+control: control {
+  shape: rectangle
+}
+
+regfile: regfile {
+  shape: rectangle
+}
+
+aluctrl: aluctrl {
+  shape: rectangle
+}
+
+alu: ALU {
+  shape: rectangle
+}
+
+sign_extend: "sign extend" {
+  shape: oval
+}
+
+alu_b_mux: MUX {
+  shape: hexagon
+}
+
+# ###############################################################################
+# Q1
+# ###############################################################################
+
+insnmem -> ifid_q1: "insn [31:0]"
+
+ifid_q1 -> control: opcode
+ifid_q1 -> regfile: rs1
+ifid_q1 -> regfile: rs2
+ifid_q1 -> idex_q2: insn_q2
+
+# ###############################################################################
+# Q2
+# ###############################################################################
+
+control -> idex_q2: ctrl_q2
+idex_q2 -> alu: a
+idex_q2 -> alu_b_mux: b
+alu_b_mux -> alu
+alu -> exmem_q3
+
+# ###############################################################################
+# Q3
+# ###############################################################################
+
+idex_q2 -> aluctrl: "ctrl_q3.alu_op"
+idex_q2 -> exmem_q3: temp
+
+# ###############################################################################
+# Q4
+# ###############################################################################
+
+exmem_q3 -> memwb_q4: temp
+
+# ###############################################################################
+# Q5
+# ###############################################################################
