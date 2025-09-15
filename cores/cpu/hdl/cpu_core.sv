@@ -47,46 +47,50 @@ module cpu_core #(
     input i_rst_n
 );
 
-  /* Pipeline register structs - declared early */
-  q1q2_t        q1q2_data;
-  q2q3_t        q2q3_data;
-  q3q4_t        q3q4_data;
-  q4q5_t        q4q5_data;
+  //------------------------------------------------------------------------------
+  // Pipeline registers
+  //------------------------------------------------------------------------------
+  q1q2_t       q1q2_data;
+  q2q3_t       q2q3_data;
+  q3q4_t       q3q4_data;
+  q4q5_t       q4q5_data;
 
-  q1q2_t        q1q2_out;
-  q2q3_t        q2q3_out;
-  q3q4_t        q3q4_out;
-  q4q5_t        q4q5_out;
+  q1q2_t       q1q2_out;
+  q2q3_t       q2q3_out;
+  q3q4_t       q3q4_out;
+  q4q5_t       q4q5_out;
 
-  /* instruction fetch q1 */
-  logic  [31:0] insn_raw_q1;  // from insnmem (q1)
-  insn_t        insn_q1;
-  assign insn_q1.raw = insn_raw_q1;
+  //------------------------------------------------------------------------------
+  // Instruction pipeline
+  //------------------------------------------------------------------------------
+
+  insn_t       insn_q1;
+  insn_t       insn_q2;
+  insn_t       insn_q3;
+  insn_t       insn_q4;
+  insn_t       insn_q5;
+
+
   logic  [4:0] rs1_q1;  // most formats use same rs1 position
   logic  [4:0] rs2_q1;  // most formats use same rs2 position
 
   /* instruction decode, register file q1 out, q2 in */
-  insn_t       insn_q2;
   assign insn_q2 = q1q2_out.insn;
 
-
-  logic  [31:0] pc_next_q2;  // JAL target address
+  logic [31:0] pc_next_q2;  // JAL target address
 
   /* q2 out, q3 in */
-  insn_t        insn_q3;
   assign insn_q3 = q2q3_out.insn;
 
-  logic  [31:0] imm_se_q3;
-  logic  [31:0] alu_out_q3;
+  logic [31:0] imm_se_q3;
+  logic [31:0] alu_out_q3;
 
   /* q3 out, q4 in */
-  logic  [31:0] mem_rdata_q4;
-  insn_t        insn_q4;
+  logic [31:0] mem_rdata_q4;
   assign insn_q4 = q3q4_out.insn;
-  logic  [31:0] pc_next_q3;  // branch target address
+  logic [31:0] pc_next_q3;  // branch target address
 
   /* q4 out, q5 in */
-  insn_t        insn_q5;
   assign insn_q5 = q4q5_out.insn;
 
   /* register file  */
@@ -137,15 +141,50 @@ module cpu_core #(
   logic      [31:0] alu_in1_forwarded;
   logic      [31:0] alu_in2_forwarded;
 
+  always_comb begin : sign_extend_immediate
+    case (q2q3_out.insn.common.opcode)
+      OP_ITYPE, OP_LOAD, OP_JALR: imm_se_q3 = get_i_imm(insn_q3);
+      OP_STORE:                   imm_se_q3 = get_s_imm(insn_q3);
+      OP_BRANCH:                  imm_se_q3 = get_b_imm(insn_q3);
+      OP_JAL:                     imm_se_q3 = get_j_imm(insn_q3);
+      default:                    imm_se_q3 = get_i_imm(insn_q3);
+    endcase
+  end
+
+  logic pc_jal_q2;
+  always_comb begin
+    pc = pc_incr_last;
+    // Handle JAL and branch instructions
+    if (ctrl_q2.q2.is_jal) begin
+      pc = pc_next_q2;
+    end
+    else if (q3q4_out.ctrl.q4.is_branch) begin
+      pc = q3q4_out.pc_next;
+    end
+  end
+
+  always_ff @(posedge i_clk or negedge i_rst_n) begin
+    if (~i_rst_n) begin
+      pc_incr_last <= 0;
+    end
+    else begin
+      pc_incr_last <= pc_incr;
+    end
+  end
+
   insnmem #(
       .SIZE(4096)
   ) insnmem_u (
       .i_clk           (i_clk),
       .i_rst_n         (i_rst_n),
       .i_pc            (pc),
-      .o_insn          (insn_raw_q1),
+      .o_insn          (insn_q1),
       .o_imem_exception(  /* unused */)
   );
+
+  //------------------------------------------------------------------------------
+  // Instruction decode (q2)
+  //------------------------------------------------------------------------------
 
   alu alu_u (
       .i_alu_a        (alu_in1),
@@ -377,36 +416,6 @@ module cpu_core #(
 
   // Q4->Q5 outputs used directly from struct
 
-  // Immediate extraction based on instruction type
-  always_comb begin
-    case (q2q3_out.insn.common.opcode)
-      OP_ITYPE, OP_LOAD, OP_JALR: imm_se_q3 = get_i_imm(insn_q3);
-      OP_STORE:                   imm_se_q3 = get_s_imm(insn_q3);
-      OP_BRANCH:                  imm_se_q3 = get_b_imm(insn_q3);
-      OP_JAL:                     imm_se_q3 = get_j_imm(insn_q3);
-      default:                    imm_se_q3 = get_i_imm(insn_q3);
-    endcase
-  end
 
-  logic pc_jal_q2;
-  always_comb begin
-    pc = pc_incr_last;
-    // Handle JAL and branch instructions
-    if (ctrl_q2.q2.is_jal) begin
-      pc = pc_next_q2;
-    end
-    else if (q3q4_out.ctrl.q4.is_branch) begin
-      pc = q3q4_out.pc_next;
-    end
-  end
-
-  always_ff @(posedge i_clk or negedge i_rst_n) begin
-    if (~i_rst_n) begin
-      pc_incr_last <= 0;
-    end
-    else begin
-      pc_incr_last <= pc_incr;
-    end
-  end
 
 endmodule
