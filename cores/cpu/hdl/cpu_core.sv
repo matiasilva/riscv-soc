@@ -27,11 +27,11 @@
 // Description:
 //   Top-level wrapper for a 5-stage RISC-V pipeline processor
 //   Pipeline stages:
-//     Q1: Instruction fetch
-//     Q2: Instruction decode / register file read
-//     Q3: Execute / ALU operations
-//     Q4: Memory access
-//     Q5: Write back
+//     P1: Instruction fetch
+//     P2: Instruction decode / register file read
+//     P3: Execute / ALU operations
+//     P4: Memory access
+//     P5: Write back
 //
 // Parameters:
 //   HAZARD_TECHNIQUE - Hazard handling method (0=STALL, 1=FORWARD, 2=HYBRID, 3=AGGRESSIVE)
@@ -50,48 +50,48 @@ module cpu_core #(
   //------------------------------------------------------------------------------
   // Pipeline registers
   //------------------------------------------------------------------------------
-  q1q2_t       q1q2_data;
-  q2q3_t       q2q3_data;
-  q3q4_t       q3q4_data;
-  q4q5_t       q4q5_data;
+  p1p2_t       p1p2_data;
+  p2p3_t       p2p3_data;
+  p3p4_t       p3p4_data;
+  p4p5_t       p4p5_data;
 
-  q1q2_t       q1q2_out;
-  q2q3_t       q2q3_out;
-  q3q4_t       q3q4_out;
-  q4q5_t       q4q5_out;
+  p1p2_t       p1p2_out;
+  p2p3_t       p2p3_out;
+  p3p4_t       p3p4_out;
+  p4p5_t       p4p5_out;
 
   //------------------------------------------------------------------------------
   // Instruction pipeline
   //------------------------------------------------------------------------------
 
-  insn_t       insn_q1;
-  insn_t       insn_q2;
-  insn_t       insn_q3;
-  insn_t       insn_q4;
-  insn_t       insn_q5;
+  insn_t       p1_insn;
+  insn_t       p2_insn;
+  insn_t       p3_insn;
+  insn_t       p4_insn;
+  insn_t       p5_insn;
 
 
-  logic  [4:0] rs1_q1;  // most formats use same rs1 position
-  logic  [4:0] rs2_q1;  // most formats use same rs2 position
+  logic  [4:0] p1_rs1;  // most formats use same rs1 position
+  logic  [4:0] p1_rs2;  // most formats use same rs2 position
 
-  /* instruction decode, register file q1 out, q2 in */
-  assign insn_q2 = q1q2_out.insn;
+  /* instruction decode, register file p1 out, p2 in */
+  assign p2_insn = p1p2_out.insn;
 
-  logic [31:0] pc_next_q2;  // JAL target address
+  logic [31:0] p2_pc_next;  // JAL target address
 
-  /* q2 out, q3 in */
-  assign insn_q3 = q2q3_out.insn;
+  /* p2 out, p3 in */
+  assign p3_insn = p2p3_out.insn;
 
-  logic [31:0] imm_se_q3;
-  logic [31:0] alu_out_q3;
+  logic [31:0] p3_imm_se;
+  logic [31:0] p3_alu_out;
 
-  /* q3 out, q4 in */
-  logic [31:0] mem_rdata_q4;
-  assign insn_q4 = q3q4_out.insn;
-  logic [31:0] pc_next_q3;  // branch target address
+  /* p3 out, p4 in */
+  logic [31:0] p4_mem_rdata;
+  assign p4_insn = p3p4_out.insn;
+  logic [31:0] p3_pc_next;  // branch target address
 
-  /* q4 out, q5 in */
-  assign insn_q5 = q4q5_out.insn;
+  /* p4 out, p5 in */
+  assign p5_insn = p4p5_out.insn;
 
   /* register file  */
   logic      [ 4:0] reg_rd_port1;  // decode from q1, pipeline register "absorbed"
@@ -101,10 +101,10 @@ module cpu_core #(
   logic      [ 4:0] reg_wr_port;
   logic      [31:0] reg_wr_data;
 
-  logic      [31:0] reg_rd_data1_q2;  // alu ops
-  logic      [31:0] reg_rd_data2_q2;  // alu ops or memory address
-  logic      [ 4:0] reg_wr_port_q2;  // pipelined to q5
-  logic      [31:0] reg_wr_data_q4;
+  logic      [31:0] p2_reg_rd_data1;  // alu ops
+  logic      [31:0] p2_reg_rd_data2;  // alu ops or memory address
+  logic      [ 4:0] p2_reg_wr_port;  // pipelined to p5
+  logic      [31:0] p4_reg_wr_data;
 
   /* alu & ctrl */
   logic      [31:0] alu_in1;
@@ -135,31 +135,31 @@ module cpu_core #(
 
 
   /* main control unit */
-  cpu_ctrl_t        ctrl_q2;
+  cpu_ctrl_t        p2_ctrl;
 
   /* forwarding unit */
   logic      [31:0] alu_in1_forwarded;
   logic      [31:0] alu_in2_forwarded;
 
   always_comb begin : sign_extend_immediate
-    case (q2q3_out.insn.common.opcode)
-      OP_ITYPE, OP_LOAD, OP_JALR: imm_se_q3 = get_i_imm(insn_q3);
-      OP_STORE:                   imm_se_q3 = get_s_imm(insn_q3);
-      OP_BRANCH:                  imm_se_q3 = get_b_imm(insn_q3);
-      OP_JAL:                     imm_se_q3 = get_j_imm(insn_q3);
-      default:                    imm_se_q3 = get_i_imm(insn_q3);
+    case (p2p3_out.insn.common.opcode)
+      OP_ITYPE, OP_LOAD, OP_JALR: p3_imm_se = get_i_imm(p3_insn);
+      OP_STORE:                   p3_imm_se = get_s_imm(p3_insn);
+      OP_BRANCH:                  p3_imm_se = get_b_imm(p3_insn);
+      OP_JAL:                     p3_imm_se = get_j_imm(p3_insn);
+      default:                    p3_imm_se = get_i_imm(p3_insn);
     endcase
   end
 
-  logic pc_jal_q2;
+  logic p2_pc_jal;
   always_comb begin
     pc = pc_incr_last;
     // Handle JAL and branch instructions
-    if (ctrl_q2.q2.is_jal) begin
-      pc = pc_next_q2;
+    if (p2_ctrl.p2.is_jal) begin
+      pc = p2_pc_next;
     end
-    else if (q3q4_out.ctrl.q4.is_branch) begin
-      pc = q3q4_out.pc_next;
+    else if (p3p4_out.ctrl.p4.is_branch) begin
+      pc = p3p4_out.pc_next;
     end
   end
 
@@ -178,7 +178,7 @@ module cpu_core #(
       .i_clk           (i_clk),
       .i_rst_n         (i_rst_n),
       .i_pc            (pc),
-      .o_insn          (insn_q1),
+      .o_insn          (p1_insn),
       .o_imem_exception(  /* unused */)
   );
 
@@ -203,18 +203,18 @@ module cpu_core #(
       .o_rd_data2(reg_rd_data2),
       .i_wr_addr (reg_wr_port),
       .i_wr_data (reg_wr_data),
-      .i_wr_en   (q4q5_out.ctrl.q5.reg_wr_en)
+      .i_wr_en   (p4p5_out.ctrl.p5.reg_wr_en)
   );
 
   control control_u (
-      .i_opcode(q1q2_out.insn.common.opcode),
-      .o_ctrl  (ctrl_q2)
+      .i_opcode(p1p2_out.insn.common.opcode),
+      .o_ctrl  (p2_ctrl)
   );
 
   aluctrl alucontrol_u (
       .i_aluop   (ctrl_aluop),
-      .i_funct3  (q2q3_out.insn.r_type.funct3),
-      .i_funct7_5(q2q3_out.insn.r_type.funct7[5]),
+      .i_funct3  (p2p3_out.insn.r_type.funct3),
+      .i_funct7_5(p2p3_out.insn.r_type.funct7[5]),
       .o_alu_ctrl(alu_ctrl_ctrl)
   );
 
@@ -240,27 +240,27 @@ module cpu_core #(
       .i_rst_n(i_rst_n),
 
       // ID stage
-      .i_id_rs1   (q1q2_out.insn.r_type.rs1),
-      .i_id_rs2   (q1q2_out.insn.r_type.rs2),
+      .i_id_rs1   (p1p2_out.insn.r_type.rs1),
+      .i_id_rs2   (p1p2_out.insn.r_type.rs2),
       .i_id_valid (1'b1),                        // TODO: Add proper valid signal
-      .i_id_opcode(q1q2_out.insn.common.opcode),
+      .i_id_opcode(p1p2_out.insn.common.opcode),
 
       // EX stage
-      .i_ex_rs1      (q2q3_out.insn.r_type.rs1),
-      .i_ex_rs2      (q2q3_out.insn.r_type.rs2),
+      .i_ex_rs1      (p2p3_out.insn.r_type.rs1),
+      .i_ex_rs2      (p2p3_out.insn.r_type.rs2),
       .i_ex_valid    (1'b1),                                     // TODO: Add proper valid signal
-      .i_ex_is_store (q2q3_out.insn.common.opcode == OP_STORE),
-      .i_ex_is_branch(q2q3_out.insn.common.opcode == OP_BRANCH),
+      .i_ex_is_store (p2p3_out.insn.common.opcode == OP_STORE),
+      .i_ex_is_branch(p2p3_out.insn.common.opcode == OP_BRANCH),
 
       // MEM stage
-      .i_mem_rd       (q3q4_out.insn.r_type.rd),
-      .i_mem_reg_write(q3q4_out.ctrl.q5.reg_wr_en),
-      .i_mem_is_load  (q3q4_out.insn.common.opcode == OP_LOAD),
+      .i_mem_rd       (p3p4_out.insn.r_type.rd),
+      .i_mem_reg_write(p3p4_out.ctrl.p5.reg_wr_en),
+      .i_mem_is_load  (p3p4_out.insn.common.opcode == OP_LOAD),
       .i_mem_valid    (1'b1),                                    // TODO: Add proper valid signal
 
       // WB stage
-      .i_wb_rd       (q4q5_out.insn.r_type.rd),
-      .i_wb_reg_write(q4q5_out.ctrl.q5.reg_wr_en),
+      .i_wb_rd       (p4p5_out.insn.r_type.rd),
+      .i_wb_reg_write(p4p5_out.ctrl.p5.reg_wr_en),
       .i_wb_valid    (1'b1),                        // TODO: Add proper valid signal
 
       // Branch prediction (for future enhancement)
@@ -279,25 +279,25 @@ module cpu_core #(
   // Data forwarding unit
   forwarding_unit forwarding_u (
       // EX stage (current instruction)
-      .i_ex_rs1     (q2q3_out.insn.r_type.rs1),
-      .i_ex_rs2     (q2q3_out.insn.r_type.rs2),
-      .i_ex_is_store(q2q3_out.insn.common.opcode == OP_STORE),
+      .i_ex_rs1     (p2p3_out.insn.r_type.rs1),
+      .i_ex_rs2     (p2p3_out.insn.r_type.rs2),
+      .i_ex_is_store(p2p3_out.insn.common.opcode == OP_STORE),
 
       // MEM stage (previous instruction)
-      .i_mem_rd        (q3q4_out.insn.r_type.rd),
-      .i_mem_reg_write (q3q4_out.ctrl.q5.reg_wr_en),
-      .i_mem_alu_result(q3q4_out.alu_out),
+      .i_mem_rd        (p3p4_out.insn.r_type.rd),
+      .i_mem_reg_write (p3p4_out.ctrl.p5.reg_wr_en),
+      .i_mem_alu_result(p3p4_out.alu_out),
 
       // WB stage (older instruction)
-      .i_wb_rd        (q4q5_out.insn.r_type.rd),
-      .i_wb_reg_write (q4q5_out.ctrl.q5.reg_wr_en),
-      .i_wb_alu_result(q4q5_out.alu_out),
-      .i_wb_mem_data  (q4q5_out.mem_rdata),
-      .i_wb_mem_to_reg(q4q5_out.ctrl.q5.is_mem_to_reg),
+      .i_wb_rd        (p4p5_out.insn.r_type.rd),
+      .i_wb_reg_write (p4p5_out.ctrl.p5.reg_wr_en),
+      .i_wb_alu_result(p4p5_out.alu_out),
+      .i_wb_mem_data  (p4p5_out.mem_rdata),
+      .i_wb_mem_to_reg(p4p5_out.ctrl.p5.is_mem_to_reg),
 
       // Register file data
-      .i_regfile_data1(q2q3_out.reg_rd_data1),
-      .i_regfile_data2(q2q3_out.reg_rd_data2),
+      .i_regfile_data1(p2p3_out.reg_rd_data1),
+      .i_regfile_data2(p2p3_out.reg_rd_data2),
 
       // Forwarded outputs
       .o_forwarded_data1     (alu_in1_forwarded),
@@ -306,115 +306,115 @@ module cpu_core #(
   );
 
   // Wire assignments after all signals are declared
-  assign alu_out_q3 = alu_out;
-  assign mem_rdata_q4 = mem_rdata;
-  assign reg_wr_port = q4q5_out.reg_wr_port;
-  assign reg_wr_data = reg_wr_data_q4;
-  assign reg_wr_data_q4 = q3q4_out.ctrl.q5.is_mem_to_reg ? mem_rdata : q3q4_out.alu_out;
+  assign p3_alu_out = alu_out;
+  assign p4_mem_rdata = mem_rdata;
+  assign reg_wr_port = p4p5_out.reg_wr_port;
+  assign reg_wr_data = p4_reg_wr_data;
+  assign p4_reg_wr_data = p3p4_out.ctrl.p5.is_mem_to_reg ? mem_rdata : p3p4_out.alu_out;
   assign alu_in1 = enable_forwarding ? alu_in1_forwarded : alu_in1_pre;
   assign alu_in2 = enable_forwarding ? alu_in2_forwarded : alu_in2_pre;
-  assign alu_in1_pre = q2q3_out.reg_rd_data1;
-  assign alu_in2_pre = q2q3_out.ctrl.q3.alu_src == ALUSRC_REG ? q2q3_out.reg_rd_data2 : imm_se_q3;
-  assign ctrl_aluop = q2q3_out.ctrl.q3.alu_ctrl;
-  assign ctrl_mem_ren = q3q4_out.ctrl.q4.mem_re;
-  assign ctrl_mem_wren = q3q4_out.ctrl.q4.mem_we;
-  assign mem_addr = alu_out_q3;
+  assign alu_in1_pre = p2p3_out.reg_rd_data1;
+  assign alu_in2_pre = p2p3_out.ctrl.p3.alu_src == ALUSRC_REG ? p2p3_out.reg_rd_data2 : p3_imm_se;
+  assign ctrl_aluop = p2p3_out.ctrl.p3.alu_ctrl;
+  assign ctrl_mem_ren = p3p4_out.ctrl.p4.mem_re;
+  assign ctrl_mem_wren = p3p4_out.ctrl.p4.mem_we;
+  assign mem_addr = p3_alu_out;
   assign mem_wdata = mem_wdata_forwarded;
 
   // Combinational signal assignments
-  assign rs1_q1 = insn_q1.common.opcode == OP_JAL ?
-      '0 : (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ?
-      insn_q1.s_type.rs1 : insn_q1.r_type.rs1;
-  assign rs2_q1 = insn_q1.common.opcode == OP_JAL ?
-      '0 : (insn_q1.common.opcode == OP_BRANCH || insn_q1.common.opcode == OP_STORE) ?
-      insn_q1.s_type.rs2 : insn_q1.r_type.rs2;
-  assign pc_next_q2 = q1q2_out.pc + get_j_imm(insn_q2);
-  assign pc_next_q3 = q2q3_out.pc + imm_se_q3;
-  assign reg_rd_port1 = rs1_q1;
-  assign reg_rd_port2 = rs2_q1;
-  assign reg_rd_data1_q2 = reg_rd_data1;
-  assign reg_rd_data2_q2 = reg_rd_data2;
-  assign reg_wr_port_q2 = q1q2_out.insn.r_type.rd;
+  assign p1_rs1 = p1_insn.common.opcode == OP_JAL ?
+      '0 : (p1_insn.common.opcode == OP_BRANCH || p1_insn.common.opcode == OP_STORE) ?
+      p1_insn.s_type.rs1 : p1_insn.r_type.rs1;
+  assign p1_rs2 = p1_insn.common.opcode == OP_JAL ?
+      '0 : (p1_insn.common.opcode == OP_BRANCH || p1_insn.common.opcode == OP_STORE) ?
+      p1_insn.s_type.rs2 : p1_insn.r_type.rs2;
+  assign p2_pc_next = p1p2_out.pc + get_j_imm(p2_insn);
+  assign p3_pc_next = p2p3_out.pc + p3_imm_se;
+  assign reg_rd_port1 = p1_rs1;
+  assign reg_rd_port2 = p1_rs2;
+  assign p2_reg_rd_data1 = reg_rd_data1;
+  assign p2_reg_rd_data2 = reg_rd_data2;
+  assign p2_reg_wr_port = p1p2_out.insn.r_type.rd;
   assign pc_incr = pc + 4;
 
   /* pipeline registers */
 
-  // Q1->Q2 pipeline struct population
+  // P1->P2 pipeline struct population
   always_comb begin
-    q1q2_data = '{insn: insn_q1, pc: pc, pc_incr: pc_incr};
+    p1p2_data = '{insn: p1_insn, pc: pc, pc_incr: pc_incr};
   end
 
-  q1q2 q1q2_u (
+  p1p2 p1p2_u (
       .i_clk  (i_clk),
       .i_rst_n(i_rst_n),
-      .i_q1q2 (q1q2_data),
-      .o_q1q2 (q1q2_out)
+      .i_p1p2 (p1p2_data),
+      .o_p1p2 (p1p2_out)
   );
 
-  // Q1->Q2 outputs used directly from struct
+  // P1->P2 outputs used directly from struct
 
-  // Q2->Q3 pipeline struct population
+  // P2->P3 pipeline struct population
   always_comb begin
-    q2q3_data = '{
-        pc: q1q2_out.pc,
-        pc_incr: q1q2_out.pc_incr,
-        reg_rd_data1: reg_rd_data1_q2,
-        reg_rd_data2: reg_rd_data2_q2,
-        reg_wr_port: q1q2_out.insn.r_type.rd,
+    p2p3_data = '{
+        pc: p1p2_out.pc,
+        pc_incr: p1p2_out.pc_incr,
+        reg_rd_data1: p2_reg_rd_data1,
+        reg_rd_data2: p2_reg_rd_data2,
+        reg_wr_port: p1p2_out.insn.r_type.rd,
         ctrl: ctrl_q2,
-        insn: q1q2_out.insn
+        insn: p1p2_out.insn
     };
   end
 
-  q2q3 q2q3_u (
+  p2p3 p2p3_u (
       .i_clk  (i_clk),
       .i_rst_n(i_rst_n),
-      .i_q2q3 (q2q3_data),
-      .o_q2q3 (q2q3_out)
+      .i_p2p3 (p2p3_data),
+      .o_p2p3 (p2p3_out)
   );
 
-  // Q2->Q3 outputs used directly from struct
+  // P2->P3 outputs used directly from struct
 
-  // Q3->Q4 pipeline struct population
+  // P3->P4 pipeline struct population
   always_comb begin
-    q3q4_data = '{
-        pc_next: pc_next_q3,
-        alu_out: alu_out_q3,
-        reg_rd_data2: q2q3_out.reg_rd_data2,
-        reg_wr_port: q2q3_out.reg_wr_port,
-        ctrl: q2q3_out.ctrl,
-        insn: q2q3_out.insn
+    p3p4_data = '{
+        pc_next: p3_pc_next,
+        alu_out: p3_alu_out,
+        reg_rd_data2: p2p3_out.reg_rd_data2,
+        reg_wr_port: p2p3_out.reg_wr_port,
+        ctrl: p2p3_out.ctrl,
+        insn: p2p3_out.insn
     };
   end
 
-  q3q4 q3q4_u (
+  p3p4 p3p4_u (
       .i_clk  (i_clk),
       .i_rst_n(i_rst_n),
-      .i_q3q4 (q3q4_data),
-      .o_q3q4 (q3q4_out)
+      .i_p3p4 (p3p4_data),
+      .o_p3p4 (p3p4_out)
   );
 
-  // Q3->Q4 outputs used directly from struct
+  // P3->P4 outputs used directly from struct
 
-  // Q4->Q5 pipeline struct population
+  // P4->P5 pipeline struct population
   always_comb begin
-    q4q5_data = '{
-        alu_out: q3q4_out.alu_out,
-        mem_rdata: mem_rdata_q4,
-        reg_wr_port: q3q4_out.reg_wr_port,
-        ctrl: q3q4_out.ctrl,
-        insn: q3q4_out.insn
+    p4p5_data = '{
+        alu_out: p3p4_out.alu_out,
+        mem_rdata: p4_mem_rdata,
+        reg_wr_port: p3p4_out.reg_wr_port,
+        ctrl: p3p4_out.ctrl,
+        insn: p3p4_out.insn
     };
   end
 
-  q4q5 q4q5_u (
+  p4p5 p4p5_u (
       .i_clk  (i_clk),
       .i_rst_n(i_rst_n),
-      .i_q4q5 (q4q5_data),
-      .o_q4q5 (q4q5_out)
+      .i_p4p5 (p4p5_data),
+      .o_p4p5 (p4p5_out)
   );
 
-  // Q4->Q5 outputs used directly from struct
+  // P4->P5 outputs used directly from struct
 
 
 

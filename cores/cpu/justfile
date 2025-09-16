@@ -27,4 +27,5 @@ fixtures:
   $TOOLS_ROOT/gen_hex_data.py 512 -o $CPU_ROOT/tests/test_insnmem_preload_2048.hex
 
 draw:
-  d2 -t 1 --layout=elk -w $CPU_ROOT/cpu.d2 out.svg
+  dot -Tsvg $CPU_ROOT/p1p2.gv -O
+  dot -Tsvg $CPU_ROOT/p3p4p5.gv -O

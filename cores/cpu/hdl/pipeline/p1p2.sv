@@ -20,43 +20,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Module  : q2q3
+// Module  : p1p2
 // Author  : Matias Wang Silva
 // Date    : 11/9/2025
 //
 // Description:
-//   Pipeline register between Q2 (instruction decode/register file access) and Q3 (execute/ALU)
+//   Pipeline register between P1 (instruction fetch) and P2 (instruction decode/register file access)
 //
 // Parameters:
 //   None
 
 `include "cpu_types.vh"
 
-module q2q3 (
+module p1p2 (
     input         i_clk,
     input         i_rst_n,
-    input  q2q3_t i_q2q3,
-    output q2q3_t o_q2q3
+    input  p1p2_t i_p1p2,
+    output p1p2_t o_p1p2
 );
 
-  q2q3_t next_q2q3;
+  p1p2_t next_p1p2;
 
   always @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
-      next_q2q3 <= '{
+      next_p1p2 <= '{
+          insn: 32'h00000013,  // NOP
           pc: '0,
-          pc_incr: '0,
-          reg_rd_data1: '0,
-          reg_rd_data2: '0,
-          reg_wr_port: '0,
-          ctrl: '0,
-          insn: 32'h00000013  // NOP
+          pc_incr: '0
       };
     end
     else begin
-      next_q2q3 <= i_q2q3;
+      next_p1p2 <= i_p1p2;
     end
   end
 
-  assign o_q2q3 = next_q2q3;
+  assign o_p1p2 = next_p1p2;
+
 endmodule
