@@ -20,30 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Module  : q4q5
+// Module  : p4p5
 // Author  : Matias Wang Silva
 // Date    : 11/9/2025
 //
 // Description:
-//   Pipeline register between Q4 (memory access) and Q5 (write-back)
+//   Pipeline register between P4 (memory access) and P5 (write-back)
 //
 // Parameters:
 //   None
 
 `include "cpu_types.vh"
 
-module q4q5 (
+module p4p5 (
     input         i_clk,
     input         i_rst_n,
-    input  q4q5_t i_q4q5,
-    output q4q5_t o_q4q5
+    input  p4p5_t i_p4p5,
+    output p4p5_t o_p4p5
 );
 
-  q4q5_t next_q4q5;
+  p4p5_t next_p4p5;
 
   always @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
-      next_q4q5 <= '{
+      next_p4p5 <= '{
           alu_out: '0,
           mem_rdata: '0,
           reg_wr_port: '0,
@@ -52,10 +52,10 @@ module q4q5 (
       };
     end
     else begin
-      next_q4q5 <= i_q4q5;
+      next_p4p5 <= i_p4p5;
     end
   end
 
-  assign o_q4q5 = next_q4q5;
+  assign o_p4p5 = next_p4p5;
 
 endmodule

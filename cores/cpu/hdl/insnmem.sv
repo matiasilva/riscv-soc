@@ -30,15 +30,16 @@
 //
 // Parameters:
 //   SIZE - Memory size in bytes (default: 512)
+`include "cpu_types.vh"
 
 module insnmem #(
     parameter int SIZE = 512
 ) (
-    input  logic        i_clk,
-    input  logic        i_rst_n,
-    input  logic [31:0] i_pc,
-    output logic [31:0] o_insn,
-    output logic        o_imem_exception
+    input  logic         i_clk,
+    input  logic         i_rst_n,
+    input  logic  [31:0] i_pc,
+    output insn_t        o_insn,
+    output logic         o_imem_exception
 );
 
   logic [ 7:0] mem        [SIZE];

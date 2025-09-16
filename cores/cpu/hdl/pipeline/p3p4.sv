@@ -20,30 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Module  : q3q4
+// Module  : p3p4
 // Author  : Matias Wang Silva
 // Date    : 11/9/2025
 //
 // Description:
-//   Pipeline register between Q3 (execute/ALU) and Q4 (memory access)
+//   Pipeline register between P3 (execute/ALU) and P4 (memory access)
 //
 // Parameters:
 //   None
 
 `include "cpu_types.vh"
 
-module q3q4 (
+module p3p4 (
     input         i_clk,
     input         i_rst_n,
-    input  q3q4_t i_q3q4,
-    output q3q4_t o_q3q4
+    input  p3p4_t i_p3p4,
+    output p3p4_t o_p3p4
 );
 
-  q3q4_t next_q3q4;
+  p3p4_t next_p3p4;
 
   always @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
-      next_q3q4 <= '{
+      next_p3p4 <= '{
           pc_next: '0,
           alu_out: '0,
           reg_rd_data2: '0,
@@ -53,10 +53,10 @@ module q3q4 (
       };
     end
     else begin
-      next_q3q4 <= i_q3q4;
+      next_p3p4 <= i_p3p4;
     end
   end
 
-  assign o_q3q4 = next_q3q4;
+  assign o_p3p4 = next_p3p4;
 
 endmodule

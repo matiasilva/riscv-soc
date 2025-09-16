@@ -162,29 +162,29 @@ typedef enum logic {
 //
 // Optimization: divide control unit data by pipeline stage
 //------------------------------------------------------------------------------
-typedef struct packed {logic is_jal;} cpu_ctrl_q2_t;
+typedef struct packed {logic is_jal;} cpu_ctrl_p2_t;
 
 typedef struct packed {
   alu_ctrl_t alu_ctrl;
   alu_src_t  alu_src;
-} cpu_ctrl_q3_t;
+} cpu_ctrl_p3_t;
 
 typedef struct packed {
   logic is_branch;
   logic mem_re;
   logic mem_we;
-} cpu_ctrl_q4_t;
+} cpu_ctrl_p4_t;
 
 typedef struct packed {
   logic reg_wr_en;
   logic is_mem_to_reg;
-} cpu_ctrl_q5_t;
+} cpu_ctrl_p5_t;
 
 typedef struct packed {
-  cpu_ctrl_q2_t q2;
-  cpu_ctrl_q3_t q3;
-  cpu_ctrl_q4_t q4;
-  cpu_ctrl_q5_t q5;
+  cpu_ctrl_p2_t p2;
+  cpu_ctrl_p3_t p3;
+  cpu_ctrl_p4_t p4;
+  cpu_ctrl_p5_t p5;
 } cpu_ctrl_t;
 
 //------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ typedef struct packed {
   insn_t insn;
   logic [31:0] pc;
   logic [31:0] pc_incr;
-} q1q2_t;
+} p1p2_t;
 
 typedef struct packed {
   logic [31:0] pc;
@@ -204,7 +204,7 @@ typedef struct packed {
   logic [4:0] reg_wr_port;
   cpu_ctrl_t ctrl;
   insn_t insn;
-} q2q3_t;
+} p2p3_t;
 
 typedef struct packed {
   logic [31:0] pc_next;
@@ -213,7 +213,7 @@ typedef struct packed {
   logic [4:0] reg_wr_port;
   cpu_ctrl_t ctrl;
   insn_t insn;
-} q3q4_t;
+} p3p4_t;
 
 typedef struct packed {
   logic [31:0] alu_out;
@@ -221,6 +221,6 @@ typedef struct packed {
   logic [4:0] reg_wr_port;
   cpu_ctrl_t ctrl;
   insn_t insn;
-} q4q5_t;
+} p4p5_t;
 
 `endif  // CPU_TYPES_VH
