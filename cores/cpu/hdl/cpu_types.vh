@@ -19,7 +19,7 @@ typedef enum logic [6:0] {
 //------------------------------------------------------------------------------
 typedef struct packed {
   logic [24:0] upper;
-  opcode_t opcode;
+  opcode_t     opcode;
 } common_fields_t;
 
 // R-type (ADD, SUB, AND, OR, XOR, SLL, SRL, SRA, SLT, SLTU)
@@ -53,13 +53,13 @@ typedef struct packed {
 
 // B-type (BEQ, BNE, BLT, BGE, BLTU, BGEU)
 typedef struct packed {
-  logic imm_12;
+  logic       imm_12;
   logic [5:0] imm_10_5;
   logic [4:0] rs2;
   logic [4:0] rs1;
   logic [2:0] funct3;
   logic [3:0] imm_4_1;
-  logic imm_11;
+  logic       imm_11;
   logic [6:0] opcode;
 } b_type_t;
 
@@ -72,9 +72,9 @@ typedef struct packed {
 
 // J-type (JAL)
 typedef struct packed {
-  logic imm_20;
+  logic       imm_20;
   logic [9:0] imm_10_1;
-  logic imm_11;
+  logic       imm_11;
   logic [7:0] imm_19_12;
   logic [4:0] rd;
   logic [6:0] opcode;
@@ -132,9 +132,9 @@ endfunction
 // ALU
 //------------------------------------------------------------------------------
 typedef enum logic [1:0] {
-  ALUOP_ADD = 2'b00,
-  ALUOP_SLTU = 2'b01,
-  ALUOP_FUNCT = 2'b10,
+  ALUOP_ADD     = 2'b00,
+  ALUOP_SLTU    = 2'b01,
+  ALUOP_FUNCT   = 2'b10,
   ALUOP_INVALID = 2'b11
 } alu_ctrl_t;
 
@@ -201,26 +201,26 @@ typedef struct packed {
   logic [31:0] pc_incr;
   logic [31:0] reg_rd_data1;
   logic [31:0] reg_rd_data2;
-  logic [4:0] reg_wr_port;
-  cpu_ctrl_t ctrl;
-  insn_t insn;
+  logic [4:0]  reg_wr_port;
+  cpu_ctrl_t   ctrl;
+  insn_t       insn;
 } p2p3_t;
 
 typedef struct packed {
   logic [31:0] pc_next;
   logic [31:0] alu_out;
   logic [31:0] reg_rd_data2;
-  logic [4:0] reg_wr_port;
-  cpu_ctrl_t ctrl;
-  insn_t insn;
+  logic [4:0]  reg_wr_port;
+  cpu_ctrl_t   ctrl;
+  insn_t       insn;
 } p3p4_t;
 
 typedef struct packed {
   logic [31:0] alu_out;
   logic [31:0] mem_rdata;
-  logic [4:0] reg_wr_port;
-  cpu_ctrl_t ctrl;
-  insn_t insn;
+  logic [4:0]  reg_wr_port;
+  cpu_ctrl_t   ctrl;
+  insn_t       insn;
 } p4p5_t;
 
 `endif  // CPU_TYPES_VH
