@@ -139,16 +139,16 @@ typedef enum logic [1:0] {
 } alu_ctrl_t;
 
 typedef enum logic [3:0] {
-  OP_ADD = 4'b0000,
-  OP_SLL = 4'b0001,
-  OP_SLT = 4'b0010,
-  OP_SLTU = 4'b0011,
-  OP_XOR = 4'b0100,
-  OP_SRL = 4'b0101,
-  OP_OR = 4'b0110,
-  OP_AND = 4'b0111,
-  OP_SUB = 4'b1000,
-  OP_SRA = 4'b1101,
+  OP_ADD     = 4'b0000,
+  OP_SLL     = 4'b0001,
+  OP_SLT     = 4'b0010,
+  OP_SLTU    = 4'b0011,
+  OP_XOR     = 4'b0100,
+  OP_SRL     = 4'b0101,
+  OP_OR      = 4'b0110,
+  OP_AND     = 4'b0111,
+  OP_SUB     = 4'b1000,
+  OP_SRA     = 4'b1101,
   OP_INVALID = 4'b1111
 } alu_op_t;
 
