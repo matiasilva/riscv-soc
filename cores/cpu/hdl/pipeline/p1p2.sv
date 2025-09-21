@@ -33,27 +33,22 @@
 `include "cpu_types.vh"
 
 module p1p2 (
-    input         i_clk,
-    input         i_rst_n,
+    input  logic  i_clk,
+    input  logic  i_rst_n,
     input  p1p2_t i_p1p2,
     output p1p2_t o_p1p2
 );
 
-  p1p2_t next_p1p2;
+  p1p2_t p1p2_next;
 
-  always @(posedge i_clk or negedge i_rst_n) begin
+  always_ff @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
-      next_p1p2 <= '{
-          insn: 32'h00000013,  // NOP
-          pc: '0,
-          pc_incr: '0
-      };
-    end
-    else begin
-      next_p1p2 <= i_p1p2;
+      p1p2_next <= '{pc: '0, pc_plus_4: '0};
+    end else begin
+      p1p2_next <= i_p1p2;
     end
   end
 
-  assign o_p1p2 = next_p1p2;
+  assign o_p1p2 = p1p2_next;
 
 endmodule

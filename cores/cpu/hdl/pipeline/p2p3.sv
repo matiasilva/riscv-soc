@@ -33,30 +33,28 @@
 `include "cpu_types.vh"
 
 module p2p3 (
-    input         i_clk,
-    input         i_rst_n,
+    input  logic  i_clk,
+    input  logic  i_rst_n,
     input  p2p3_t i_p2p3,
     output p2p3_t o_p2p3
 );
 
-  p2p3_t next_p2p3;
+  p2p3_t p2p3_next;
 
-  always @(posedge i_clk or negedge i_rst_n) begin
+  always_ff @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
-      next_p2p3 <= '{
+      p2p3_next <= '{
           pc: '0,
-          pc_incr: '0,
+          pc_plus_4: '0,
           reg_rd_data1: '0,
           reg_rd_data2: '0,
-          reg_wr_port: '0,
           ctrl: '0,
           insn: 32'h00000013  // NOP
       };
-    end
-    else begin
-      next_p2p3 <= i_p2p3;
+    end else begin
+      p2p3_next <= i_p2p3;
     end
   end
 
-  assign o_p2p3 = next_p2p3;
+  assign o_p2p3 = p2p3_next;
 endmodule

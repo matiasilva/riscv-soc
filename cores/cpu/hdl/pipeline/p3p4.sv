@@ -39,24 +39,22 @@ module p3p4 (
     output p3p4_t o_p3p4
 );
 
-  p3p4_t next_p3p4;
+  p3p4_t p3p4_next;
 
   always @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
-      next_p3p4 <= '{
+      p3p4_next <= '{
           pc_next: '0,
-          alu_out: '0,
           reg_rd_data2: '0,
-          reg_wr_port: '0,
           ctrl: '0,
+          alu_out: '0,
           insn: 32'h00000013  // NOP
       };
-    end
-    else begin
-      next_p3p4 <= i_p3p4;
+    end else begin
+      p3p4_next <= i_p3p4;
     end
   end
 
-  assign o_p3p4 = next_p3p4;
+  assign o_p3p4 = p3p4_next;
 
 endmodule

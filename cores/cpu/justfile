@@ -2,14 +2,14 @@ HDL_DIR := "hdl/"
 SRCS := "cpu_core.sv \
 				insnmem.sv aluctrl.sv control.sv regfile.sv \
 				alu.sv memory.sv hazard_unit.sv forwarding_unit.sv \
-				pipeline/q1q2.sv pipeline/q2q3.sv pipeline/q3q4.sv pipeline/q4q5.sv"
+				pipeline/p1p2.sv pipeline/p2p3.sv pipeline/p3p4.sv pipeline/p4p5.sv"
 # INCLUDES := "cpu_types.vh"
 FULL_SRCS := prepend(HDL_DIR, SRCS)
 # FULL_INCLUDES := prepend("-I " + HDL_DIR, INCLUDES)
 
 # use slang to lint cpu_core
 lint:
-  slang {{FULL_SRCS}} -I {{HDL_DIR}}
+  slang -Weverything -Wno-unused-typedef {{FULL_SRCS}} -I {{HDL_DIR}}
 
 # run all cocotb tests
 test filter="":

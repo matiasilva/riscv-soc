@@ -81,14 +81,14 @@ typedef struct packed {
 } j_type_t;
 
 typedef union packed {
-  logic [31:0] raw;
+  logic [31:0]    raw;
   common_fields_t common;
-  r_type_t r_type;
-  i_type_t i_type;
-  s_type_t s_type;
-  b_type_t b_type;
-  u_type_t u_type;
-  j_type_t j_type;
+  r_type_t        r_type;
+  i_type_t        i_type;
+  s_type_t        s_type;
+  b_type_t        b_type;
+  u_type_t        u_type;
+  j_type_t        j_type;
 } insn_t;
 
 //------------------------------------------------------------------------------
@@ -171,14 +171,12 @@ typedef struct packed {
 
 typedef struct packed {
   logic is_branch;
-  logic mem_re;
-  logic mem_we;
+  logic mem_rd_en;
+  logic mem_wr_en;
+  logic is_mem_to_reg;
 } cpu_ctrl_p4_t;
 
-typedef struct packed {
-  logic reg_wr_en;
-  logic is_mem_to_reg;
-} cpu_ctrl_p5_t;
+typedef struct packed {logic reg_wr_en;} cpu_ctrl_p5_t;
 
 typedef struct packed {
   cpu_ctrl_p2_t p2;
@@ -191,34 +189,29 @@ typedef struct packed {
 // Pipeline registers
 //------------------------------------------------------------------------------
 typedef struct packed {
-  insn_t insn;
   logic [31:0] pc;
-  logic [31:0] pc_incr;
+  logic [31:0] pc_plus_4;
 } p1p2_t;
 
 typedef struct packed {
   logic [31:0] pc;
-  logic [31:0] pc_incr;
+  logic [31:0] pc_plus_4;
   logic [31:0] reg_rd_data1;
   logic [31:0] reg_rd_data2;
-  logic [4:0]  reg_wr_port;
   cpu_ctrl_t   ctrl;
   insn_t       insn;
 } p2p3_t;
 
 typedef struct packed {
   logic [31:0] pc_next;
-  logic [31:0] alu_out;
   logic [31:0] reg_rd_data2;
-  logic [4:0]  reg_wr_port;
+  logic [31:0] alu_out;
   cpu_ctrl_t   ctrl;
   insn_t       insn;
 } p3p4_t;
 
 typedef struct packed {
-  logic [31:0] alu_out;
-  logic [31:0] mem_rdata;
-  logic [4:0]  reg_wr_port;
+  logic [31:0] reg_wr_data;
   cpu_ctrl_t   ctrl;
   insn_t       insn;
 } p4p5_t;

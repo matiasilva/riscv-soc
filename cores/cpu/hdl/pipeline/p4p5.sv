@@ -39,23 +39,20 @@ module p4p5 (
     output p4p5_t o_p4p5
 );
 
-  p4p5_t next_p4p5;
+  p4p5_t p4p5_next;
 
   always @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
-      next_p4p5 <= '{
-          alu_out: '0,
-          mem_rdata: '0,
-          reg_wr_port: '0,
+      p4p5_next <= '{
+          reg_wr_data: '0,
           ctrl: '0,
           insn: 32'h00000013  // NOP
       };
-    end
-    else begin
-      next_p4p5 <= i_p4p5;
+    end else begin
+      p4p5_next <= i_p4p5;
     end
   end
 
-  assign o_p4p5 = next_p4p5;
+  assign o_p4p5 = p4p5_next;
 
 endmodule

@@ -30,8 +30,8 @@
 //
 // Signals:
 //  aluop
-//  mem_re
-//  mem_we
+//  mem_rd_en
+//  mem_wr_en
 //  reg_wr_en     - enable writeback to regfile
 //  is_mem_to_reg - select whether ALU result or memory read is written to regfile
 //  is_branch
@@ -46,8 +46,8 @@ module control (
 );
 
   alu_ctrl_t aluop;
-  logic      mem_re;
-  logic      mem_we;
+  logic      mem_rd_en;
+  logic      mem_wr_en;
   logic      reg_wr_en;
   logic      is_mem_to_reg;
   logic      is_branch;
@@ -56,8 +56,8 @@ module control (
   alu_src_t  alu_src;
 
   always_comb begin
-    mem_re        = '0;
-    mem_we        = '0;
+    mem_rd_en     = '0;
+    mem_wr_en     = '0;
     reg_wr_en     = '0;
     is_mem_to_reg = '0;
     is_branch     = '0;
@@ -77,12 +77,12 @@ module control (
         aluop     = ALUOP_FUNCT;
       end
       OP_LOAD: begin
-        mem_re        = '1;
+        mem_rd_en     = '1;
         reg_wr_en     = '1;
         is_mem_to_reg = '1;
       end
       OP_STORE: begin
-        mem_we = '1;
+        mem_wr_en = '1;
       end
       OP_BRANCH: begin
         is_branch = '1;
@@ -95,15 +95,18 @@ module control (
         is_jalr   = '1;
         reg_wr_en = '1;
       end
-      default: begin
-      end
     endcase
 
     o_ctrl = '{
-        q2: '{is_jal: is_jal},
-        q3: '{alu_ctrl: aluop, alu_src: alu_src},
-        q4: '{is_branch: is_branch, mem_re: mem_re, mem_we: mem_we},
-        q5: '{reg_wr_en: reg_wr_en, is_mem_to_reg: is_mem_to_reg}
+        p2: '{is_jal: is_jal},
+        p3: '{alu_ctrl: aluop, alu_src: alu_src},
+        p4: '{
+            is_branch: is_branch,
+            mem_rd_en: mem_rd_en,
+            mem_wr_en: mem_wr_en,
+            is_mem_to_reg: is_mem_to_reg
+        },
+        p5: '{reg_wr_en: reg_wr_en}
     };
   end
 

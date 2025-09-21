@@ -58,24 +58,24 @@ module alu (
   assign shamt = i_alu_b[4:0];
 
   always_comb begin : alu_result
-    unique case (i_alu_ctrl)
-      OP_ADD:  result = i_alu_a + i_alu_b;
-      OP_SUB:  result = diff;
+    case (i_alu_ctrl)
+      OP_ADD: result = i_alu_a + i_alu_b;
+      OP_SUB: result = diff;
       OP_SLT: begin
         if (i_alu_a[31] ^ i_alu_b[31]) begin
           result = {31'b0, i_alu_a[31]};
-        end
-        else begin
+        end else begin
           result = {31'b0, diff[31]};
         end
       end
       OP_SLTU: result = {31'b0, (i_alu_a < i_alu_b)};
-      OP_AND:  result = i_alu_a & i_alu_b;
-      OP_OR:   result = i_alu_a | i_alu_b;
-      OP_XOR:  result = i_alu_a ^ i_alu_b;
-      OP_SLL:  result = i_alu_a << shamt;
-      OP_SRL:  result = i_alu_a >> shamt;
-      OP_SRA:  result = $signed(i_alu_a) >>> shamt;
+      OP_AND: result = i_alu_a & i_alu_b;
+      OP_OR: result = i_alu_a | i_alu_b;
+      OP_XOR: result = i_alu_a ^ i_alu_b;
+      OP_SLL: result = i_alu_a << shamt;
+      OP_SRL: result = i_alu_a >> shamt;
+      OP_SRA: result = $signed(i_alu_a) >>> shamt;
+      OP_INVALID: result = '0;
       default: result = '0;
     endcase
   end
@@ -83,8 +83,7 @@ module alu (
   always_comb begin : alu_controller
     if (i_alu_ctrl == OP_INVALID) begin
       o_alu_exception = '1;
-    end
-    else begin
+    end else begin
       o_alu_exception = '0;
     end
   end

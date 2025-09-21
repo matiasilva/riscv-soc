@@ -1,6 +1,8 @@
 --try_wrap_long_lines=true
---wrap_end_else_clauses=true
+--wrap_end_else_clauses=false
 --port_declarations_alignment=align
 --assignment_statement_alignment=align
 --named_port_alignment=align
 --module_net_variable_alignment=align
+--struct_union_members_alignment=align
+--enum_assignment_statement_alignment=align
