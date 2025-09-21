@@ -143,6 +143,7 @@ def test_insnmem_runner(size: int) -> None:
     runner.build(
         sources=[hdl_root / "insnmem.sv"],
         hdl_toplevel="insnmem",
+        includes=[str(hdl_root)],
         always=True,
         waves=True,
         parameters={"SIZE": size},

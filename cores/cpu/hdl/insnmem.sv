@@ -30,15 +30,16 @@
 //
 // Parameters:
 //   SIZE - Memory size in bytes (default: 512)
+`include "cpu_types.vh"
 
 module insnmem #(
     parameter int SIZE = 512
 ) (
-    input  logic        i_clk,
-    input  logic        i_rst_n,
-    input  logic [31:0] i_pc,
-    output logic [31:0] o_insn,
-    output logic        o_imem_exception
+    input  logic         i_clk,
+    input  logic         i_rst_n,
+    input  logic  [31:0] i_pc,
+    output insn_t        o_insn,
+    output logic         o_imem_exception
 );
 
   logic [ 7:0] mem        [SIZE];
@@ -48,15 +49,13 @@ module insnmem #(
   logic [ 1:0] align_bits;
   assign align_bits = i_pc[1:0];
 
-  int    i;
   string filename;
 
   initial begin
     if ($value$plusargs("IMEM_PRELOAD_FILE=%s", filename)) begin
       $readmemh(filename, mem);
       $display("Loaded memory from %s", filename);
-    end
-    else begin
+    end else begin
       foreach (mem[i]) mem[i] = '0;
     end
   end
@@ -65,8 +64,7 @@ module insnmem #(
     if (align_bits == 2'b0) begin
       o_imem_exception = 1'b0;
       addr             = i_pc;
-    end
-    else begin
+    end else begin
       o_imem_exception = 1'b1;
       addr             = '0;
     end
@@ -75,8 +73,7 @@ module insnmem #(
   always_ff @(posedge i_clk or negedge i_rst_n) begin : fetch_insn
     if (~i_rst_n) begin
       next_insn <= 32'h00000013;  //  NOP
-    end
-    else begin
+    end else begin
       next_insn <= {mem[addr+3], mem[addr+2], mem[addr+1], mem[addr]};
     end
   end

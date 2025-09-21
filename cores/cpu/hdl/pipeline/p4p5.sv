@@ -20,40 +20,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Module  : q1q2
+// Module  : p4p5
 // Author  : Matias Wang Silva
 // Date    : 11/9/2025
 //
 // Description:
-//   Pipeline register between Q1 (instruction fetch) and Q2 (instruction decode/register file access)
+//   Pipeline register between P4 (memory access) and P5 (write-back)
 //
 // Parameters:
 //   None
 
 `include "cpu_types.vh"
 
-module q1q2 (
+module p4p5 (
     input         i_clk,
     input         i_rst_n,
-    input  q1q2_t i_q1q2,
-    output q1q2_t o_q1q2
+    input  p4p5_t i_p4p5,
+    output p4p5_t o_p4p5
 );
 
-  q1q2_t next_q1q2;
+  p4p5_t p4p5_next;
 
   always @(posedge i_clk or negedge i_rst_n) begin
     if (~i_rst_n) begin
-      next_q1q2 <= '{
-          insn: 32'h00000013,  // NOP
-          pc: '0,
-          pc_incr: '0
+      p4p5_next <= '{
+          reg_wr_data: '0,
+          ctrl: '0,
+          insn: 32'h00000013  // NOP
       };
-    end
-    else begin
-      next_q1q2 <= i_q1q2;
+    end else begin
+      p4p5_next <= i_p4p5;
     end
   end
 
-  assign o_q1q2 = next_q1q2;
+  assign o_p4p5 = p4p5_next;
 
 endmodule
